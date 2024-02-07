@@ -17,7 +17,8 @@ Future<void> refreshSchedule(WidgetRef ref) {
         ref.invalidate(uniScheduleManifestProvider);
     }
 
-    return ref.refresh(scheduleProvider.future);
+    ref.invalidate(scheduleProvider);
+    return Future<void>.value();
 }
 
 RefreshIndicator getLoadingIndicator(RefreshCallback onRefresh) {

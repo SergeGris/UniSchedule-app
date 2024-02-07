@@ -62,16 +62,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             showCurrentWeek = DateTime.now().weekday != DateTime.sunday;
         }
 
-        var weekNumber = null;
-
-        ref.watch(scheduleProvider).unwrapPrevious().when(
-            loading: () {},
-            error: (e, st) {
-                weekNumber = null;
-            },
-            data: (value) {
-                weekNumber = getWeekNumber(DateTime.now().add(Duration(days: 1)), value);
-            }
+        var weekNumber = ref.watch(scheduleProvider).unwrapPrevious().when<int?>(
+            loading: () => null,
+            error: (e, st) => null,
+            data: (value) => getWeekNumber(DateTime.now().add(Duration(days: 1)), value),
         );
 
         return Scaffold(

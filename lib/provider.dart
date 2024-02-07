@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import './models/schedule.dart';
 import './manifest.dart';
 import './utils.dart';
+import './globalkeys.dart';
 
 part 'provider.g.dart';
 
@@ -66,9 +67,12 @@ Future<Schedule> schedule(ScheduleRef ref) async {
             var response = await getAndTrack(ref, scheduleJsonRawUri);
             schedule = response.body;
         } catch (e) {
+            GlobalKeys.showWarningBanner('Не удалось обновить расписание');
             throw Exception('Не удалось загрузить расписание');
         }
     }
+
+    GlobalKeys.hideWarningBanner();
 
     // * Decoding no longer needed when using GitHub Pages
     // // Because there are cyrillic characters in the json we have to decode it.

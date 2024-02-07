@@ -246,12 +246,14 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
             appBar: AppBar(
                 title: Text('Поиск расписания'),
             ),
+
             body: RefreshIndicator(
                 onRefresh: () {
                     GlobalKeys.hideWarningBanner();
                     setState(() => initialized = false);
                     return Future<void>.value();
                 },
+
                 child: LayoutBuilder(
                     builder: (context, constraints) => ListView(
                         children: [

@@ -11,7 +11,6 @@ class ScheduleLoader extends ConsumerWidget {
     ScheduleLoader(this.child);
 
     final Widget Function(Schedule) child;
-    late Schedule? fallback = null;
 
     @override
     Widget build(BuildContext context, WidgetRef ref) {
@@ -24,8 +23,6 @@ class ScheduleLoader extends ConsumerWidget {
                     return getLoadingIndicator(() => refreshSchedule(ref));
                 },
                 error: (e, st) {
-                    GlobalKeys.showWarningBanner('Не удалось загрузить расписание');
-
                     final prefs = ref.watch(settingsProvider).value!;
 
                     String? fallbackSchedule = prefs.getString('fallbackSchedule');
@@ -33,17 +30,15 @@ class ScheduleLoader extends ConsumerWidget {
 
                     if (groupId != null && fallbackSchedule != null) {
                         try {
-                            fallback = Schedule.fromJson(jsonDecode(fallbackSchedule) as Map<String, dynamic>);
+                            return child(Schedule.fromJson(jsonDecode(fallbackSchedule) as Map<String, dynamic>));
                         } catch (e) {
                             return getErrorContainer('Не удалось загрузить расписание');
                         };
-                        return child(fallback!);
                     } else {
                         return getErrorContainer('Не удалось загрузить расписание');
                     }
                 },
                 data: (value) {
-                    fallback = value;
                     return child(value);
                 }
             )
