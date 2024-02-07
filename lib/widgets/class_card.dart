@@ -152,7 +152,7 @@ class ClassCardTile extends StatelessWidget {
                                                 style: Theme.of(context).textTheme.bodySmall!
                                             ),
                                         ),
-                                        if (type != null && type != '')
+                                        if (type != null)
                                         ...[
                                             const Spacer(),
 

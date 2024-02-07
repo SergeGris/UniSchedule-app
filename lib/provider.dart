@@ -21,10 +21,10 @@ Future<Schedule> schedule(ScheduleRef ref) async {
     final String facultyId    = prefs.getString('facultyId')!;
     final String yearId       = prefs.getString('yearId')!;
     final String groupId      = prefs.getString('groupId')!;
-    final String path = '${globalUniScheduleManifest.uniScheduleManifest.schedulePathPrefix}'
+    final String path = '${globalUniScheduleManifest.schedulePathPrefix}'
                          + '/$scheduleFormatVersion/$universityId/$facultyId/$yearId/$groupId.json';
-    final Uri scheduleJsonRawUri  = Uri.https(globalUniScheduleManifest.uniScheduleManifest.serverIp, '$path');
-    final Uri scheduleJsonGzipUri = Uri.https(globalUniScheduleManifest.uniScheduleManifest.serverIp, '$path.gz');
+    final Uri scheduleJsonRawUri  = Uri.https(globalUniScheduleManifest.serverIp, '$path');
+    final Uri scheduleJsonGzipUri = Uri.https(globalUniScheduleManifest.serverIp, '$path.gz');
 
     print(scheduleJsonRawUri);
 
@@ -75,12 +75,12 @@ Future<Schedule> schedule(ScheduleRef ref) async {
     // // final utf8 = const Utf8Decoder().convert(response.body.codeUnits);
     // // final decompressed = ZstdDecoder().convert(response.body.codeUnits);
     // // final decoded = const Utf8Decoder().convert(response.body.codeUnits);
-    prefs.setString('fallbackSchedule', schedule);
 
     final json;
 
     try {
         json = jsonDecode(schedule) as Map<String, dynamic>;
+        prefs.setString('fallbackSchedule', schedule);
     } catch (e) {
         print(e);
         throw Exception('Не удалось обработать расписание');
@@ -129,14 +129,8 @@ Future<DateTime> datetime(DatetimeRef ref) async {
 
 @riverpod
 Future<UniScheduleManifest> uniScheduleManifest(UniScheduleManifestRef ref) async {
-    bool _manifestUpdated         = false;
-    String _serverIp              = 'raw.githubusercontent.com';
-    String _schedulePathPrefix    = '/SergeGris/sergegris.github.io/main';
-    String? _channelLink          = null;
-    String _supportGoals          = 'Поддержать развитие проекта';
-    List<NamedLink> _supportVariants = [];
-    List<int>? _latestApplicationVersion = null;
-    List<NamedLink> _updateVariants = [];
+
+    var instance;
 
     try {
         Uri uri = Uri.https(
@@ -145,46 +139,12 @@ Future<UniScheduleManifest> uniScheduleManifest(UniScheduleManifestRef ref) asyn
         );
         var manifestDataJson = await downloadFileByUri(uri);
         var json = jsonDecode(manifestDataJson);
-
-        if (json['schedule.format.version'] != null) {
-            _manifestUpdated = (scheduleFormatVersion < json['schedule.format.version']);
-        }
-        if (json['server.ip'] != null) {
-            _serverIp = json['server.ip'];
-        }
-        if (json['schedule.path.prefix'] != null) {
-            _schedulePathPrefix = json['schedule.path.prefix'];
-        }
-        if (json['channel.link'] != null) {
-            _channelLink = json['channel.link'];
-        }
-        if (json['support.variants'] != null) {
-            _supportVariants = json['support.variants'].map(
-                (e) => NamedLink(label: e[0].toString(), link: e[1].toString())
-            ).cast<NamedLink>().toList();
-        }
-        if (json['support.goals'] != null) {
-            _supportGoals = json['support.goals'];
-        }
-        if (json['latest.application.version'] != null) {
-            _latestApplicationVersion = json['latest.application.version'].split('.').map((v) => int.parse(v)).cast<int>().toList();
-        }
-        if (json['update.variants'] != null) {
-            _updateVariants = json['update.variants'].map(
-                (e) => NamedLink(label: e[0].toString(), link: e[1].toString())
-            ).cast<NamedLink>().toList();
-        }
+        instance = UniScheduleManifest.fromJson(json);
     } catch (e) {
         print("can not download $e");
+        instance = UniScheduleManifest.createEmpty();
     }
 
-    final instance = UniScheduleManifest(manifestUpdated: _manifestUpdated,
-                                         serverIp: _serverIp,
-                                         schedulePathPrefix: _schedulePathPrefix,
-                                         channelLink: _channelLink,
-                                         supportVariants: _supportVariants,
-                                         supportGoals: _supportGoals,
-                                         latestApplicationVersion: _latestApplicationVersion,
-                                         updateVariants: _updateVariants);
+
     return instance;
 }

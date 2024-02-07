@@ -83,7 +83,7 @@ class UniScheduleApp extends ConsumerWidget {
                 ),
 
                 data: (manifest) {
-                    globalUniScheduleManifest = GlobalUniScheduleManifest(manifest);
+                    globalUniScheduleManifest = manifest;
                     return callback();
                 }
             );

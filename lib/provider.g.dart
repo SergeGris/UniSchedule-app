@@ -6,7 +6,7 @@ part of 'provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$scheduleHash() => r'9bf6158deb2d783621c2bee6836ad0150e70ca0f';
+String _$scheduleHash() => r'ebe4a54b297a853ca7b6d672ebaf4bd45dfa2cbc';
 
 /// See also [schedule].
 @ProviderFor(schedule)
@@ -49,7 +49,7 @@ final datetimeProvider = AutoDisposeFutureProvider<DateTime>.internal(
 
 typedef DatetimeRef = AutoDisposeFutureProviderRef<DateTime>;
 String _$uniScheduleManifestHash() =>
-    r'e6915d326e315df722927b495a8b85075721b7a6';
+    r'93b7dd51588eeec47c3d4a1887deedaeef87ed63';
 
 /// See also [uniScheduleManifest].
 @ProviderFor(uniScheduleManifest)

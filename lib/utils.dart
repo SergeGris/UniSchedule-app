@@ -13,7 +13,7 @@ import 'manifest.dart';
 Future<void> refreshSchedule(WidgetRef ref) {
     GlobalKeys.hideWarningBanner();
 
-    if (!globalUniScheduleManifest.uniScheduleManifest.loaded) {
+    if (!globalUniScheduleManifest.loaded) {
         ref.invalidate(uniScheduleManifestProvider);
     }
 
@@ -130,6 +130,22 @@ extension ExtendedIterable<E> on Iterable<E> {
         var i = 0;
         return map((e) => callback(e, i++));
     }
+}
+
+List<int> parseVersion(String version) {
+    final s = version.split('.');
+    final v = [ 0, 0, 0 ];
+
+    for (int i = 0; i < 3; i++) {
+        if (i < s.length) {
+            v[i] = int.parse(s[i]);
+        } else {
+            v[i] = 0;
+            break;
+        }
+    }
+
+    return v;
 }
 
 extension TimeOfDayExtension on TimeOfDay {

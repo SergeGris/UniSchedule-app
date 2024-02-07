@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import './provider.dart';
 import './manifest.dart';
 import './utils.dart';
+import './globalkeys.dart';
 
 part 'scheduleselector.g.dart';
 
@@ -70,7 +71,7 @@ class Manifest {
 }
 
 Future<ManifestData> downloadManifest(WidgetRef ref, String path) async {
-    return await downloadFileByUri(Uri.https(globalUniScheduleManifest.uniScheduleManifest.serverIp, path))
+    return await downloadFileByUri(Uri.https(globalUniScheduleManifest.serverIp, path))
         .then((value)   { return Manifest.fromJson(jsonDecode(value)).data; })
         .catchError((e) { return Future<ManifestData>.error('Не удалось загрузить список'); });
 }
@@ -100,7 +101,7 @@ Future<ManifestData> getManifest({required WidgetRef ref, String? university = n
         }
     }
 
-    return await downloadManifest(ref, ref.watch(uniScheduleManifestProvider).value!.schedulePathPrefix + path + '/manifest.json');
+    return await downloadManifest(ref, globalUniScheduleManifest.schedulePathPrefix + path + '/manifest.json');
 }
 
 //TODO load manifest here, but not below
@@ -138,13 +139,15 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
     // Do initialization in build to avoid troubles because of setState() and sequences tree rebuilding.
     bool initialized = false;
 
+    bool canLoadSchedule = false;
+
     late Menu university;
     late Menu faculty;
     late Menu year;
     late Menu group;
 
     bool allDone() {
-        return university.id != null && faculty.id != null && year.id != null && group.id != null;
+        return canLoadSchedule && university.id != null && faculty.id != null && year.id != null && group.id != null;
     }
 
     @override
@@ -201,19 +204,25 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                     ),
                 ],
 
-                error: (e, st) => <Widget>[
-                    const Icon(
-                        Icons.error_outline,
-                        color: Colors.red,
-                        size: 60,
-                    ),
-                    Padding(
-                        padding: const EdgeInsets.only(top: 16),
-                        child: Text('${manifest.error}'),
-                    ),
-                ],
+                error: (e, st) {
+                    canLoadSchedule = false;
+
+                    return <Widget>[
+                        const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 60,
+                        ),
+                        Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: Text('${manifest.error}'),
+                        ),
+                    ];
+                },
 
                 data: (list) {
+                    canLoadSchedule = true;
+
                     return <Widget>[
                         Container(
                             alignment: Alignment.center,
@@ -239,6 +248,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
             ),
             body: RefreshIndicator(
                 onRefresh: () {
+                    GlobalKeys.hideWarningBanner();
                     setState(() => initialized = false);
                     return Future<void>.value();
                 },

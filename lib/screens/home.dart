@@ -36,7 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     @override
     Widget build(BuildContext context) {
-        if (!warningShown && globalUniScheduleManifest.uniScheduleManifest.manifestUpdated) {
+        if (!warningShown && globalUniScheduleManifest.manifestUpdated) {
             warningShown = true;
 
             Future(() async {
@@ -62,7 +62,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             showCurrentWeek = DateTime.now().weekday != DateTime.sunday;
         }
 
-        final weekNumber = getWeekNumber(DateTime.now().add(Duration(days: 1)), ref.watch(scheduleProvider).value);
+        var weekNumber = null;
+
+        ref.watch(scheduleProvider).unwrapPrevious().when(
+            loading: () {},
+            error: (e, st) {
+                weekNumber = null;
+            },
+            data: (value) {
+                weekNumber = getWeekNumber(DateTime.now().add(Duration(days: 1)), value);
+            }
+        );
 
         return Scaffold(
             appBar: AppBar(
@@ -177,16 +187,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 PackageInfo packageInfo = await PackageInfo.fromPlatform();
                 List<int> version = packageInfo.version.split('.').map((v) => int.parse(v)).toList();
 
-                if (globalUniScheduleManifest.uniScheduleManifest.updateVariants.isNotEmpty
-                 && globalUniScheduleManifest.uniScheduleManifest.latestApplicationVersion != null
-                 && compareVersions(version, globalUniScheduleManifest.uniScheduleManifest.latestApplicationVersion!, (a, b) => (a < b))) {
+                if (globalUniScheduleManifest.updateVariants.isNotEmpty
+                 && globalUniScheduleManifest.latestApplicationVersion != null
+                 && compareVersions(version, globalUniScheduleManifest.latestApplicationVersion!, (a, b) => (a < b))) {
                     showDialog(
                         context: context,
                         builder: (BuildContext context) => AlertDialog(
                             title: const Text('Доступно обновление!'),
                             content: const Text('Установить новую версию?'),
                             actions: <Widget>[
-                                ...globalUniScheduleManifest.uniScheduleManifest.updateVariants.map(
+                                ...globalUniScheduleManifest.updateVariants.map(
                                     (e) => ElevatedButton(
                                         child: Text(e.label),
                                         onPressed: () => launchUrl(context, e.link),

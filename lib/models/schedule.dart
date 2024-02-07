@@ -93,7 +93,7 @@ ClassType? classTypeFromString(String type) {
     String t = typeTranslateMap.keys.contains(type.toLowerCase())
         ? typeTranslateMap[type.toLowerCase()]! : type;
 
-    return (typesMap.keys.contains(t)) ? typesMap[t] : (t != null ? ClassType(name: t, color: Colors.pink) : null);
+    return (typesMap.keys.contains(t)) ? typesMap[t] : (t != null && t != '' ? ClassType(name: t, color: Colors.pink) : null);
 }
 
 class Class {

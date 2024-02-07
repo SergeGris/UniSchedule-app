@@ -47,12 +47,12 @@ class SettingsPage extends ConsumerWidget {
                         'Сергей Сушилин, ВМК МГУ')
                 ),
 
-                if (globalUniScheduleManifest.uniScheduleManifest.channelLink != null)
+                if (globalUniScheduleManifest.channelLink != null)
                 ListTile(
                     title: const Text('Канал в Telegram:'),
                     trailing: Linkify(
                         onOpen: (link) => launchUrl(context, link.url),
-                        text: globalUniScheduleManifest.uniScheduleManifest.channelLink!,
+                        text: globalUniScheduleManifest.channelLink!,
                         style: const TextStyle(fontSize: 14.0),
                     ),
                 ),
@@ -66,8 +66,8 @@ class SettingsPage extends ConsumerWidget {
                                     context: context,
                                     builder: (BuildContext context) => AlertDialog( // TODO Change to dialog
                                         title: Text('Поддержать проект'),
-                                        content: Text(globalUniScheduleManifest.uniScheduleManifest.supportGoals),
-                                        actions: globalUniScheduleManifest.uniScheduleManifest.supportVariants.map(
+                                        content: Text(globalUniScheduleManifest.supportGoals),
+                                        actions: globalUniScheduleManifest.supportVariants?.map(
                                             (e) => ElevatedButton(
                                                 child: Text(e.label),
                                                 onPressed: () => launchUrl(context, e.link),
