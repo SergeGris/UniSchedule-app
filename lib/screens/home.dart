@@ -17,10 +17,10 @@ import '../scheduleselector.dart';
 import '../manifest.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
-  HomeScreen({super.key});
+    const HomeScreen({super.key});
 
-  @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+    @override
+    ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
 class UniSchedulePages {
@@ -65,7 +65,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         var weekNumber = ref.watch(scheduleProvider).unwrapPrevious().when<int?>(
             loading: () => null,
             error: (e, st) => null,
-            data: (value) => getWeekNumber(DateTime.now().add(Duration(days: 1)), value),
+            data: (value) => getWeekNumber(DateTime.now().add(const Duration(days: 1)), value),
         );
 
         return Scaffold(
@@ -124,10 +124,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 },
             ),
             body: <Widget>[
-                HomePage(),
+                const HomePage(),
                 SchedulePage(showCurrentWeek: showCurrentWeek),
                 // MapPage(), // TBI
-                SettingsPage(),
+                const SettingsPage(),
             ][_selPage],
 
             floatingActionButton: (_selPage != UniSchedulePages.schedule)
@@ -148,7 +148,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             size: Theme.of(context).textTheme.titleMedium!.fontSize
                         ),
 
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
 
                         Text(
                             showCurrentWeek ? 'К следующей неделе' : 'К текущей неделе',

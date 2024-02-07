@@ -6,7 +6,7 @@ import '../scheduleloader.dart';
 import '../utils.dart';
 
 class SchedulePage extends ConsumerWidget {
-    SchedulePage({required this.showCurrentWeek, super.key});
+    const SchedulePage({required this.showCurrentWeek, super.key});
     final bool showCurrentWeek;
 
     @override

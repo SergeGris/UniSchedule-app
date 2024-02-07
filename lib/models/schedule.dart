@@ -73,7 +73,7 @@ class ClassType {
 }
 
 ClassType? classTypeFromString(String type) {
-    final typeTranslateMap = const {
+    const typeTranslateMap = {
         'лекция':       'lecture',
         'семинар':      'seminar',
         'практикум':    'practicum',
@@ -82,7 +82,7 @@ ClassType? classTypeFromString(String type) {
 
     };
 
-    final typesMap = const {
+    const typesMap = {
         'lecture':      ClassType(name: 'Лекция',       color: Colors.green),
         'seminar':      ClassType(name: 'Семинар',      color: Colors.yellow),
         'practicum':    ClassType(name: 'Практикум',    color: Colors.red),
@@ -93,7 +93,9 @@ ClassType? classTypeFromString(String type) {
     String t = typeTranslateMap.keys.contains(type.toLowerCase())
         ? typeTranslateMap[type.toLowerCase()]! : type;
 
-    return (typesMap.keys.contains(t)) ? typesMap[t] : (t != null && t != '' ? ClassType(name: t, color: Colors.pink) : null);
+    return (typesMap.keys.contains(t))
+        ? typesMap[t]
+        : (t != '' ? ClassType(name: t, color: Colors.pink) : null);
 }
 
 class Class {

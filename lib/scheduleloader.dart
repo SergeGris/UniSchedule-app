@@ -5,10 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import './provider.dart';
 import './models/schedule.dart';
 import './utils.dart';
-import './globalkeys.dart';
 
 class ScheduleLoader extends ConsumerWidget {
-    ScheduleLoader(this.child);
+    const ScheduleLoader(this.child, {super.key});
 
     final Widget Function(Schedule) child;
 

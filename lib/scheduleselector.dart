@@ -12,11 +12,11 @@ import './globalkeys.dart';
 part 'scheduleselector.g.dart';
 
 class ScheduleSelectorRoute extends ConsumerWidget {
-  ScheduleSelectorRoute({super.key});
+    const ScheduleSelectorRoute({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ScheduleSelector(firstRun: false);
+    return const ScheduleSelector(firstRun: false);
   }
 }
 
@@ -36,7 +36,7 @@ Widget getScheduleSelectorButton(BuildContext context, WidgetRef ref, RefreshCal
                 MaterialPageRoute(
                     //TODO barrierLabel: 'Назад',
                     builder: (context) {
-                        return ScheduleSelectorRoute();
+                        return const ScheduleSelectorRoute();
                     }
                 )
             ).then((_) {
@@ -48,10 +48,10 @@ Widget getScheduleSelectorButton(BuildContext context, WidgetRef ref, RefreshCal
 }
 
 class ManifestEntry {
+    ManifestEntry({required this.name, required this.label});
+
     String name;
     String label;
-
-    ManifestEntry({required this.name, required this.label});
 }
 
 typedef ManifestData = List<ManifestEntry>;
@@ -62,12 +62,12 @@ ManifestData manifestDataEmpty() {
 
 class Manifest {
   Manifest({required this.data});
-  final ManifestData data;
 
   factory Manifest.fromJson(Map<String, dynamic> json) {
-      var d = json.entries.map((e) => ManifestEntry(name: e.key, label: e.value.toString())).toList(growable: true);
-      return Manifest(data: d);
+      return Manifest(data: json.entries.map((e) => ManifestEntry(name: e.key, label: e.value.toString())).toList());
   }
+
+  final ManifestData data;
 }
 
 Future<ManifestData> downloadManifest(WidgetRef ref, String path) async {
@@ -122,18 +122,19 @@ Future<ManifestData> manifest(ManifestRef ref, Menu which) async {
 }
 
 class ScheduleSelector extends ConsumerStatefulWidget {
-    final bool firstRun;
     const ScheduleSelector({required this.firstRun, super.key});
+
+    final bool firstRun;
 
     @override
     ConsumerState<ScheduleSelector> createState() => _ScheduleSelectorState(firstRun);
 }
 
 class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
+    _ScheduleSelectorState(this.firstRun);
+
     final bool firstRun;
     SharedPreferences? prefs;
-
-    _ScheduleSelectorState(this.firstRun);
 
     // TODO
     // Do initialization in build to avoid troubles because of setState() and sequences tree rebuilding.
@@ -176,12 +177,10 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                 initialSelection: menu.enabled ? menu.id : null,
                 label: Text(label),
                 leadingIcon: const Icon(Icons.search),
-                width: 240.0,
-                menuHeight: 300.0,
+                width: 184.0,
+                menuHeight: 200.0,
                 inputDecorationTheme: const InputDecorationTheme(
                     border: null,
-                    filled: true,
-                    //contentPadding: EdgeInsets.symmetric(vertical: 12.0),
                 ),
                 dropdownMenuEntries: menu.entries ?? entries,
                 onSelected: (value) {
@@ -194,10 +193,10 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
             );
         }
 
-        List<Widget> getMenu(AsyncValue<dynamic> manifest, String name, Menu menu, void callback(String name, String label, ManifestData)) {
+        List<Widget> getMenu(AsyncValue<dynamic> manifest, String name, Menu menu, void callback(String name, String label, manifestData)) {
             return manifest.when<List<Widget>>(
                 loading: () => <Widget>[
-                    SizedBox(
+                    const SizedBox(
                         width: 60,
                         height: 60,
                         child: CircularProgressIndicator(),
@@ -244,7 +243,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
 
         return Scaffold(
             appBar: AppBar(
-                title: Text('Поиск расписания'),
+                title: const Text('Поиск расписания'),
             ),
 
             body: RefreshIndicator(
@@ -255,7 +254,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                 },
 
                 child: LayoutBuilder(
-                    builder: (context, constraints) => ListView(
+                    builder: (context, final constraints) => ListView(
                         children: [
                             Container(
                                 constraints: BoxConstraints(
@@ -317,7 +316,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                             TextButton(
                                                 style: TextButton.styleFrom(
                                                     textStyle: const TextStyle(fontSize: 20.0),
-                                                    padding: EdgeInsets.all(24.0),
+                                                    padding: const EdgeInsets.all(24.0),
                                                 ),
                                                 onPressed: !allDone()
                                                 ? null
@@ -350,7 +349,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                                         Navigator.pop(context);
                                                     }
                                                 },
-                                                child: Text('Загрузить расписание'),
+                                                child: const Text('Загрузить расписание'),
                                             ),
                                         ]
                                     )

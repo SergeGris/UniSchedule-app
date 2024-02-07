@@ -8,7 +8,7 @@ import '../manifest.dart';
 import '../utils.dart';
 
 class SettingsPage extends ConsumerWidget {
-    SettingsPage({super.key});
+    const SettingsPage({super.key});
 
     @override
     Widget build(BuildContext context, WidgetRef ref) {
@@ -17,43 +17,50 @@ class SettingsPage extends ConsumerWidget {
         return ListView(
             children: [
                 ListTile(
-                    title: const Text("Тема приложения:"),
-                    trailing: Container(
-                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-                        child: DropdownMenu(
-                            initialSelection: prefs!.getString('theme') ?? 'system',
-                            enableSearch: false,
-                            inputDecorationTheme: InputDecorationTheme(
-                                border: null,
-                            ),
-                            requestFocusOnTap: false,
-                            dropdownMenuEntries: const [
-                                DropdownMenuEntry(value: 'light',  label: "Светлая"),
-                                DropdownMenuEntry(value: 'dark',   label: "Тёмная"),
-                                DropdownMenuEntry(value: 'system', label: "Системная"),
-                            ],
-                            onSelected: (value) {
-                                prefs!.setString('theme', value!);
-                                ref.invalidate(settingsProvider);
-                            },
-                        )
+                    title: Text(
+                        "Тема приложения:",
+                        style: Theme.of(context).textTheme.titleMedium!
+                    ),
+                    trailing: DropdownMenu(
+                        initialSelection: prefs!.getString('theme') ?? 'system',
+                        enableSearch: false,
+                        inputDecorationTheme: const InputDecorationTheme(
+                            border: null,
+                        ),
+                        requestFocusOnTap: false,
+                        dropdownMenuEntries: const [
+                            DropdownMenuEntry(value: 'light',  label: "Светлая"),
+                            DropdownMenuEntry(value: 'dark',   label: "Тёмная"),
+                            DropdownMenuEntry(value: 'system', label: "Системная"),
+                        ],
+                        onSelected: (value) {
+                            prefs!.setString('theme', value!);
+                            ref.invalidate(settingsProvider);
+                        },
                     )
                 ),
 
                 ListTile(
-                    title: const Text('Автор:'),
-                    trailing: const Text(
-                        style: const TextStyle(fontSize: 14.0),
-                        'Сергей Сушилин, ВМК МГУ')
+                    title: Text(
+                        'Автор:',
+                        style: Theme.of(context).textTheme.titleMedium!
+                    ),
+                    trailing: Text(
+                        'Сергей Сушилин, ВМК МГУ',
+                        style: Theme.of(context).textTheme.titleMedium!
+                    )
                 ),
 
                 if (globalUniScheduleManifest.channelLink != null)
                 ListTile(
-                    title: const Text('Канал в Telegram:'),
+                    title: Text(
+                        'Канал в Telegram:',
+                        style: Theme.of(context).textTheme.titleMedium!,
+                    ),
                     trailing: Linkify(
                         onOpen: (link) => launchUrl(context, link.url),
                         text: globalUniScheduleManifest.channelLink!,
-                        style: const TextStyle(fontSize: 14.0),
+                        style: Theme.of(context).textTheme.titleMedium!,
                     ),
                 ),
 
@@ -65,7 +72,7 @@ class SettingsPage extends ConsumerWidget {
                                 showDialog(
                                     context: context,
                                     builder: (BuildContext context) => AlertDialog( // TODO Change to dialog
-                                        title: Text('Поддержать проект'),
+                                        title: const Text('Поддержать проект'),
                                         content: Text(globalUniScheduleManifest.supportGoals),
                                         actions: globalUniScheduleManifest.supportVariants?.map(
                                             (e) => ElevatedButton(

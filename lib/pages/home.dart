@@ -8,7 +8,7 @@ import '../utils.dart';
 import '../provider.dart';
 
 class HomePage extends ConsumerWidget {
-    HomePage({super.key});
+    const HomePage({super.key});
 
     @override
     Widget build(BuildContext context, WidgetRef ref) {

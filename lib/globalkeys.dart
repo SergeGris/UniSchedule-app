@@ -16,7 +16,6 @@ class GlobalKeys {
         return context;
     }
 
-    //TODO make a method of GlobalKeys
     static void showWarningBanner(String text) {
         // See reason of Future(() async { ... }) at <https://stackoverflow.com/a/63607696>.
         Future(
@@ -30,9 +29,9 @@ class GlobalKeys {
                         MaterialBanner(
                             padding: const EdgeInsets.symmetric(horizontal: 8.0),
                             content: Text(text),
-                            leading: Icon(Icons.warning_amber, color: Colors.black),
+                            leading: const Icon(Icons.warning_amber, color: Colors.black),
                             backgroundColor: Colors.yellow,
-                            contentTextStyle: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16.0),
+                            contentTextStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16.0),
                             actions: <Widget>[
                                 TextButton(
                                     onPressed: () {
@@ -42,7 +41,7 @@ class GlobalKeys {
                                             }
                                         );
                                     },
-                                    child: Text('Понятно'),
+                                    child: const Text('Понятно'),
                                 ),
                             ],
                         )

@@ -15,7 +15,8 @@ class ClassCardTile extends StatelessWidget {
                    required this.type,
                    required this.note,
                    required this.borderRadius,
-                   required this.horizontalMargin});
+                   required this.horizontalMargin,
+                   super.key});
 
     bool haveClass;
     Color color;
@@ -193,7 +194,7 @@ class ClassCardTile extends StatelessWidget {
                         ),
                     ),
 
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                 ],
             ),
         );

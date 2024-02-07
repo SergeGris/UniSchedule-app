@@ -9,7 +9,7 @@ import './screens/home.dart';
 
 void main() async {
     WidgetsFlutterBinding.ensureInitialized();
-    runApp(const ProviderScope(child: const UniScheduleApp()));
+    runApp(const ProviderScope(child: UniScheduleApp()));
 }
 
 class UniScheduleApp extends ConsumerWidget {
@@ -57,12 +57,12 @@ class UniScheduleApp extends ConsumerWidget {
             return manifest.when(
                 loading: () => wrapper(
                     () => [
-                        Padding(
-                            padding: const EdgeInsets.only(top: 16),
-                            child: const SizedBox(
+                        const Padding(
+                            padding: EdgeInsets.only(top: 16),
+                            child: SizedBox(
                                 width: 60,
                                 height: 60,
-                                child: const CircularProgressIndicator(),
+                                child: CircularProgressIndicator(),
                             )
                         )
                     ]
@@ -103,16 +103,20 @@ class UniScheduleApp extends ConsumerWidget {
                 brightness: Brightness.dark,
                 colorSchemeSeed: Colors.indigo,
             ),
-            home: preloadManifest(() => firstRun ? ScheduleSelector(firstRun: true) : HomeScreen()),
-           // // // // TODO
-           //  builder: (context, child) {
-           //      final mediaQueryData = MediaQuery.of(context);
-           //      final scale = 1.3;//TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! mediaQueryData.textScaleFactor.clamp(1.0, 1.3);
-           //      return MediaQuery(
-           //          child: child!,
-           //          data: MediaQuery.of(context).copyWith(textScaleFactor: scale),
-           //      );
-           //  },
+            home: preloadManifest(
+                () => firstRun
+                ? const ScheduleSelector(firstRun: true)
+                : const HomeScreen()
+            ),
+            // // // // TODO
+            //  builder: (context, child) {
+            //      final mediaQueryData = MediaQuery.of(context);
+            //      final scale = 1.3;//TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! mediaQueryData.textScaleFactor.clamp(1.0, 1.3);
+            //      return MediaQuery(
+            //          child: child!,
+            //          data: MediaQuery.of(context).copyWith(textScaleFactor: scale),
+            //      );
+            //  },
         );
     }
 }

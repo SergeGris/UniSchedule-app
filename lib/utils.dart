@@ -24,7 +24,7 @@ Future<void> refreshSchedule(WidgetRef ref) {
 RefreshIndicator getLoadingIndicator(RefreshCallback onRefresh) {
     return RefreshIndicator(
         onRefresh: onRefresh,
-        child: LayoutBuilder(builder: (context, constraints) {
+        child: LayoutBuilder(builder: (context, final constraints) {
                 return ListView(
                     children: [
                         SizedBox(
@@ -49,11 +49,11 @@ String plural(int n, List<String> variants) {
 
 Widget getErrorContainer(String message) {
     return LayoutBuilder(
-        builder: (context, constraints) {
+        builder: (context, final constraints) {
             return ListView(
                 children: [
-                    Center(
-                        child: const Icon(
+                    const Center(
+                        child: Icon(
                             Icons.error_outline,
                             color: Colors.red,
                             size: 60,
@@ -163,11 +163,11 @@ extension TimeOfDayExtension on TimeOfDay {
     }
 
     bool isNotAfterThan(TimeOfDay other) {
-        return !isAfterThan(other);
+        return !this.isAfterThan(other);
     }
 
     bool isNotBeforeThan(TimeOfDay other) {
-        return !isBeforeThan(other);
+        return !this.isBeforeThan(other);
     }
 }
 
