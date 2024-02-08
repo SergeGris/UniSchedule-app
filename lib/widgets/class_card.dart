@@ -246,6 +246,17 @@ class ClassCard extends StatelessWidget {
                     note: class0.note,
                     borderRadius: borderRadius,
                     horizontalMargin: horizontalMargin,
+                )
+                else if (index + 1 < classes.length)
+                Container(
+                    alignment: Alignment.center,
+                    margin: const EdgeInsets.all(8.0),
+                    child: Text(
+                        'Пары нет',
+                        style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                        )
+                    )
                 ),
                 if (showProgress)
                 Padding(

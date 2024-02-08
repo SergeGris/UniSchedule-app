@@ -5,7 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import './provider.dart';
-import './manifest.dart';
+import './configuration.dart';
 import './utils.dart';
 import './globalkeys.dart';
 
@@ -70,7 +70,7 @@ class Manifest {
 }
 
 Future<ManifestData> downloadManifest(WidgetRef ref, String path) async {
-    return downloadFileByUri(Uri.https(globalUniScheduleManifest.serverIp, path))
+    return downloadFileByUri(Uri.https(globalUniScheduleConfiguration.serverIp, path))
         .then((value)   { return Manifest.fromJson(jsonDecode(value)).data; })
         .catchError((e) { return Future<ManifestData>.error('Не удалось загрузить список'); });
 }
@@ -100,7 +100,7 @@ Future<ManifestData> getManifest({required WidgetRef ref, String? university = n
         }
     }
 
-    return downloadManifest(ref, globalUniScheduleManifest.schedulePathPrefix + path + '/manifest.json');
+    return downloadManifest(ref, globalUniScheduleConfiguration.schedulePathPrefix + path + '/manifest.json');
 }
 
 @riverpod

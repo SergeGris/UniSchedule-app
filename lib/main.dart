@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import './globalkeys.dart';
-import './manifest.dart';
+import './configuration.dart';
 import './provider.dart';
 import './scheduleselector.dart';
 import './screens/home.dart';
@@ -52,9 +52,9 @@ class UniScheduleApp extends ConsumerWidget {
                 );
             }
 
-            final manifest = ref.watch(uniScheduleManifestProvider);
+            final configuration = ref.watch(uniScheduleConfigurationProvider);
 
-            return manifest.when(
+            return configuration.when(
                 loading: () => wrapper(
                     () => [
                         const Padding(
@@ -77,13 +77,13 @@ class UniScheduleApp extends ConsumerWidget {
                         ),
                         Padding(
                             padding: const EdgeInsets.only(top: 16),
-                            child: Text('${manifest.error}'),
+                            child: Text('${configuration.error}'),
                         ),
                     ]
                 ),
 
-                data: (manifest) {
-                    globalUniScheduleManifest = manifest;
+                data: (value) {
+                    globalUniScheduleConfiguration = value;
                     return callback();
                 }
             );

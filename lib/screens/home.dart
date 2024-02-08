@@ -14,7 +14,7 @@ import '../pages/settings.dart';
 import '../utils.dart';
 import '../provider.dart';
 import '../scheduleselector.dart';
-import '../manifest.dart';
+import '../configuration.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
     const HomeScreen({super.key});
@@ -36,7 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     @override
     Widget build(BuildContext context) {
-        if (!warningShown && globalUniScheduleManifest.manifestUpdated) {
+        if (!warningShown && globalUniScheduleConfiguration.manifestUpdated) {
             warningShown = true;
 
             Future(() async {
@@ -177,16 +177,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 PackageInfo packageInfo = await PackageInfo.fromPlatform();
                 List<int> version = packageInfo.version.split('.').map((v) => int.parse(v)).toList();
 
-                if (globalUniScheduleManifest.updateVariants.isNotEmpty
-                 && globalUniScheduleManifest.latestApplicationVersion != null
-                 && compareVersions(version, globalUniScheduleManifest.latestApplicationVersion!, (a, b) => (a < b))) {
+                if (globalUniScheduleConfiguration.updateVariants.isNotEmpty
+                 && globalUniScheduleConfiguration.latestApplicationVersion != null
+                 && compareVersions(version, globalUniScheduleConfiguration.latestApplicationVersion!, (a, b) => (a < b))) {
                     showDialog(
                         context: context,
                         builder: (BuildContext context) => AlertDialog(
                             title: const Text('Доступно обновление!'),
                             content: const Text('Установить новую версию?'),
                             actions: <Widget>[
-                                ...globalUniScheduleManifest.updateVariants.map(
+                                ...globalUniScheduleConfiguration.updateVariants.map(
                                     (e) => ElevatedButton(
                                         child: Text(e.label),
                                         onPressed: () => launchUrl(context, e.link),

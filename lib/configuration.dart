@@ -1,28 +1,8 @@
 
 import 'utils.dart';
 
-// class GlobalUniScheduleManifest {
-
-//     GlobalUniScheduleManifest(UniScheduleManifest uniScheduleManifest) {
-//         globalUniScheduleManifest = UniScheduleManifest(manifestUpdated: uniScheduleManifest.manifestUpdated,
-//                                                         serverIp: uniScheduleManifest.serverIp,
-//                                                         schedulePathPrefix: uniScheduleManifest.schedulePathPrefix,
-//                                                         channelLink: uniScheduleManifest.channelLink,
-//                                                         supportVariants: uniScheduleManifest.supportVariants,
-//                                                         supportGoals: uniScheduleManifest.supportGoals,
-//                                                         latestApplicationVersion: uniScheduleManifest.latestApplicationVersion,
-//                                                         updateVariants: uniScheduleManifest.updateVariants);
-//     }
-
-//     UniScheduleManifest get uniScheduleManifest {
-//         return globalUniScheduleManifest;
-//     }
-
-//     static UniScheduleManifest globalUniScheduleManifest = UniScheduleManifest.createEmpty();
-// }
-
 const int scheduleFormatVersion = 3;
-late UniScheduleManifest globalUniScheduleManifest;
+late UniScheduleConfiguration globalUniScheduleConfiguration;
 
 class NamedLink {
     NamedLink({required this.label, required this.link});
@@ -31,8 +11,8 @@ class NamedLink {
     String link;
 }
 
-class UniScheduleManifest {
-    UniScheduleManifest.fromJson(Map<String, dynamic> json) {
+class UniScheduleConfiguration {
+    UniScheduleConfiguration.fromJson(Map<String, dynamic> json) {
         _loaded = true;
 
         if (json['schedule.format.version'] != null) {
@@ -65,7 +45,7 @@ class UniScheduleManifest {
         }
     }
 
-    UniScheduleManifest.createEmpty();
+    UniScheduleConfiguration.createEmpty();
 
     static bool            _manifestUpdated          = false;
     static String          _serverIp                 = 'raw.githubusercontent.com';

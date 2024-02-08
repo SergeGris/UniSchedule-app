@@ -6,7 +6,7 @@ part of 'provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$scheduleHash() => r'ebe4a54b297a853ca7b6d672ebaf4bd45dfa2cbc';
+String _$scheduleHash() => r'76ec22d8773fb2b285289d9bba45786bb1ef27ff';
 
 /// See also [schedule].
 @ProviderFor(schedule)
@@ -34,7 +34,7 @@ final settingsProvider = AutoDisposeFutureProvider<SharedPreferences>.internal(
 );
 
 typedef SettingsRef = AutoDisposeFutureProviderRef<SharedPreferences>;
-String _$datetimeHash() => r'3c3ac42faa39cc3e3468fb815934debd811619ec';
+String _$datetimeHash() => r'9f66512e1af4e0a1879995fa1cf42f705a775bf4';
 
 /// See also [datetime].
 @ProviderFor(datetime)
@@ -48,23 +48,23 @@ final datetimeProvider = AutoDisposeFutureProvider<DateTime>.internal(
 );
 
 typedef DatetimeRef = AutoDisposeFutureProviderRef<DateTime>;
-String _$uniScheduleManifestHash() =>
-    r'93b7dd51588eeec47c3d4a1887deedaeef87ed63';
+String _$uniScheduleConfigurationHash() =>
+    r'055c142d6b4df7e202b5f18271ffd4a813699b94';
 
-/// See also [uniScheduleManifest].
-@ProviderFor(uniScheduleManifest)
-final uniScheduleManifestProvider =
-    AutoDisposeFutureProvider<UniScheduleManifest>.internal(
-  uniScheduleManifest,
-  name: r'uniScheduleManifestProvider',
+/// See also [uniScheduleConfiguration].
+@ProviderFor(uniScheduleConfiguration)
+final uniScheduleConfigurationProvider =
+    AutoDisposeFutureProvider<UniScheduleConfiguration>.internal(
+  uniScheduleConfiguration,
+  name: r'uniScheduleConfigurationProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$uniScheduleManifestHash,
+      : _$uniScheduleConfigurationHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef UniScheduleManifestRef
-    = AutoDisposeFutureProviderRef<UniScheduleManifest>;
+typedef UniScheduleConfigurationRef
+    = AutoDisposeFutureProviderRef<UniScheduleConfiguration>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

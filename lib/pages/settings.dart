@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 
 import '../provider.dart';
-import '../manifest.dart';
+import '../configuration.dart';
 import '../utils.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -51,7 +51,7 @@ class SettingsPage extends ConsumerWidget {
                     )
                 ),
 
-                if (globalUniScheduleManifest.channelLink != null)
+                if (globalUniScheduleConfiguration.channelLink != null)
                 ListTile(
                     title: Text(
                         'Канал в Telegram:',
@@ -59,7 +59,7 @@ class SettingsPage extends ConsumerWidget {
                     ),
                     trailing: Linkify(
                         onOpen: (link) => launchUrl(context, link.url),
-                        text: globalUniScheduleManifest.channelLink!,
+                        text: globalUniScheduleConfiguration.channelLink!,
                         style: Theme.of(context).textTheme.titleMedium!,
                     ),
                 ),
@@ -73,8 +73,8 @@ class SettingsPage extends ConsumerWidget {
                                     context: context,
                                     builder: (BuildContext context) => AlertDialog( // TODO Change to dialog
                                         title: const Text('Поддержать проект'),
-                                        content: Text(globalUniScheduleManifest.supportGoals),
-                                        actions: globalUniScheduleManifest.supportVariants?.map(
+                                        content: Text(globalUniScheduleConfiguration.supportGoals),
+                                        actions: globalUniScheduleConfiguration.supportVariants?.map(
                                             (e) => ElevatedButton(
                                                 child: Text(e.label),
                                                 onPressed: () => launchUrl(context, e.link),

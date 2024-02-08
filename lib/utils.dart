@@ -8,13 +8,13 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'models/schedule.dart';
 import 'globalkeys.dart';
-import 'manifest.dart';
+import 'configuration.dart';
 
 Future<void> refreshSchedule(WidgetRef ref) {
     GlobalKeys.hideWarningBanner();
 
-    if (!globalUniScheduleManifest.loaded) {
-        ref.invalidate(uniScheduleManifestProvider);
+    if (!globalUniScheduleConfiguration.loaded) {
+        ref.invalidate(uniScheduleConfigurationProvider);
     }
 
     ref.invalidate(scheduleProvider);

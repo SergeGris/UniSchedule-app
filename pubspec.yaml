@@ -1,7 +1,7 @@
 name: UniSchedule
 description: UniSchedule - application to view an university schedule.
 publish_to: 'none'
-version: 0.1.6+10
+version: 0.1.7+11
 
 environment:
   sdk: '>=3.1.2 <4.0.0'

@@ -18,11 +18,9 @@ class HomePage extends ConsumerWidget {
 
                 return date.when(
                     skipLoadingOnReload: true,
-                    loading: () {
-                        return getLoadingIndicator(() => refreshSchedule(ref));
-                    },
+                    loading: () => getLoadingIndicator(() => refreshSchedule(ref)),
                     error: (e, st) {
-                        return getErrorContainer('ЛОЛ: Не удалось загрузить ВРЕМЯ!');
+                        return getErrorContainer('БАГ: Не удалось загрузить ВРЕМЯ!');
                     },
                     data: (date) {
                         final day = date.weekday - 1;
@@ -60,8 +58,16 @@ class HomePage extends ConsumerWidget {
                             if (nextClasses.isNotEmpty) {
                                 int diff = classes[0].start.differenceInMinutes(time);
 
-                                if (diff <= 0) {
-                                    listTitle = 'Идёт ' + (classes[0].type?.name.toLowerCase() ?? 'пара');
+                                if (diff < 0) {
+                                    int untilEnd = classes[0].end.differenceInMinutes(time);
+
+                                    int hours   = untilEnd ~/ 60;
+                                    int minutes = untilEnd % 60;
+
+                                    String h = hours   > 0 ? ' $hours ${  plural(hours,   ["час",    "часа",   "часов"])}' : '';
+                                    String m = minutes > 0 ? ' $minutes ${plural(minutes, ["минуту", "минуты", "минут"])}' : '';
+
+                                    listTitle = 'Идёт ' + (classes[0].type?.name.toLowerCase() ?? 'пара') + ', до конца — $h$m';
                                 } else {
                                     int hours   = diff ~/ 60;
                                     int minutes = diff % 60;
@@ -87,16 +93,17 @@ class HomePage extends ConsumerWidget {
                                         //TODO decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer),
                                         child: Text(
                                             listTitle,
-                                            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                                            style: Theme.of(context).textTheme.titleMedium!.copyWith(
                                                 color: Theme.of(context).colorScheme.primary,
-                                            )
+                                            ),
+                                            overflow: TextOverflow.ellipsis
                                         )
                                     )
                                     : ListTile(
                                         title: Center(
                                             child: Text(
                                                 listTitle,
-                                                style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                                                style: Theme.of(context).textTheme.titleMedium!.copyWith(
                                                     color: Theme.of(context).colorScheme.primary
                                                 ),
                                                 overflow: TextOverflow.ellipsis)

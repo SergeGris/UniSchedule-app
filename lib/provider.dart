@@ -8,7 +8,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import './models/schedule.dart';
-import './manifest.dart';
+import './configuration.dart';
 import './utils.dart';
 import './globalkeys.dart';
 
@@ -22,10 +22,10 @@ Future<Schedule> schedule(ScheduleRef ref) async {
     final String facultyId    = prefs.getString('facultyId')!;
     final String yearId       = prefs.getString('yearId')!;
     final String groupId      = prefs.getString('groupId')!;
-    final String path = '${globalUniScheduleManifest.schedulePathPrefix}'
+    final String path = '${globalUniScheduleConfiguration.schedulePathPrefix}'
                          + '/$scheduleFormatVersion/$universityId/$facultyId/$yearId/$groupId.json';
-    final Uri scheduleJsonRawUri  = Uri.https(globalUniScheduleManifest.serverIp, '$path');
-    final Uri scheduleJsonGzipUri = Uri.https(globalUniScheduleManifest.serverIp, '$path.gz');
+    final Uri scheduleJsonRawUri  = Uri.https(globalUniScheduleConfiguration.serverIp, '$path');
+    final Uri scheduleJsonGzipUri = Uri.https(globalUniScheduleConfiguration.serverIp, '$path.gz');
 
     print(scheduleJsonRawUri);
 
@@ -124,20 +124,20 @@ Future<DateTime> datetime(DatetimeRef ref) async {
 }
 
 @riverpod
-Future<UniScheduleManifest> uniScheduleManifest(UniScheduleManifestRef ref) async {
+Future<UniScheduleConfiguration> uniScheduleConfiguration(UniScheduleConfigurationRef ref) async {
     var instance;
 
     try {
         Uri uri = Uri.https(
             'raw.githubusercontent.com',
-            '/SergeGris/sergegris.github.io/main/manifest.json'
+            '/SergeGris/sergegris.github.io/main/configuration.json'
         );
         var manifestDataJson = await downloadFileByUri(uri);
         var json = jsonDecode(manifestDataJson);
-        instance = UniScheduleManifest.fromJson(json);
+        instance = UniScheduleConfiguration.fromJson(json);
     } catch (e) {
         print('can not download $e');
-        instance = UniScheduleManifest.createEmpty();
+        instance = UniScheduleConfiguration.createEmpty();
     }
 
 
