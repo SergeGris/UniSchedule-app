@@ -90,7 +90,7 @@ ClassType? classTypeFromString(String type) {
         'consultation': ClassType(name: 'Консультация', color: Colors.purple),
     };
 
-    String t = typeTranslateMap.keys.contains(type.toLowerCase())
+    final t = typeTranslateMap.keys.contains(type.toLowerCase())
         ? typeTranslateMap[type.toLowerCase()]! : type;
 
     return (typesMap.keys.contains(t))
@@ -124,8 +124,9 @@ class Class {
                 .map(
                     (tr) {
                         if (tr != null) {
-                            String t = tr[0].toString();
-                            String r = tr[1].toString();
+                            // TODO HANDLE Only entry
+                            final t = tr[0].toString();
+                            final r = tr[1].toString();
 
                             return TeacherAndRoom(
                                 teacher: t == 'null' || t == '' ? null : t,

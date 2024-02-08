@@ -88,19 +88,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // ][_selPage],
                 shadowColor: Theme.of(context).shadowColor,
 
-                bottom: Tab(
+                bottom: const Tab(
                     child: Padding(
-                        padding: const EdgeInsets.all(3),
+                        padding: EdgeInsets.all(3),
                         child: OverflowBar(
                             overflowAlignment: OverflowBarAlignment.center,
                             alignment: MainAxisAlignment.center,
                             overflowSpacing: 3.0,
                             children: <Widget>[
-                                getScheduleSelectorButton(
-                                    context,
-                                    ref,
-                                    () => refreshSchedule(ref)
-                                ),
+                                ScheduleSelectorButton(),
                             ],
                         ),
                     ),
@@ -109,10 +105,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             bottomNavigationBar: NavigationBar(
                 destinations: const [
-                    NavigationDestination(icon: Icon(Icons.home),     label: "Главная"),
-                    NavigationDestination(icon: Icon(Icons.schedule), label: "Расписание"),
-                    // NavigationDestination(icon: Icon(Icons.map), label: "Карта"), // TBI
-                    NavigationDestination(icon: Icon(Icons.settings), label: "Настройки")
+                    NavigationDestination(icon: Icon(Icons.home),     label: 'Главная'),
+                    NavigationDestination(icon: Icon(Icons.schedule), label: 'Расписание'),
+                    // NavigationDestination(icon: Icon(Icons.map), label: 'Карта'), // TBI
+                    NavigationDestination(icon: Icon(Icons.settings), label: 'Настройки')
                 ],
                 selectedIndex: _selPage,
                 onDestinationSelected: (index) {
@@ -162,9 +158,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     bool compareVersions(List<int> first, List<int> second, bool comparator(int a, int b)) {
-        assert(first.length == second.length);
+        final length = first.length <= second.length ? first.length : second.length;
 
-        for (int i = 0; i < first.length; i++) {
+        for (int i = 0; i < length; i++) {
             if (first[i] != second[i]) {
                 return comparator(first[i], second[i]);
             }
@@ -195,7 +191,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         child: Text(e.label),
                                         onPressed: () => launchUrl(context, e.link),
                                     ),
-                                ).toList(),
+                                ),
 
                                 TextButton(
                                     onPressed: () { Navigator.pop(context); },

@@ -18,7 +18,7 @@ class SettingsPage extends ConsumerWidget {
             children: [
                 ListTile(
                     title: Text(
-                        "Тема приложения:",
+                        'Тема приложения:',
                         style: Theme.of(context).textTheme.titleMedium!
                     ),
                     trailing: DropdownMenu(
@@ -29,9 +29,9 @@ class SettingsPage extends ConsumerWidget {
                         ),
                         requestFocusOnTap: false,
                         dropdownMenuEntries: const [
-                            DropdownMenuEntry(value: 'light',  label: "Светлая"),
-                            DropdownMenuEntry(value: 'dark',   label: "Тёмная"),
-                            DropdownMenuEntry(value: 'system', label: "Системная"),
+                            DropdownMenuEntry(value: 'light',  label: 'Светлая'),
+                            DropdownMenuEntry(value: 'dark',   label: 'Тёмная'),
+                            DropdownMenuEntry(value: 'system', label: 'Системная'),
                         ],
                         onSelected: (value) {
                             prefs!.setString('theme', value!);

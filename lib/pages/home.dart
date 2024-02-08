@@ -14,21 +14,6 @@ class HomePage extends ConsumerWidget {
     Widget build(BuildContext context, WidgetRef ref) {
         return ScheduleLoader(
             (schedule) {
-                Widget noMore(String message) {
-                    return Container(alignment: Alignment.center,
-                        margin: const EdgeInsets.all(8.0),
-                        width: 80,
-                        height: 80,
-                        //TODO decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer),
-                        child: Text(
-                            message,
-                            style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                            )
-                        ),
-                    );
-                }
-
                 final date = ref.watch(datetimeProvider).unwrapPrevious();
 
                 return date.when(
@@ -53,24 +38,35 @@ class HomePage extends ConsumerWidget {
                         } else {
                             final time = TimeOfDay.fromDateTime(date);
                             final classes = week.days[day].classes
-                                .where((class0) => class0.end.isNotBeforeThan(time)) // (class0.end.hour * 60 + class0.end.minute) >= (time.hour * 60 + time.minute))
+                                .where((class0) => class0.end.isNotBeforeThan(time))
                                 .toList();
 
+                            int skipped = week.days[day].classes.length - classes.length;
+
                             nextClasses = classes
-                                .mapIndexed((class0, index) => ClassCard(classes, index, showProgress: true, horizontalMargin: 8.0, borderRadius: 8.0))
+                                .mapIndexed(
+                                    (class0, index) => ClassCard(
+                                        classes: classes,
+                                        index: index,
+                                        number: index + skipped + 1,
+                                        showProgress: true,
+                                        horizontalMargin: 8.0,
+                                        borderRadius: 8.0
+                                    )
+                                )
                                 .toList()
                                 .nonNulls;
 
                             if (nextClasses.isNotEmpty) {
-                                int diff = classes[0].start.differenceInMinutes(time); // (classes[0].start.hour - time.hour) * 60 + (classes[0].start.minute - time.minute);
+                                int diff = classes[0].start.differenceInMinutes(time);
 
                                 if (diff <= 0) {
-                                    listTitle = 'Пара идёт';
+                                    listTitle = 'Идёт ' + (classes[0].type?.name.toLowerCase() ?? 'пара');
                                 } else {
                                     int hours   = diff ~/ 60;
                                     int minutes = diff % 60;
 
-                                    String h = hours > 0   ? ' $hours ${plural(hours, ["час", "часа", "часов"])}' : '';
+                                    String h = hours   > 0 ? ' $hours ${  plural(hours,   ["час",    "часа",   "часов"])}' : '';
                                     String m = minutes > 0 ? ' $minutes ${plural(minutes, ["минуту", "минуты", "минут"])}' : '';
 
                                     listTitle = 'Следующая пара через$h$m';
@@ -83,8 +79,29 @@ class HomePage extends ConsumerWidget {
                         return ListView(
                             children: [
                                 nextClasses.isEmpty
-                                    ? noMore(listTitle)
-                                    : ListTile(title: Center(child: Text(listTitle, overflow: TextOverflow.ellipsis))), // TODO ellipsis?
+                                    ? Container(
+                                        alignment: Alignment.center,
+                                        margin: const EdgeInsets.all(8.0),
+                                        width: 80,
+                                        height: 80,
+                                        //TODO decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer),
+                                        child: Text(
+                                            listTitle,
+                                            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                                                color: Theme.of(context).colorScheme.primary,
+                                            )
+                                        )
+                                    )
+                                    : ListTile(
+                                        title: Center(
+                                            child: Text(
+                                                listTitle,
+                                                style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                                                    color: Theme.of(context).colorScheme.primary
+                                                ),
+                                                overflow: TextOverflow.ellipsis)
+                                        )
+                                    ), // TODO ellipsis?
                                 ...nextClasses,
                             ],
                         );

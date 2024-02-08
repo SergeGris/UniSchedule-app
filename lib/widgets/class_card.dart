@@ -33,8 +33,8 @@ class ClassCardTile extends StatelessWidget {
 
     @override
     Widget build(BuildContext context) {
-        String classNumberToString(int number) {
-            return [
+        Widget classNumber(int number) {
+            const strings = [
                 'Первая',
                 'Вторая',
                 'Третья',
@@ -45,39 +45,51 @@ class ClassCardTile extends StatelessWidget {
                 'Восьмая',
                 'Девятая',
                 'Десятая',
-            ][number - 1] + ' пара';
-        }
+                'Одиннадцатая',
+                'Двенадцатая',
+            ];
 
-        Widget className(String name) {
-            return Text(
-                name,
-                maxLines: 2,
-                softWrap: true,
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    color: Theme.of(context).colorScheme.primary
-                )
+            return Container(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 1,
+                    horizontal: 4
+                ),
+                decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.tertiary.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                    (number < strings.length) ? strings[number - 1] + ' пара' : '$number пара',
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall!
+                ),
             );
         }
+
+        Widget className(String name) => Text(
+            name,
+            maxLines: 2,
+            softWrap: true,
+            style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                color: Theme.of(context).colorScheme.primary
+            )
+        );
 
         //TODO return list of texts?
-        Widget classTeachersAndRooms(List<TeacherAndRoom?> teachersAndRooms) {
-            return Text(
-                teachersAndRooms
-                .nonNulls
-                .map((tr) => [ tr.teacher, tr.room ].nonNulls.join(' — '))
-                .join('\n'),
-                style: Theme.of(context).textTheme.bodySmall!
-            );
-        }
+        Widget classTeachersAndRooms(List<TeacherAndRoom?> teachersAndRooms) => Text(
+            teachersAndRooms
+            .nonNulls
+            .map((tr) => [ tr.teacher, tr.room ].nonNulls.join(' — '))
+            .join('\n'),
+            style: Theme.of(context).textTheme.bodySmall!
+        );
 
-        Widget classNote(String note) {
-            return Text(
-                note,
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                )
-            );
-        }
+        Widget classNote(String note) => Text(
+            note,
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+            )
+        );
 
         return Card(
             color: color,
@@ -119,40 +131,15 @@ class ClassCardTile extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: !haveClass
                             ? [
-                                Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
-                                    decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.tertiaryContainer.withOpacity(0.15),
-                                        borderRadius: BorderRadius.circular(24),
-                                    ),
-                                    child: Text(
-                                        classNumberToString(number),
-                                        overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context).textTheme.bodySmall!
-                                    ),
-                                ),
-
+                                classNumber(number),
                                 className('Окно'),
                             ]
                             : [
                                 const SizedBox(height: 8),
 
                                 Row(children: [
-                                        Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 1,
-                                                horizontal: 4
-                                            ),
-                                            decoration: BoxDecoration(
-                                                color: Theme.of(context).colorScheme.tertiary.withOpacity(0.15),
-                                                borderRadius: BorderRadius.circular(8),
-                                            ),
-                                            child: Text(
-                                                classNumberToString(number),
-                                                overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(context).textTheme.bodySmall!
-                                            ),
-                                        ),
+                                        classNumber(number),
+
                                         if (type != null)
                                         ...[
                                             const Spacer(),
@@ -202,15 +189,17 @@ class ClassCardTile extends StatelessWidget {
 }
 
 class ClassCard extends StatelessWidget {
-    const ClassCard(this.classes,
-                    this.index,
-                    {this.showProgress = false,
+    const ClassCard({required this.classes,
+                     required this.index,
+                     required this.showProgress,
+                     required this.number,
                      required this.horizontalMargin,
                      required this.borderRadius,
                      super.key});
 
     final List<Class> classes;
     final int index;
+    final int number;
     final bool showProgress;
     final double horizontalMargin;
     final double borderRadius;
@@ -222,7 +211,6 @@ class ClassCard extends StatelessWidget {
         final bool haveClass = (class0.name != null);
         final begin = haveClass ? class0.start.format(context) : (index > 0                  ? classes[index - 1].end.format(context)   : null);
         final end =   haveClass ? class0.end.format(context)   : (index + 1 < classes.length ? classes[index + 1].start.format(context) : null);
-
 
         final cardColor = Theme.of(context).brightness == Brightness.dark
             ? [ // Dark
@@ -248,7 +236,7 @@ class ClassCard extends StatelessWidget {
                 ClassCardTile(
                     haveClass: haveClass,
                     color: cardColor[index % 2],
-                    number: index + 1,
+                    number: number,
                     begin: begin,
                     end: end,
                     name: class0.name,
@@ -259,7 +247,6 @@ class ClassCard extends StatelessWidget {
                     borderRadius: borderRadius,
                     horizontalMargin: horizontalMargin,
                 ),
-
                 if (showProgress)
                 Padding(
                     padding: EdgeInsets.only(

@@ -18,28 +18,22 @@ class ScheduleLoader extends ConsumerWidget {
         return RefreshIndicator(
             onRefresh: () => refreshSchedule(ref),
             child: schedule.when(
-                loading: () {
-                    return getLoadingIndicator(() => refreshSchedule(ref));
-                },
+                loading: () => getLoadingIndicator(() => refreshSchedule(ref)),
                 error: (e, st) {
                     final prefs = ref.watch(settingsProvider).value!;
-
                     String? fallbackSchedule = prefs.getString('fallbackSchedule');
-                    String? groupId = prefs.getString('groupId');
 
-                    if (groupId != null && fallbackSchedule != null) {
+                    if (fallbackSchedule != null) {
                         try {
                             return child(Schedule.fromJson(jsonDecode(fallbackSchedule) as Map<String, dynamic>));
                         } catch (e) {
                             return getErrorContainer('Не удалось загрузить расписание');
-                        };
+                        }
                     } else {
                         return getErrorContainer('Не удалось загрузить расписание');
                     }
                 },
-                data: (value) {
-                    return child(value);
-                }
+                data: (value) => child(value),
             )
         );
     }

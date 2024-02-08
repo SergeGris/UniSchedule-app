@@ -14,37 +14,36 @@ part 'scheduleselector.g.dart';
 class ScheduleSelectorRoute extends ConsumerWidget {
     const ScheduleSelectorRoute({super.key});
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return const ScheduleSelector(firstRun: false);
-  }
+    @override
+    Widget build(BuildContext context, WidgetRef ref) {
+        return const ScheduleSelector(firstRun: false);
+    }
 }
 
-Widget getScheduleSelectorButton(BuildContext context, WidgetRef ref, RefreshCallback refreshSchedule) {
-    final prefs = ref.watch(settingsProvider).value!; //ref.listen(settingsProvider, (previous, next) {}).read().value!;
+class ScheduleSelectorButton extends ConsumerWidget {
+    const ScheduleSelectorButton({super.key});
 
-    final String universityId = prefs.getString('universityName') ?? prefs.getString('universityId')!;
-    final String facultyId = prefs.getString('facultyName') ?? prefs.getString('facultyId')!;
-    final String yearId = prefs.getString('yearId')!;
-    final String groupId = prefs.getString('groupName') ?? prefs.getString('groupId')!;
+    @override
+    Widget build(BuildContext context, WidgetRef ref) {
+        final prefs = ref.watch(settingsProvider).value!;
 
-    return ElevatedButton(
-        child: Text('${groupId} группа $yearId курса $facultyId $universityId'),
-        onPressed: () {
-            Navigator.push(
+        final String university = prefs.getString('universityName') ?? prefs.getString('universityId')!;
+        final String faculty    = prefs.getString('facultyName')    ?? prefs.getString('facultyId')!;
+        final String year       = prefs.getString('yearName')       ?? prefs.getString('yearId')!;
+        final String group      = prefs.getString('groupName')      ?? prefs.getString('groupId')!;
+
+        return ElevatedButton(
+            child: Text('$group группа $year курса $faculty $university'),
+            onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                    //TODO barrierLabel: 'Назад',
-                    builder: (context) {
-                        return const ScheduleSelectorRoute();
-                    }
+                    // TODO barrierLabel: 'Назад',
+                    builder: (context) => const ScheduleSelectorRoute()
                 )
-            ).then((_) {
-                    /*TODO: none need if invalidate(groupProvider) in ScheduleSelectorRoute() */
-                    refreshSchedule();
-            });
-        },
-    );
+            ).then((_) => refreshSchedule(ref))
+        );
+
+    }
 }
 
 class ManifestEntry {
@@ -56,28 +55,28 @@ class ManifestEntry {
 
 typedef ManifestData = List<ManifestEntry>;
 
-ManifestData manifestDataEmpty() {
-    return [ManifestEntry(name: '', label: '')];
-}
+ManifestData manifestDataEmpty() => [ManifestEntry(name: '', label: '')];
 
 class Manifest {
   Manifest({required this.data});
 
-  factory Manifest.fromJson(Map<String, dynamic> json) {
-      return Manifest(data: json.entries.map((e) => ManifestEntry(name: e.key, label: e.value.toString())).toList());
-  }
+  factory Manifest.fromJson(Map<String, dynamic> json) => Manifest(
+      data: json.entries.map(
+          (e) => ManifestEntry(name: e.key, label: e.value.toString())
+      ).toList()
+  );
 
   final ManifestData data;
 }
 
 Future<ManifestData> downloadManifest(WidgetRef ref, String path) async {
-    return await downloadFileByUri(Uri.https(globalUniScheduleManifest.serverIp, path))
+    return downloadFileByUri(Uri.https(globalUniScheduleManifest.serverIp, path))
         .then((value)   { return Manifest.fromJson(jsonDecode(value)).data; })
         .catchError((e) { return Future<ManifestData>.error('Не удалось загрузить список'); });
 }
 
 class Menu {
-    Menu({required this.enabled, this.id = null, this.name = null, this.manifest = null, required this.getManifest, this.entries = null});
+    Menu({required this.enabled, this.id, this.name, this.manifest, required this.getManifest, this.entries});
     bool enabled;
     String? id;
     String? name;
@@ -101,10 +100,9 @@ Future<ManifestData> getManifest({required WidgetRef ref, String? university = n
         }
     }
 
-    return await downloadManifest(ref, globalUniScheduleManifest.schedulePathPrefix + path + '/manifest.json');
+    return downloadManifest(ref, globalUniScheduleManifest.schedulePathPrefix + path + '/manifest.json');
 }
 
-//TODO load manifest here, but not below
 @riverpod
 Future<ManifestData> manifest(ManifestRef ref, Menu which) async {
     if (which.manifest == null) {
@@ -136,7 +134,6 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
     final bool firstRun;
     SharedPreferences? prefs;
 
-    // TODO
     // Do initialization in build to avoid troubles because of setState() and sequences tree rebuilding.
     bool initialized = false;
 
@@ -164,12 +161,15 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
 
             university = Menu(enabled: true,                 id: universityId, getManifest: () => getManifest(ref: ref));
             faculty    = Menu(enabled: universityId != null, id: facultyId,    getManifest: () { return university.id != null ? getManifest(ref: ref, university: university.id) : null; });
-            year       = Menu(enabled: facultyId != null,    id: yearId,       getManifest: () { return faculty.id    != null ? getManifest(ref: ref, university: university.id, faculty: faculty.id) : null; });
-            group      = Menu(enabled: yearId != null,       id: groupId,      getManifest: () { return year.id       != null ? getManifest(ref: ref, university: university.id, faculty: faculty.id, year: year.id) : null; });
+            year       = Menu(enabled: facultyId    != null, id: yearId,       getManifest: () { return faculty.id    != null ? getManifest(ref: ref, university: university.id, faculty: faculty.id) : null; });
+            group      = Menu(enabled: yearId       != null, id: groupId,      getManifest: () { return year.id       != null ? getManifest(ref: ref, university: university.id, faculty: faculty.id, year: year.id) : null; });
         }
 
-        DropdownMenu getDropDownMenu(String label, Menu menu, ManifestData manifest, void callback(String a, String b, List<DropdownMenuEntry> dropDownMenu)) {
-            final entries = manifest.map((e) => DropdownMenuEntry(value: e.name, label: e.label)).cast<DropdownMenuEntry>().toList() as List<DropdownMenuEntry>;
+        DropdownMenu getDropDownMenu(String label,
+                                     Menu menu,
+                                     ManifestData manifest,
+                                     void callback(String a, String b, List<DropdownMenuEntry> dropDownMenu)) {
+            final entries = manifest.map((e) => DropdownMenuEntry(value: e.name, label: e.label)).cast<DropdownMenuEntry>().toList();
 
             return DropdownMenu(
                 enabled: menu.enabled,
@@ -183,25 +183,31 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                     border: null,
                 ),
                 dropdownMenuEntries: menu.entries ?? entries,
-                onSelected: (value) {
-                    setState(
-                        () {
-                            callback(value, manifest.firstWhere((element) => element.name == value).label, entries);
-                        }
-                    );
-                },
+                onSelected: (value) => setState(
+                    () => callback(
+                        value,
+                        manifest.firstWhere((element) => element.name == value).label,
+                        entries
+                    )
+                )
             );
         }
 
-        List<Widget> getMenu(AsyncValue<dynamic> manifest, String name, Menu menu, void callback(String name, String label, manifestData)) {
+        List<Widget> getMenu(AsyncValue<dynamic> manifest, String name, Menu menu, void callback(String name, String label, List<DropdownMenuEntry> manifestData)) {
+            const size = 64.0;
+
             return manifest.when<List<Widget>>(
-                loading: () => <Widget>[
-                    const SizedBox(
-                        width: 60,
-                        height: 60,
-                        child: CircularProgressIndicator(),
-                    ),
-                ],
+                loading: () {
+                    canLoadSchedule = false;
+
+                    return <Widget>[
+                        const SizedBox(
+                            width: size,
+                            height: size,
+                            child: CircularProgressIndicator(),
+                        ),
+                    ];
+                },
 
                 error: (e, st) {
                     canLoadSchedule = false;
@@ -210,7 +216,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                         const Icon(
                             Icons.error_outline,
                             color: Colors.red,
-                            size: 60,
+                            size: size,
                         ),
                         Padding(
                             padding: const EdgeInsets.only(top: 16),
@@ -223,17 +229,16 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                     canLoadSchedule = true;
 
                     return <Widget>[
-                        Container(
-                            alignment: Alignment.center,
-                            child: SizedBox(
-                                child: getDropDownMenu(
-                                    name,
-                                    menu,
-                                    list,
-                                    (value, label, entries) {
-                                        callback(value, label, entries);
-                                    },
-                                )
+                        SizedBox(
+                            height: size,
+                            // Width is specified in getDropDownMenu().
+                            child: getDropDownMenu(
+                                name,
+                                menu,
+                                list,
+                                (value, label, entries) {
+                                    callback(value, label, entries);
+                                },
                             )
                         ),
                     ];
@@ -260,13 +265,11 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                 constraints: BoxConstraints(
                                     minHeight: constraints.maxHeight,
                                 ),
-                                child: Center(child: Wrap(
-                                        //mainAxisAlignment: MainAxisAlignment.center,
-                                        //runAlignment: WrapAlignment.center,
+                                child: Center(
+                                    child: Wrap(
                                         crossAxisAlignment: WrapCrossAlignment.center,
-                                        //runSpacing: 20,
                                         direction: Axis.vertical,
-                                        spacing: 20,
+                                        spacing: 24,
                                         children: [
                                             ...getMenu(
                                                 ref.watch(manifestProvider(university)),
@@ -316,7 +319,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                             TextButton(
                                                 style: TextButton.styleFrom(
                                                     textStyle: const TextStyle(fontSize: 20.0),
-                                                    padding: const EdgeInsets.all(24.0),
+                                                    padding: const EdgeInsets.all(20.0),
                                                 ),
                                                 onPressed: !allDone()
                                                 ? null
@@ -331,18 +334,29 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
 
                                                     if (university.name != null) {
                                                         prefs.setString('universityName', university.name!);
+                                                    } else {
+                                                        prefs.remove('universityName');
                                                     }
 
                                                     if (faculty.name != null) {
                                                         prefs.setString('facultyName', faculty.name!);
+                                                    } else {
+                                                        prefs.remove('facultyName');
+                                                    }
+
+                                                    if (year.name != null) {
+                                                        prefs.setString('yearName', year.name!);
+                                                    } else {
+                                                        prefs.remove('yearName');
                                                     }
 
                                                     if (group.name != null) {
                                                         prefs.setString('groupName', group.name!);
+                                                    } else {
+                                                        prefs.remove('groupName');
                                                     }
 
                                                     prefs.remove('fallbackSchedule');
-
                                                     ref.invalidate(settingsProvider);
 
                                                     if (!firstRun) {

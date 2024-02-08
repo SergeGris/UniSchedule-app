@@ -67,8 +67,9 @@ Future<Schedule> schedule(ScheduleRef ref) async {
             var response = await getAndTrack(ref, scheduleJsonRawUri);
             schedule = response.body;
         } catch (e) {
-            GlobalKeys.showWarningBanner('Не удалось обновить расписание');
-            throw Exception('Не удалось загрузить расписание');
+            final error = 'Не удалось обновить расписание';
+            GlobalKeys.showWarningBanner(error);
+            throw Exception(error);
         }
     }
 
@@ -86,7 +87,6 @@ Future<Schedule> schedule(ScheduleRef ref) async {
         json = jsonDecode(schedule) as Map<String, dynamic>;
         prefs.setString('fallbackSchedule', schedule);
     } catch (e) {
-        print(e);
         throw Exception('Не удалось обработать расписание');
     }
 
@@ -118,22 +118,13 @@ Future<SharedPreferences> settings(SettingsRef ref) async {
 
 @riverpod
 Future<DateTime> datetime(DatetimeRef ref) async {
-    Timer.periodic(
-        Duration(
-            minutes: 1,
-            seconds: DateTime.now().second,
-        ),
-        (timer) {
-            ref.invalidateSelf();
-        }
-    );
-
-    return DateTime.now();
+    final now = DateTime.now();
+    Timer(Duration(minutes: 0, seconds: 60 - now.second), () => ref.invalidateSelf());
+    return now;
 }
 
 @riverpod
 Future<UniScheduleManifest> uniScheduleManifest(UniScheduleManifestRef ref) async {
-
     var instance;
 
     try {
@@ -145,7 +136,7 @@ Future<UniScheduleManifest> uniScheduleManifest(UniScheduleManifestRef ref) asyn
         var json = jsonDecode(manifestDataJson);
         instance = UniScheduleManifest.fromJson(json);
     } catch (e) {
-        print("can not download $e");
+        print('can not download $e');
         instance = UniScheduleManifest.createEmpty();
     }
 

@@ -79,10 +79,8 @@ Future<String> downloadFileByUri(Uri uri) async {
 }
 
 String dayName(int number) {
-    assert(number >= 1 && number <= 7);
-
     // Именительный падеж (кто?/что?)
-    return [
+    const names = [
         'Понедельник',
         'Вторник',
         'Среда',
@@ -90,7 +88,9 @@ String dayName(int number) {
         'Пятница',
         'Суббота',
         'Воскресенье',
-    ][number - 1];
+    ];
+
+    return number >= 1 && number <= 7 ? names[number - 1] : '???';
 }
 
 String dateTitle(WidgetRef ref) {
@@ -150,25 +150,15 @@ List<int> parseVersion(String version) {
 }
 
 extension TimeOfDayExtension on TimeOfDay {
-    int differenceInMinutes(TimeOfDay other) {
-        return (this.hour - other.hour) * 60 + (this.minute - other.minute);
-    }
+    int differenceInMinutes(TimeOfDay other) => (this.hour - other.hour) * 60 + (this.minute - other.minute);
 
-    bool isAfterThan(TimeOfDay other) {
-        return this.hour * 60 + this.minute > other.hour * 60 + other.minute;
-    }
+    bool isAfterThan(TimeOfDay other) => this.hour * 60 + this.minute > other.hour * 60 + other.minute;
 
-    bool isBeforeThan(TimeOfDay other) {
-        return this.hour * 60 + this.minute < other.hour * 60 + other.minute;
-    }
+    bool isBeforeThan(TimeOfDay other) => this.hour * 60 + this.minute < other.hour * 60 + other.minute;
 
-    bool isNotAfterThan(TimeOfDay other) {
-        return !this.isAfterThan(other);
-    }
+    bool isNotAfterThan(TimeOfDay other) => !this.isAfterThan(other);
 
-    bool isNotBeforeThan(TimeOfDay other) {
-        return !this.isBeforeThan(other);
-    }
+    bool isNotBeforeThan(TimeOfDay other) => !this.isBeforeThan(other);
 }
 
 Future<void> launchUrl(BuildContext context, String url) async {

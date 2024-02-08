@@ -67,51 +67,23 @@ class UniScheduleManifest {
 
     UniScheduleManifest.createEmpty();
 
-    static bool _manifestUpdated = false;
-    static String _serverIp = 'raw.githubusercontent.com';
-    static String _schedulePathPrefix = '/SergeGris/sergegris.github.io/main';
-    static String? _channelLink = null;
-    static String _supportGoals = 'Поддержать развитие проекта';
-    static List<NamedLink> _supportVariants = [];
-    static List<int>? _latestApplicationVersion = null;
-    static List<NamedLink> _updateVariants = [];
+    static bool            _manifestUpdated          = false;
+    static String          _serverIp                 = 'raw.githubusercontent.com';
+    static String          _schedulePathPrefix       = '/SergeGris/sergegris.github.io/main';
+    static String?         _channelLink              = null;
+    static String          _supportGoals             = 'Поддержать развитие проекта';
+    static List<NamedLink> _supportVariants          = [];
+    static List<int>?      _latestApplicationVersion = null;
+    static List<NamedLink> _updateVariants           = [];
+    static bool            _loaded                   = false;
 
-    static bool _loaded = false;
-
-
-    bool get manifestUpdated {
-        return _manifestUpdated;
-    }
-
-    String get serverIp {
-        return _serverIp;
-    }
-
-    String get schedulePathPrefix {
-        return _schedulePathPrefix;
-    }
-
-    String? get channelLink {
-        return _channelLink;
-    }
-
-    String get supportGoals {
-        return _supportGoals;
-    }
-
-    List<NamedLink>? get supportVariants {
-        return _supportVariants;
-    }
-
-    List<int>? get latestApplicationVersion {
-        return _latestApplicationVersion;
-    }
-
-    List<NamedLink> get updateVariants {
-        return _updateVariants;
-    }
-
-    bool get loaded {
-        return _loaded;
-    }
+    bool            get manifestUpdated          => _manifestUpdated;
+    String          get serverIp                 => _serverIp;
+    String          get schedulePathPrefix       => _schedulePathPrefix;
+    String?         get channelLink              => _channelLink;
+    String          get supportGoals             => _supportGoals;
+    List<NamedLink> get supportVariants          => _supportVariants;
+    List<int>?      get latestApplicationVersion => _latestApplicationVersion;
+    List<NamedLink> get updateVariants           => _updateVariants;
+    bool            get loaded                   => _loaded;
 }

@@ -42,13 +42,7 @@ class SchedulePage extends ConsumerWidget {
 
         final currentWeekDay = (DateTime.now().weekday - 1);
 
-        DateTime getScheduleDay(int index) {
-            return DateTime.now()
-            .add(Duration(
-                    days: index + 1 - currentWeekDay - 1 + (showCurrentWeek ? 0 : 7)
-                )
-            );
-        }
+        DateTime getScheduleDay(int index) => DateTime.now().add(Duration(days: index + 1 - currentWeekDay - 1 + (showCurrentWeek ? 0 : 7)));
 
         return ScheduleLoader(
             (schedule) {
@@ -108,7 +102,6 @@ class SchedulePage extends ConsumerWidget {
                                                                 child: Text(
                                                                     'Свободный день',
                                                                     style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                                                                        //fontSize: 24,
                                                                         color: Theme.of(context).colorScheme.primary,
                                                                     )
                                                                 )
@@ -119,7 +112,14 @@ class SchedulePage extends ConsumerWidget {
                                                         padding: const EdgeInsets.only(top: 8.0, bottom: kFloatingActionButtonMargin + 48.0 /* TODO compute size of floating button. */),
                                                         itemCount: day.classes.length,
                                                         itemBuilder: (context, index) => (
-                                                            ClassCard(day.classes, index, horizontalMargin: horizontalMargin, borderRadius: borderRadius)
+                                                            ClassCard(
+                                                                classes: day.classes,
+                                                                index: index,
+                                                                showProgress: false,
+                                                                number: index + 1,
+                                                                horizontalMargin: horizontalMargin,
+                                                                borderRadius: borderRadius
+                                                            )
                                                         ),
                                                         separatorBuilder: (context, index) => const Divider(
                                                             indent: horizontalMargin + borderRadius,

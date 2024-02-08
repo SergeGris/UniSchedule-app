@@ -21,6 +21,8 @@ class GlobalKeys {
         Future(
             () async {
                 final globalScaffoldMessanger = GlobalKeys.globalScaffold;
+                const textColor = Colors.black;
+                const bannerColor = Colors.yellow;
 
                 if (!haveWarningBanner) {
                     haveWarningBanner = true;
@@ -29,11 +31,11 @@ class GlobalKeys {
                         MaterialBanner(
                             padding: const EdgeInsets.symmetric(horizontal: 8.0),
                             content: Text(text),
-                            leading: const Icon(Icons.warning_amber, color: Colors.black),
-                            backgroundColor: Colors.yellow,
-                            contentTextStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16.0),
+                            leading: const Icon(Icons.warning_amber, color: textColor),
+                            backgroundColor: bannerColor,
+                            contentTextStyle: const TextStyle(color: textColor, fontWeight: FontWeight.bold),
                             actions: <Widget>[
-                                TextButton(
+                                ElevatedButton(
                                     onPressed: () {
                                         Future(
                                             () async {
@@ -41,7 +43,17 @@ class GlobalKeys {
                                             }
                                         );
                                     },
-                                    child: const Text('Понятно'),
+                                    style: ButtonStyle(
+                                        backgroundColor: MaterialStateProperty.resolveWith<Color?>(
+                                            (Set<MaterialState> states) => bannerColor.withOpacity(
+                                                states.contains(MaterialState.pressed) ? 1.0 : 0.8
+                                            ),
+                                        ),
+                                    ),
+                                    child: const Text(
+                                        'Понятно',
+                                        style: TextStyle(color: textColor)
+                                    ),
                                 ),
                             ],
                         )
