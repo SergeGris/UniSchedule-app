@@ -21,7 +21,7 @@ class ScheduleLoader extends ConsumerWidget {
                 loading: () => getLoadingIndicator(() => refreshSchedule(ref)),
                 error: (e, st) {
                     final prefs = ref.watch(settingsProvider).value!;
-                    String? fallbackSchedule = prefs.getString('fallbackSchedule');
+                    final fallbackSchedule = prefs.getString('fallbackSchedule');
 
                     if (fallbackSchedule != null) {
                         try {

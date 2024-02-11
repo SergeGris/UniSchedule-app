@@ -62,10 +62,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             showCurrentWeek = DateTime.now().weekday != DateTime.sunday;
         }
 
-        var weekNumber = ref.watch(scheduleProvider).unwrapPrevious().when<int?>(
-            loading: () => null,
-            error: (e, st) => null,
-            data: (value) => getWeekNumber(DateTime.now().add(const Duration(days: 1)), value),
+        final weekIndex = ref.watch(scheduleProvider).unwrapPrevious().when<int?>(
+            loading: ()      => null,
+            error:   (e, st) => null,
+            data:    (value) => getWeekIndex(DateTime.now(), value),
         );
 
         return Scaffold(
@@ -74,8 +74,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                         Text(dateTitle(ref)),
-                        if (weekNumber != null)
-                        Text('Учебная неделя №${weekNumber + 1}', style: Theme.of(context).textTheme.titleMedium!)
+                        if (weekIndex != null)
+                        Text('Учебная неделя №${weekIndex + 1}', style: Theme.of(context).textTheme.titleMedium)
                         //TODO!!! else
                         //Text('Учёба ещё не началась', style: Theme.of(context).textTheme.titleMedium!)
                     ]
@@ -136,6 +136,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         }
                     );
                 },
+
                 child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -157,29 +158,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
     }
 
-    bool compareVersions(List<int> first, List<int> second, bool comparator(int a, int b)) {
-        final length = first.length <= second.length ? first.length : second.length;
-
-        for (int i = 0; i < length; i++) {
-            if (first[i] != second[i]) {
-                return comparator(first[i], second[i]);
-            }
-        }
-
-        return false;
-    }
-
     @override
     void initState() {
         super.initState();
 
         Future(() async {
-                PackageInfo packageInfo = await PackageInfo.fromPlatform();
-                List<int> version = packageInfo.version.split('.').map((v) => int.parse(v)).toList();
+                final packageInfo = await PackageInfo.fromPlatform();
+                var version = Version.fromString(packageInfo.version);
 
                 if (globalUniScheduleConfiguration.updateVariants.isNotEmpty
                  && globalUniScheduleConfiguration.latestApplicationVersion != null
-                 && compareVersions(version, globalUniScheduleConfiguration.latestApplicationVersion!, (a, b) => (a < b))) {
+                 && globalUniScheduleConfiguration.latestApplicationVersion!.greaterThan(version)) {
                     showDialog(
                         context: context,
                         builder: (BuildContext context) => AlertDialog(
@@ -204,7 +193,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             }
         );
     }
-
 
     ///////// TODO!!!!!
     // vvv RUSTORE IN APP UPDATE CODE

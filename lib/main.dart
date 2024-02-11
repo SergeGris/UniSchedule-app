@@ -6,6 +6,7 @@ import './configuration.dart';
 import './provider.dart';
 import './scheduleselector.dart';
 import './screens/home.dart';
+import './utils.dart';
 
 void main() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -18,12 +19,7 @@ class UniScheduleApp extends ConsumerWidget {
     @override
     Widget build(BuildContext context, WidgetRef ref) {
         final prefs = ref.watch(settingsProvider).value;
-
-        final theme = {
-            'light': ThemeMode.light,
-            'dark': ThemeMode.dark,
-            'system': ThemeMode.system,
-        }[prefs?.getString('theme') ?? 'system'];
+        final theme = uniScheduleThemes.firstWhere((t) => (t.key == (prefs?.getString('theme') ?? 'system')))!;
 
         bool firstRun = (prefs?.getString('initialized') == null);
 
@@ -38,7 +34,7 @@ class UniScheduleApp extends ConsumerWidget {
             }
         }
 
-        Widget preloadManifest(Widget callback()) {
+        Widget preloadConfiguration(Widget callback()) {
             Widget wrapper(List<Widget> callback()) {
                 return Scaffold(
                     body: ListView(
@@ -92,18 +88,18 @@ class UniScheduleApp extends ConsumerWidget {
         return MaterialApp(
             // TODO debugShowCheckedModeBanner: false,
             scaffoldMessengerKey: GlobalKeys.globalScaffoldKey,
-            themeMode: theme,
+            themeMode: theme.themeMode,
             theme: ThemeData(
                 useMaterial3: true,
                 brightness: Brightness.light,
-                colorSchemeSeed: Colors.indigo,
+                colorSchemeSeed: theme.colorSchemeSeed,
             ),
             darkTheme: ThemeData(
                 useMaterial3: true,
                 brightness: Brightness.dark,
-                colorSchemeSeed: Colors.indigo,
+                colorSchemeSeed: theme.colorSchemeSeed,
             ),
-            home: preloadManifest(
+            home: preloadConfiguration(
                 () => firstRun
                 ? const ScheduleSelector(firstRun: true)
                 : const HomeScreen()

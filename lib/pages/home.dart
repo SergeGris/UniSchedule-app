@@ -19,18 +19,19 @@ class HomePage extends ConsumerWidget {
                 return date.when(
                     skipLoadingOnReload: true,
                     loading: () => getLoadingIndicator(() => refreshSchedule(ref)),
-                    error: (e, st) {
-                        return getErrorContainer('БАГ: Не удалось загрузить ВРЕМЯ!');
-                    },
+                    error: (e, st) => getErrorContainer('БАГ: Не удалось загрузить ВРЕМЯ!'),
                     data: (date) {
                         final day = date.weekday - 1;
-                        final weekParity = (getWeekNumber(date, schedule) ?? 0) % schedule.weeks.length;
+                        final weekParity = getWeekParity(date: date, schedule: schedule, showCurrentWeek: false);//TODO(getWeekIndex(date, schedule) ?? 0) % schedule.weeks.length;
                         final week = schedule.weeks[weekParity];
 
                         late Iterable<ClassCard> nextClasses;
                         late String listTitle;
 
-                        if (day >= week.days.length || week.days[day].classes.isEmpty || (schedule.studiesBegin?.isAfter(date) ?? false)) {
+                        if (day >= week.days.length
+                            || week.days[day].classes.isEmpty
+                            || (schedule.studiesBegin?.isAfter(date) ?? false)
+                            || (schedule.studiesEnd?.isBefore(date) ?? false)) {
                             listTitle = 'Сегодня пар нет';
                             nextClasses = [];
                         } else {
@@ -39,7 +40,7 @@ class HomePage extends ConsumerWidget {
                                 .where((class0) => class0.end.isNotBeforeThan(time))
                                 .toList();
 
-                            int skipped = week.days[day].classes.length - classes.length;
+                            final skipped = week.days[day].classes.length - classes.length;
 
                             nextClasses = classes
                                 .mapIndexed(
@@ -56,26 +57,33 @@ class HomePage extends ConsumerWidget {
                                 .nonNulls;
 
                             if (nextClasses.isNotEmpty) {
-                                int diff = classes[0].start.differenceInMinutes(time);
+                                final untilBegin = classes[0].start.differenceInMinutes(time);
 
-                                if (diff < 0) {
-                                    int untilEnd = classes[0].end.differenceInMinutes(time);
+                                if (untilBegin < 0) { // Пара уже началась и идёт
+                                    final untilEnd = classes[0].end.differenceInMinutes(time);
+                                    final hours   = untilEnd ~/ 60;
+                                    final minutes = untilEnd % 60;
 
-                                    int hours   = untilEnd ~/ 60;
-                                    int minutes = untilEnd % 60;
+                                    if (hours == 0 && minutes == 0) {
+                                        listTitle = 'Пара закончилась';
+                                    } else {
+                                        final h = hours   > 0 ? ' $hours ${  plural(hours,   ["час",    "часа",   "часов"])}' : '';
+                                        final m = minutes > 0 ? ' $minutes ${plural(minutes, ["минуту", "минуты", "минут"])}' : '';
 
-                                    String h = hours   > 0 ? ' $hours ${  plural(hours,   ["час",    "часа",   "часов"])}' : '';
-                                    String m = minutes > 0 ? ' $minutes ${plural(minutes, ["минуту", "минуты", "минут"])}' : '';
-
-                                    listTitle = 'Идёт ' + (classes[0].type?.name.toLowerCase() ?? 'пара') + ', до конца — $h$m';
+                                        listTitle = 'Идёт ' + (classes[0].type?.name.toLowerCase() ?? 'пара') + ', до конца —$h$m';
+                                    }
                                 } else {
-                                    int hours   = diff ~/ 60;
-                                    int minutes = diff % 60;
+                                    final hours   = untilBegin ~/ 60;
+                                    final minutes = untilBegin % 60;
 
-                                    String h = hours   > 0 ? ' $hours ${  plural(hours,   ["час",    "часа",   "часов"])}' : '';
-                                    String m = minutes > 0 ? ' $minutes ${plural(minutes, ["минуту", "минуты", "минут"])}' : '';
+                                    if (hours == 0 && minutes == 0) {
+                                        listTitle = 'Пара началась';
+                                    } else {
+                                        final h = hours   > 0 ? ' $hours ${  plural(hours,   ["час",    "часа",   "часов"])}' : '';
+                                        final m = minutes > 0 ? ' $minutes ${plural(minutes, ["минуту", "минуты", "минут"])}' : '';
 
-                                    listTitle = 'Следующая пара через$h$m';
+                                        listTitle = 'Следующая пара через$h$m';
+                                    }
                                 }
                             } else {
                                 listTitle = 'Сегодня пар больше нет';

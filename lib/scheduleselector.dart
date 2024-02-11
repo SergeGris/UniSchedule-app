@@ -15,9 +15,7 @@ class ScheduleSelectorRoute extends ConsumerWidget {
     const ScheduleSelectorRoute({super.key});
 
     @override
-    Widget build(BuildContext context, WidgetRef ref) {
-        return const ScheduleSelector(firstRun: false);
-    }
+    Widget build(BuildContext context, WidgetRef ref) => const ScheduleSelector(firstRun: false);
 }
 
 class ScheduleSelectorButton extends ConsumerWidget {
@@ -125,11 +123,11 @@ class ScheduleSelector extends ConsumerStatefulWidget {
     final bool firstRun;
 
     @override
-    ConsumerState<ScheduleSelector> createState() => _ScheduleSelectorState(firstRun);
+    ConsumerState<ScheduleSelector> createState() => _ScheduleSelectorState(firstRun: firstRun);
 }
 
 class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
-    _ScheduleSelectorState(this.firstRun);
+    _ScheduleSelectorState({required this.firstRun});
 
     final bool firstRun;
     SharedPreferences? prefs;
@@ -144,9 +142,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
     late Menu year;
     late Menu group;
 
-    bool allDone() {
-        return canLoadSchedule && university.id != null && faculty.id != null && year.id != null && group.id != null;
-    }
+    bool allDone() => canLoadSchedule && university.id != null && faculty.id != null && year.id != null && group.id != null;
 
     @override
     Widget build(BuildContext context) {
@@ -154,15 +150,20 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
             initialized = true;
             prefs = ref.watch(settingsProvider).value;
 
-            String? universityId = prefs?.getString('universityId');
-            String? facultyId    = prefs?.getString('facultyId');
-            String? yearId       = prefs?.getString('yearId');
-            String? groupId      = prefs?.getString('groupId');
+            final universityId = prefs?.getString('universityId');
+            final facultyId    = prefs?.getString('facultyId');
+            final yearId       = prefs?.getString('yearId');
+            final groupId      = prefs?.getString('groupId');
 
-            university = Menu(enabled: true,                 id: universityId, getManifest: () => getManifest(ref: ref));
-            faculty    = Menu(enabled: universityId != null, id: facultyId,    getManifest: () { return university.id != null ? getManifest(ref: ref, university: university.id) : null; });
-            year       = Menu(enabled: facultyId    != null, id: yearId,       getManifest: () { return faculty.id    != null ? getManifest(ref: ref, university: university.id, faculty: faculty.id) : null; });
-            group      = Menu(enabled: yearId       != null, id: groupId,      getManifest: () { return year.id       != null ? getManifest(ref: ref, university: university.id, faculty: faculty.id, year: year.id) : null; });
+            final universityName = prefs?.getString('universityName');
+            final facultyName    = prefs?.getString('facultyName');
+            final yearName       = prefs?.getString('yearName');
+            final groupName      = prefs?.getString('groupName');
+
+            university = Menu(enabled: true,                 id: universityId, name: universityName, getManifest: () => getManifest(ref: ref));
+            faculty    = Menu(enabled: universityId != null, id: facultyId,    name: facultyName,    getManifest: () => university.id != null ? getManifest(ref: ref, university: university.id) : null);
+            year       = Menu(enabled: facultyId    != null, id: yearId,       name: yearName,       getManifest: () => faculty.id    != null ? getManifest(ref: ref, university: university.id, faculty: faculty.id) : null);
+            group      = Menu(enabled: yearId       != null, id: groupId,      name: groupName,      getManifest: () => year.id       != null ? getManifest(ref: ref, university: university.id, faculty: faculty.id, year: year.id) : null);
         }
 
         DropdownMenu getDropDownMenu(String label,
@@ -326,11 +327,11 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                                 : () {
                                                     final prefs = ref.watch(settingsProvider).value!;
 
-                                                    prefs.setString('initialized', '1');
+                                                    prefs.setString('initialized',  '1');
                                                     prefs.setString('universityId', university.id!);
-                                                    prefs.setString('facultyId', faculty.id!);
-                                                    prefs.setString('yearId', year.id!);
-                                                    prefs.setString('groupId', group.id!);
+                                                    prefs.setString('facultyId',    faculty.id!);
+                                                    prefs.setString('yearId',       year.id!);
+                                                    prefs.setString('groupId',      group.id!);
 
                                                     if (university.name != null) {
                                                         prefs.setString('universityName', university.name!);

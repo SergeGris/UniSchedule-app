@@ -14,7 +14,7 @@ class Schedule {
     Schedule.fromJson(final Map<String, dynamic> json)
         : studiesBegin = studiesDateFromJson(json['studies.begin']),
           studiesEnd   = studiesDateFromJson(json['studies.end']),
-          weeks = json['schedule'].map((e) => Week.fromJson(e)).cast<Week>().toList();
+          weeks        = json['schedule'].map((e) => Week.fromJson(e)).cast<Week>().toList();
 
     final DateTime? studiesBegin;
     final DateTime? studiesEnd;
@@ -61,9 +61,8 @@ class Day {
 //TODO rename?
 class TeacherAndRoom {
     TeacherAndRoom({required this.teacher, required this.room});
-
-    String? teacher;
-    String? room;
+    final String? teacher;
+    final String? room;
 }
 
 class ClassType {
@@ -118,9 +117,9 @@ class Class {
             hour:   int.parse(json['end'].toString().split(':')[0]),
             minute: int.parse(json['end'].toString().split(':')[1])
         ),
-        name = json['name'] != 'null' ? json['name'] : null,
+        name = json['name'],
         teachersAndRooms = [
-            ...((json['teachersAndRooms'] ?? [ null ])
+            ...(json['teachersAndRooms'] ?? [ null ])
                 .map(
                     (tr) {
                         if (tr != null) {
@@ -135,7 +134,6 @@ class Class {
                         }
                     }
                 )
-            )
         ],
         building = json['building'],
         type     = json['type'] != null ? classTypeFromString(json['type']) : null,

@@ -22,20 +22,14 @@ Future<Schedule> schedule(ScheduleRef ref) async {
     final String facultyId    = prefs.getString('facultyId')!;
     final String yearId       = prefs.getString('yearId')!;
     final String groupId      = prefs.getString('groupId')!;
-    final String path = '${globalUniScheduleConfiguration.schedulePathPrefix}'
-                         + '/$scheduleFormatVersion/$universityId/$facultyId/$yearId/$groupId.json';
-    final Uri scheduleJsonRawUri  = Uri.https(globalUniScheduleConfiguration.serverIp, '$path');
-    final Uri scheduleJsonGzipUri = Uri.https(globalUniScheduleConfiguration.serverIp, '$path.gz');
+    final String path = '${globalUniScheduleConfiguration.schedulePathPrefix}/$scheduleFormatVersion/$universityId/$facultyId/$yearId/$groupId.json';
 
-    print(scheduleJsonRawUri);
+    //TODO print(scheduleJsonRawUri);
 
     //TODO RENAME
-    Future<http.Response> getAndTrack(ScheduleRef ref, Uri uri) async
-    {
-        var response;
-
+    Future<http.Response> getAndTrack(ScheduleRef ref, Uri uri) async {
         try {
-            response = await http.get(uri);
+            final response = await http.get(uri);
             final link = ref.keepAlive();
 
             ref.onAddListener(
@@ -50,20 +44,22 @@ Future<Schedule> schedule(ScheduleRef ref) async {
                     }
                 }
             );
+
+            return response;
         } catch (e) {
             throw Exception('Ошибка подключения к серверу: проверьте доступ к интернету');
         }
-
-        return response;
     }
 
     var schedule;
 
     try {
+        final scheduleJsonGzipUri = Uri.https(globalUniScheduleConfiguration.serverIp, '$path.gz');
         var response = await getAndTrack(ref, scheduleJsonGzipUri);
         schedule = utf8.decode(GZipCodec().decode(response.bodyBytes));
     } catch (e) {
         try {
+            final Uri scheduleJsonRawUri  = Uri.https(globalUniScheduleConfiguration.serverIp, '$path');
             var response = await getAndTrack(ref, scheduleJsonRawUri);
             schedule = response.body;
         } catch (e) {
@@ -111,7 +107,7 @@ Future<
 
 @riverpod
 Future<SharedPreferences> settings(SettingsRef ref) async {
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  final prefs = await SharedPreferences.getInstance();
 
   return prefs;
 }
@@ -125,21 +121,16 @@ Future<DateTime> datetime(DatetimeRef ref) async {
 
 @riverpod
 Future<UniScheduleConfiguration> uniScheduleConfiguration(UniScheduleConfigurationRef ref) async {
-    var instance;
-
     try {
-        Uri uri = Uri.https(
+        final uri = Uri.https(
             'raw.githubusercontent.com',
             '/SergeGris/sergegris.github.io/main/configuration.json'
         );
-        var manifestDataJson = await downloadFileByUri(uri);
-        var json = jsonDecode(manifestDataJson);
-        instance = UniScheduleConfiguration.fromJson(json);
+        final manifestDataJson = await downloadFileByUri(uri);
+        final json = jsonDecode(manifestDataJson);
+        return UniScheduleConfiguration.fromJson(json);
     } catch (e) {
-        print('can not download $e');
-        instance = UniScheduleConfiguration.createEmpty();
+        //TODO print('can not download $e');
+        return UniScheduleConfiguration.createEmpty();
     }
-
-
-    return instance;
 }

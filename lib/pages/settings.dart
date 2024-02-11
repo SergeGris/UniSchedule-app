@@ -19,7 +19,7 @@ class SettingsPage extends ConsumerWidget {
                 ListTile(
                     title: Text(
                         'Тема приложения:',
-                        style: Theme.of(context).textTheme.titleMedium!
+                        style: Theme.of(context).textTheme.titleMedium
                     ),
                     trailing: DropdownMenu(
                         initialSelection: prefs!.getString('theme') ?? 'system',
@@ -28,11 +28,9 @@ class SettingsPage extends ConsumerWidget {
                             border: null,
                         ),
                         requestFocusOnTap: false,
-                        dropdownMenuEntries: const [
-                            DropdownMenuEntry(value: 'light',  label: 'Светлая'),
-                            DropdownMenuEntry(value: 'dark',   label: 'Тёмная'),
-                            DropdownMenuEntry(value: 'system', label: 'Системная'),
-                        ],
+                        dropdownMenuEntries: uniScheduleThemes.map(
+                            (t) => DropdownMenuEntry(value: t.key, label: t.label)
+                        ).toList(),
                         onSelected: (value) {
                             prefs!.setString('theme', value!);
                             ref.invalidate(settingsProvider);
@@ -43,11 +41,11 @@ class SettingsPage extends ConsumerWidget {
                 ListTile(
                     title: Text(
                         'Автор:',
-                        style: Theme.of(context).textTheme.titleMedium!
+                        style: Theme.of(context).textTheme.titleMedium
                     ),
                     trailing: Text(
                         'Сергей Сушилин, ВМК МГУ',
-                        style: Theme.of(context).textTheme.titleMedium!
+                        style: Theme.of(context).textTheme.titleMedium
                     )
                 ),
 
@@ -55,12 +53,12 @@ class SettingsPage extends ConsumerWidget {
                 ListTile(
                     title: Text(
                         'Канал в Telegram:',
-                        style: Theme.of(context).textTheme.titleMedium!,
+                        style: Theme.of(context).textTheme.titleMedium,
                     ),
                     trailing: Linkify(
                         onOpen: (link) => launchUrl(context, link.url),
                         text: globalUniScheduleConfiguration.channelLink!,
-                        style: Theme.of(context).textTheme.titleMedium!,
+                        style: Theme.of(context).textTheme.titleMedium,
                     ),
                 ),
 

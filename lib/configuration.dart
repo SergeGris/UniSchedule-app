@@ -16,7 +16,7 @@ class UniScheduleConfiguration {
         _loaded = true;
 
         if (json['schedule.format.version'] != null) {
-            _manifestUpdated = (scheduleFormatVersion < json['schedule.format.version']);
+            _manifestUpdated = scheduleFormatVersion < json['schedule.format.version'];
         }
         if (json['server.ip'] != null) {
             _serverIp = json['server.ip'];
@@ -36,7 +36,7 @@ class UniScheduleConfiguration {
             _supportGoals = json['support.goals'];
         }
         if (json['latest.application.version'] != null) {
-            _latestApplicationVersion = parseVersion(json['latest.application.version']);
+            _latestApplicationVersion = Version.fromString(json['latest.application.version']);
         }
         if (json['update.variants'] != null) {
             _updateVariants = json['update.variants'].map(
@@ -53,7 +53,7 @@ class UniScheduleConfiguration {
     static String?         _channelLink              = null;
     static String          _supportGoals             = 'Поддержать развитие проекта';
     static List<NamedLink> _supportVariants          = [];
-    static List<int>?      _latestApplicationVersion = null;
+    static Version?        _latestApplicationVersion = null;
     static List<NamedLink> _updateVariants           = [];
     static bool            _loaded                   = false;
 
@@ -63,7 +63,7 @@ class UniScheduleConfiguration {
     String?         get channelLink              => _channelLink;
     String          get supportGoals             => _supportGoals;
     List<NamedLink> get supportVariants          => _supportVariants;
-    List<int>?      get latestApplicationVersion => _latestApplicationVersion;
+    Version?        get latestApplicationVersion => _latestApplicationVersion;
     List<NamedLink> get updateVariants           => _updateVariants;
     bool            get loaded                   => _loaded;
 }

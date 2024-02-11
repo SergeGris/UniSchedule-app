@@ -49,7 +49,7 @@ String plural(int n, List<String> variants) {
 
 Widget getErrorContainer(String message) {
     return LayoutBuilder(
-        builder: (context, final constraints) {
+        builder: (final context, final constraints) {
             return ListView(
                 children: [
                     const Center(
@@ -72,15 +72,16 @@ Widget getErrorContainer(String message) {
 }
 
 Future<String> downloadFileByUri(Uri uri) async {
-    print(uri);
-
     var response = await http.get(uri);
     return response.body;
 }
 
-String dayName(int number) {
+// Возвращает строку в формате "День-недели, число месяц"
+String dateTitle(WidgetRef ref) {
+    final date = DateTime.now();
+
     // Именительный падеж (кто?/что?)
-    const names = [
+    const weekdays = [
         'Понедельник',
         'Вторник',
         'Среда',
@@ -90,14 +91,8 @@ String dayName(int number) {
         'Воскресенье',
     ];
 
-    return number >= 1 && number <= 7 ? names[number - 1] : '???';
-}
-
-String dateTitle(WidgetRef ref) {
-    final date = DateTime.now();
-
     // Винительный падеж (кого?/чего?)
-    final month = [
+    final months = [
         'января',
         'февраля',
         'марта',
@@ -110,14 +105,13 @@ String dateTitle(WidgetRef ref) {
         'октября',
         'ноября',
         'декабря',
-    ][date.month - 1];
+    ];
 
-    return '${dayName(date.weekday)}, ${date.day} $month';
+    return '${weekdays[date.weekday - 1]}, ${date.day} ${months[date.month - 1]}';
 }
 
-int? getWeekNumber(DateTime date, Schedule? schedule) {
-    if (schedule == null
-     || schedule.studiesBegin == null || date.isBefore(schedule.studiesBegin!)
+int? getWeekIndex(DateTime date, Schedule schedule) {
+    if (schedule.studiesBegin == null || date.isBefore(schedule.studiesBegin!)
      || (schedule.studiesEnd  != null && date.isAfter(schedule.studiesEnd!))) {
         return null;
     }
@@ -125,40 +119,48 @@ int? getWeekNumber(DateTime date, Schedule? schedule) {
     return date.weekOfYear - schedule.studiesBegin!.weekOfYear;
 }
 
+int getWeekParity({required DateTime date,
+                   required Schedule schedule,
+                   required bool showCurrentWeek}) {
+    return ((getWeekIndex(date, schedule) ?? 0) + (showCurrentWeek ? 0 : 1)) % schedule.weeks.length;
+}
+
 extension ExtendedIterable<E> on Iterable<E> {
-    /// Like Iterable<T>.map but the callback has index as second argument
+    // Like Iterable<T>.map but the callback has index as second argument.
     Iterable<T> mapIndexed<T>(T Function(E e, int i) callback) {
         var i = 0;
         return map((e) => callback(e, i++));
     }
 }
 
-List<int> parseVersion(String version) {
-    final s = version.split('.');
-    final v = [ 0, 0, 0 ];
+class Version {
+    Version.fromString(String string) {
+        final s = string.split('.');
 
-    for (int i = 0; i < 3; i++) {
-        if (i < s.length) {
-            v[i] = int.parse(s[i]);
-        } else {
-            v[i] = 0;
-            break;
-        }
+        major = s.length > 0 ? int.parse(s[0]) : 0;
+        minor = s.length > 1 ? int.parse(s[1]) : 0;
+        patch = s.length > 2 ? int.parse(s[2]) : 0;
     }
 
-    return v;
+    bool greaterThan(Version other) =>
+        (major > other.major
+            || (major == other.major
+                && (minor > other.minor
+                    || (minor == other.minor
+                        && (patch > other.patch)))));
+
+    int major = 0;
+    int minor = 0;
+    int patch = 0;
 }
 
 extension TimeOfDayExtension on TimeOfDay {
-    int differenceInMinutes(TimeOfDay other) => (this.hour - other.hour) * 60 + (this.minute - other.minute);
+    int differenceInMinutes(TimeOfDay other) => (hour - other.hour) * 60 + (minute - other.minute);
 
-    bool isAfterThan(TimeOfDay other) => this.hour * 60 + this.minute > other.hour * 60 + other.minute;
-
-    bool isBeforeThan(TimeOfDay other) => this.hour * 60 + this.minute < other.hour * 60 + other.minute;
-
-    bool isNotAfterThan(TimeOfDay other) => !this.isAfterThan(other);
-
-    bool isNotBeforeThan(TimeOfDay other) => !this.isBeforeThan(other);
+    bool isAfterThan(TimeOfDay other)     => hour * 60 + minute > other.hour * 60 + other.minute;
+    bool isBeforeThan(TimeOfDay other)    => hour * 60 + minute < other.hour * 60 + other.minute;
+    bool isNotAfterThan(TimeOfDay other)  => !isAfterThan(other);
+    bool isNotBeforeThan(TimeOfDay other) => !isBeforeThan(other);
 }
 
 Future<void> launchUrl(BuildContext context, String url) async {
@@ -180,3 +182,23 @@ Future<void> launchUrl(BuildContext context, String url) async {
         );
     }
 }
+
+class UniScheduleTheme {
+    const UniScheduleTheme({required this.themeMode,
+                            required this.colorSchemeSeed,
+                            required this.key,
+                            required this.label});
+    final ThemeMode themeMode;
+    final Color colorSchemeSeed;
+    final String key;
+    final String label;
+}
+
+const uniScheduleThemes = [
+    UniScheduleTheme(themeMode: ThemeMode.system, colorSchemeSeed: Colors.indigoAccent, key: 'system',     label: 'Системная'),
+    UniScheduleTheme(themeMode: ThemeMode.light,  colorSchemeSeed: Colors.indigoAccent, key: 'light',      label: 'Светлая'),
+    UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.indigoAccent, key: 'dark',       label: 'Тёмная'),
+    //TODO Add new color themes
+//    UniScheduleTheme(themeMode: ThemeMode.light,  colorSchemeSeed: Colors.pinkAccent,   key: 'light-pink', label: 'Светло-розовая'),
+//    UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.pinkAccent,   key: 'dark-pink',  label: 'Тёмно-розовая'),
+];

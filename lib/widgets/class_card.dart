@@ -59,7 +59,7 @@ class ClassCardTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                    (number < strings.length) ? strings[number - 1] + ' пара' : '$number пара',
+                    number < strings.length ? strings[number - 1] + ' пара' : '$number пара',
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall!
                 ),
@@ -267,8 +267,8 @@ class ClassCard extends StatelessWidget {
                         bottom: horizontalMargin
                     ),
                     child: LinearProgressIndicator(
-                        value: time.differenceInMinutes(class0.start) / class0.end.differenceInMinutes(class0.start)
-
+                        value: time.differenceInMinutes(class0.start) / class0.end.differenceInMinutes(class0.start),
+                        borderRadius: BorderRadius.circular(borderRadius),
                         // value: ((time.hour * 60 + time.minute) - (class0.start.hour * 60 + class0.start.minute))
                         //      / ((class0.end.hour * 60 + class0.end.minute) - (class0.start.hour * 60 + class0.start.minute)),
                     ),

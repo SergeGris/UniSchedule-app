@@ -31,11 +31,11 @@ class SchedulePage extends ConsumerWidget {
             return [
                 Text('${date.day}',
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall!
+                    style: Theme.of(context).textTheme.titleSmall
                 ),
                 Text('$month',
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall!
+                    style: Theme.of(context).textTheme.bodySmall
                 )
             ];
         }
@@ -48,7 +48,7 @@ class SchedulePage extends ConsumerWidget {
             (schedule) {
                 return ScaffoldMessenger(
                     child: Builder(builder: (context) {
-                            final weekParity = ((getWeekNumber(DateTime.now(), schedule) ?? 0) + (showCurrentWeek ? 0 : 1)) % schedule.weeks.length; // TODO
+                            final weekParity = getWeekParity(date: DateTime.now(), schedule: schedule, showCurrentWeek: showCurrentWeek); //((getWeekIndex(DateTime.now(), schedule) ?? 0) + (showCurrentWeek ? 0 : 1)) % schedule.weeks.length; // TODO
                             final week = schedule.weeks[weekParity];
                             final weekdayTabs = week.days.mapIndexed(
                                 (day, index) => Tab(
@@ -63,7 +63,7 @@ class SchedulePage extends ConsumerWidget {
                                                     Text(
                                                         day.dayAbbr,
                                                         overflow: TextOverflow.ellipsis,
-                                                        style: Theme.of(context).textTheme.bodyMedium!,
+                                                        style: Theme.of(context).textTheme.bodyMedium,
                                                         softWrap: true
                                                     ),
                                                     ...dateTitleShort(
@@ -93,7 +93,9 @@ class SchedulePage extends ConsumerWidget {
                                             ...week.days.mapIndexed(
                                                 (day, index) => RefreshIndicator(
                                                     onRefresh: () => refreshSchedule(ref),
-                                                    child: day.classes.isEmpty || (schedule.studiesBegin?.isAfter(getScheduleDay(index)) ?? false)
+                                                    child: day.classes.isEmpty
+                                                    || (schedule.studiesBegin?.isAfter(getScheduleDay(index)) ?? false)
+                                                    || (schedule.studiesEnd?.isBefore(getScheduleDay(index)) ?? false)
                                                     ? ListView(
                                                         children: [
                                                             Container(
@@ -101,7 +103,7 @@ class SchedulePage extends ConsumerWidget {
                                                                 margin: const EdgeInsets.all(8.0),
                                                                 child: Text(
                                                                     'Свободный день',
-                                                                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                                                                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                                                         color: Theme.of(context).colorScheme.primary,
                                                                     )
                                                                 )
