@@ -22,11 +22,12 @@ class HomePage extends ConsumerWidget {
                     error: (e, st) => getErrorContainer('БАГ: Не удалось загрузить ВРЕМЯ!'),
                     data: (date) {
                         final day = date.weekday - 1;
-                        final weekParity = getWeekParity(date: date, schedule: schedule, showCurrentWeek: false);//TODO(getWeekIndex(date, schedule) ?? 0) % schedule.weeks.length;
+                        final weekParity = getWeekParity(date, schedule);
                         final week = schedule.weeks[weekParity];
 
                         late Iterable<ClassCard> nextClasses;
                         late String listTitle;
+                        String? listSubTitle = null;
 
                         if (day >= week.days.length
                             || week.days[day].classes.isEmpty
@@ -37,21 +38,22 @@ class HomePage extends ConsumerWidget {
                         } else {
                             final time = TimeOfDay.fromDateTime(date);
                             final classes = week.days[day].classes
-                                .where((class0) => class0.end.isNotBeforeThan(time))
+                                .where((class0) => class0.name != null && class0.end.isNotBeforeThan(time))
                                 .toList();
 
                             final skipped = week.days[day].classes.length - classes.length;
 
                             nextClasses = classes
                                 .mapIndexed(
-                                    (class0, index) => ClassCard(
-                                        classes: classes,
-                                        index: index,
-                                        number: index + skipped + 1,
-                                        showProgress: true,
-                                        horizontalMargin: 8.0,
-                                        borderRadius: 8.0
-                                    )
+                                    (class0, index) =>
+                                        ClassCard(
+                                            classes: classes,
+                                            index: index,
+                                            number: index + skipped + 1,
+                                            showProgress: true,
+                                            horizontalMargin: 8.0,
+                                            borderRadius: 8.0
+                                        )
                                 )
                                 .toList()
                                 .nonNulls;
@@ -67,10 +69,11 @@ class HomePage extends ConsumerWidget {
                                     if (hours == 0 && minutes == 0) {
                                         listTitle = 'Пара закончилась';
                                     } else {
-                                        final h = hours   > 0 ? ' $hours ${  plural(hours,   ["час",    "часа",   "часов"])}' : '';
-                                        final m = minutes > 0 ? ' $minutes ${plural(minutes, ["минуту", "минуты", "минут"])}' : '';
+                                        final h = hours   > 0 ? ' $hours'   + ' ${plural(hours,   ["час",    "часа",   "часов"])}' : '';
+                                        final m = minutes > 0 ? ' $minutes' + ' ${plural(minutes, ["минута", "минуты", "минут"])}' : '';
 
-                                        listTitle = 'Идёт ' + (classes[0].type?.name.toLowerCase() ?? 'пара') + ', до конца —$h$m';
+                                        listTitle = 'Идёт ' + (classes[0].type?.name.toLowerCase() ?? 'пара');
+                                        listSubTitle = 'До конца —$h$m';
                                     }
                                 } else {
                                     final hours   = untilBegin ~/ 60;
@@ -79,10 +82,11 @@ class HomePage extends ConsumerWidget {
                                     if (hours == 0 && minutes == 0) {
                                         listTitle = 'Пара началась';
                                     } else {
-                                        final h = hours   > 0 ? ' $hours ${  plural(hours,   ["час",    "часа",   "часов"])}' : '';
-                                        final m = minutes > 0 ? ' $minutes ${plural(minutes, ["минуту", "минуты", "минут"])}' : '';
+                                        final h = hours   > 0 ? ' $hours'   + ' ${plural(hours,   ["час",    "часа",   "часов"])}' : '';
+                                        final m = minutes > 0 ? ' $minutes' + ' ${plural(minutes, ["минуту", "минуты", "минут"])}' : '';
 
-                                        listTitle = 'Следующая пара через$h$m';
+                                        listTitle = 'Сейчас пары нет';
+                                        listSubTitle = 'Следующая пара через$h$m';
                                     }
                                 }
                             } else {
@@ -92,31 +96,45 @@ class HomePage extends ConsumerWidget {
 
                         return ListView(
                             children: [
-                                nextClasses.isEmpty
-                                    ? Container(
-                                        alignment: Alignment.center,
-                                        margin: const EdgeInsets.all(8.0),
-                                        width: 80,
-                                        height: 80,
-                                        //TODO decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer),
-                                        child: Text(
-                                            listTitle,
-                                            style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                                color: Theme.of(context).colorScheme.primary,
-                                            ),
-                                            overflow: TextOverflow.ellipsis
+                                if (nextClasses.isEmpty)
+                                Container(
+                                    alignment: Alignment.center,
+                                    margin: const EdgeInsets.all(8.0),
+                                    width: 80,
+                                    height: 80,
+                                    //TODO decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer),
+                                    child: Text(
+                                        listTitle,
+                                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                            color: Theme.of(context).colorScheme.primary,
+                                        ),
+                                        overflow: TextOverflow.ellipsis
+                                    )
+                                )
+                                else
+                                ListTile(
+                                    title: Center(
+                                        child: Column(
+                                            children: [
+                                                Text(
+                                                    listTitle,
+                                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                                        color: Theme.of(context).colorScheme.primary
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis
+                                                ),
+                                                if (listSubTitle != null)
+                                                Text(
+                                                    listSubTitle!,
+                                                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                                        color: Theme.of(context).colorScheme.primary
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis
+                                                )
+                                            ]
                                         )
                                     )
-                                    : ListTile(
-                                        title: Center(
-                                            child: Text(
-                                                listTitle,
-                                                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                                    color: Theme.of(context).colorScheme.primary
-                                                ),
-                                                overflow: TextOverflow.ellipsis)
-                                        )
-                                    ), // TODO ellipsis?
+                                ), // TODO ellipsis?
                                 ...nextClasses,
                             ],
                         );

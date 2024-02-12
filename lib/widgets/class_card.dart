@@ -61,7 +61,7 @@ class ClassCardTile extends StatelessWidget {
                 child: Text(
                     number < strings.length ? strings[number - 1] + ' пара' : '$number пара',
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall!
+                    style: Theme.of(context).textTheme.bodySmall
                 ),
             );
         }
@@ -81,7 +81,7 @@ class ClassCardTile extends StatelessWidget {
             .nonNulls
             .map((tr) => [ tr.teacher, tr.room ].nonNulls.join(' — '))
             .join('\n'),
-            style: Theme.of(context).textTheme.bodySmall!
+            style: Theme.of(context).textTheme.bodySmall
         );
 
         Widget classNote(String note) => Text(
@@ -147,7 +147,7 @@ class ClassCardTile extends StatelessWidget {
                                             Icon(
                                                 Icons.circle,
                                                 color: type!.color,
-                                                size: Theme.of(context).textTheme.bodySmall!.fontSize
+                                                size: Theme.of(context).textTheme.bodySmall?.fontSize
                                             ),
 
                                             const SizedBox(width: 3),
@@ -155,7 +155,7 @@ class ClassCardTile extends StatelessWidget {
                                             Text(
                                                 type!.name,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(context).textTheme.bodySmall!
+                                                style: Theme.of(context).textTheme.bodySmall
                                             ),
                                         ],
                                     ],
@@ -170,7 +170,7 @@ class ClassCardTile extends StatelessWidget {
                                 Text(
                                     building!,
                                     overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context).textTheme.bodySmall!
+                                    style: Theme.of(context).textTheme.bodySmall
                                 ),
 
                                 if (note != null)

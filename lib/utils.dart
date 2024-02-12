@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:week_of_year/week_of_year.dart';
 import 'package:http/http.dart' as http;
-import 'provider.dart';
-
 import 'package:url_launcher/url_launcher.dart';
+import 'package:week_of_year/week_of_year.dart';
 
-import 'models/schedule.dart';
-import 'globalkeys.dart';
 import 'configuration.dart';
+import 'globalkeys.dart';
+import 'models/schedule.dart';
+import 'provider.dart';
 
 Future<void> refreshSchedule(WidgetRef ref) {
     GlobalKeys.hideWarningBanner();
@@ -24,21 +23,43 @@ Future<void> refreshSchedule(WidgetRef ref) {
 RefreshIndicator getLoadingIndicator(RefreshCallback onRefresh) {
     return RefreshIndicator(
         onRefresh: onRefresh,
-        child: LayoutBuilder(builder: (context, final constraints) {
-                return ListView(
-                    children: [
-                        SizedBox(
-                            height: constraints.maxHeight,
-                            width: constraints.maxWidth,
-                            child: const Center(child: CircularProgressIndicator.adaptive()))
-                    ],
-                );
-        }),
+        child: LayoutBuilder(
+            builder: (final context, final constraints) => ListView(
+                children: [
+                    SizedBox(
+                        height: constraints.maxHeight,
+                        width: constraints.maxWidth,
+                        child: const Center(child: CircularProgressIndicator.adaptive()))
+                ]
+            )
+        )
+    );
+}
+
+Widget getErrorContainer(String message) {
+    return LayoutBuilder(
+        builder: (final context, final constraints) => ListView(
+            children: [
+                const Center(
+                    child: Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 60,
+                    )
+                ),
+                Center(
+                    child: Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Text(message),
+                    )
+                )
+            ]
+        )
     );
 }
 
 String plural(int n, List<String> variants) {
-    int i = n % 10 == 1 && n % 100 != 11
+    final i = n % 10 == 1 && n % 100 != 11
         ? 0
         : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)
             ? 1
@@ -47,32 +68,8 @@ String plural(int n, List<String> variants) {
     return variants[i];
 }
 
-Widget getErrorContainer(String message) {
-    return LayoutBuilder(
-        builder: (final context, final constraints) {
-            return ListView(
-                children: [
-                    const Center(
-                        child: Icon(
-                            Icons.error_outline,
-                            color: Colors.red,
-                            size: 60,
-                        )
-                    ),
-                    Center(
-                        child: Padding(
-                            padding: const EdgeInsets.only(top: 16),
-                            child: Text(message),
-                        )
-                    )
-                ]
-            );
-        }
-    );
-}
-
 Future<String> downloadFileByUri(Uri uri) async {
-    var response = await http.get(uri);
+    final response = await http.get(uri);
     return response.body;
 }
 
@@ -92,7 +89,7 @@ String dateTitle(WidgetRef ref) {
     ];
 
     // Винительный падеж (кого?/чего?)
-    final months = [
+    const months = [
         'января',
         'февраля',
         'марта',
@@ -119,10 +116,8 @@ int? getWeekIndex(DateTime date, Schedule schedule) {
     return date.weekOfYear - schedule.studiesBegin!.weekOfYear;
 }
 
-int getWeekParity({required DateTime date,
-                   required Schedule schedule,
-                   required bool showCurrentWeek}) {
-    return ((getWeekIndex(date, schedule) ?? 0) + (showCurrentWeek ? 0 : 1)) % schedule.weeks.length;
+int getWeekParity(DateTime date, Schedule schedule, {bool showNextWeek = false}) {
+    return ((getWeekIndex(date, schedule) ?? 0) + (showNextWeek ? 1 : 0)) % schedule.weeks.length;
 }
 
 extension ExtendedIterable<E> on Iterable<E> {
@@ -169,9 +164,9 @@ Future<void> launchUrl(BuildContext context, String url) async {
     } else {
         showDialog(
             context: context,
-            builder: (BuildContext context) => AlertDialog(
+            builder: (final context) => AlertDialog(
                 title: const Text('Ошибка!'),
-                content: Text('Не удалось открыть ${url}'),
+                content: Text('Не удалось открыть $url'),
                 actions: <Widget>[
                     TextButton(
                         onPressed: () => Navigator.pop(context),
@@ -195,9 +190,10 @@ class UniScheduleTheme {
 }
 
 const uniScheduleThemes = [
-    UniScheduleTheme(themeMode: ThemeMode.system, colorSchemeSeed: Colors.indigoAccent, key: 'system',     label: 'Системная'),
-    UniScheduleTheme(themeMode: ThemeMode.light,  colorSchemeSeed: Colors.indigoAccent, key: 'light',      label: 'Светлая'),
-    UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.indigoAccent, key: 'dark',       label: 'Тёмная'),
+    UniScheduleTheme(themeMode: ThemeMode.system, colorSchemeSeed: Colors.indigoAccent, key: 'system', label: 'Системная'),
+    UniScheduleTheme(themeMode: ThemeMode.light,  colorSchemeSeed: Colors.indigoAccent, key: 'light',  label: 'Светлая'),
+    UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.indigoAccent, key: 'dark',   label: 'Тёмная'),
+
     //TODO Add new color themes
 //    UniScheduleTheme(themeMode: ThemeMode.light,  colorSchemeSeed: Colors.pinkAccent,   key: 'light-pink', label: 'Светло-розовая'),
 //    UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.pinkAccent,   key: 'dark-pink',  label: 'Тёмно-розовая'),

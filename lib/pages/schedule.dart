@@ -6,8 +6,8 @@ import '../scheduleloader.dart';
 import '../utils.dart';
 
 class SchedulePage extends ConsumerWidget {
-    const SchedulePage({required this.showCurrentWeek, super.key});
-    final bool showCurrentWeek;
+    const SchedulePage({required this.showNextWeek, super.key});
+    final bool showNextWeek;
 
     @override
     Widget build(BuildContext context, WidgetRef ref) {
@@ -42,13 +42,18 @@ class SchedulePage extends ConsumerWidget {
 
         final currentWeekDay = (DateTime.now().weekday - 1);
 
-        DateTime getScheduleDay(int index) => DateTime.now().add(Duration(days: index + 1 - currentWeekDay - 1 + (showCurrentWeek ? 0 : 7)));
+        DateTime getScheduleDay(int index) =>
+            DateTime.now().add(
+                Duration(
+                    days: index + 1 - currentWeekDay - 1 + (showNextWeek ? 7 : 0)
+                )
+            );
 
         return ScheduleLoader(
             (schedule) {
                 return ScaffoldMessenger(
                     child: Builder(builder: (context) {
-                            final weekParity = getWeekParity(date: DateTime.now(), schedule: schedule, showCurrentWeek: showCurrentWeek); //((getWeekIndex(DateTime.now(), schedule) ?? 0) + (showCurrentWeek ? 0 : 1)) % schedule.weeks.length; // TODO
+                            final weekParity = getWeekParity(DateTime.now(), schedule, showNextWeek: showNextWeek); //((getWeekIndex(DateTime.now(), schedule) ?? 0) + (showCurrentWeek ? 0 : 1)) % schedule.weeks.length; // TODO
                             final week = schedule.weeks[weekParity];
                             final weekdayTabs = week.days.mapIndexed(
                                 (day, index) => Tab(

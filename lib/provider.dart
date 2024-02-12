@@ -18,11 +18,11 @@ part 'provider.g.dart';
 Future<Schedule> schedule(ScheduleRef ref) async {
     final prefs = ref.listen(settingsProvider, (previous, next) {}).read().value!;
 
-    final String universityId = prefs.getString('universityId')!;
-    final String facultyId    = prefs.getString('facultyId')!;
-    final String yearId       = prefs.getString('yearId')!;
-    final String groupId      = prefs.getString('groupId')!;
-    final String path = '${globalUniScheduleConfiguration.schedulePathPrefix}/$scheduleFormatVersion/$universityId/$facultyId/$yearId/$groupId.json';
+    final universityId = prefs.getString('universityId')!;
+    final facultyId    = prefs.getString('facultyId')!;
+    final yearId       = prefs.getString('yearId')!;
+    final groupId      = prefs.getString('groupId')!;
+    final path = '${globalUniScheduleConfiguration.schedulePathPrefix}/$scheduleFormatVersion/$universityId/$facultyId/$yearId/$groupId.json';
 
     //TODO print(scheduleJsonRawUri);
 
@@ -59,7 +59,7 @@ Future<Schedule> schedule(ScheduleRef ref) async {
         schedule = utf8.decode(GZipCodec().decode(response.bodyBytes));
     } catch (e) {
         try {
-            final Uri scheduleJsonRawUri  = Uri.https(globalUniScheduleConfiguration.serverIp, '$path');
+            final scheduleJsonRawUri  = Uri.https(globalUniScheduleConfiguration.serverIp, '$path');
             var response = await getAndTrack(ref, scheduleJsonRawUri);
             schedule = response.body;
         } catch (e) {
@@ -81,7 +81,7 @@ Future<Schedule> schedule(ScheduleRef ref) async {
 
     try {
         json = jsonDecode(schedule) as Map<String, dynamic>;
-        prefs.setString('fallbackSchedule', schedule);
+        await prefs.setString('fallbackSchedule', schedule);
     } catch (e) {
         throw Exception('Не удалось обработать расписание');
     }
@@ -107,9 +107,7 @@ Future<
 
 @riverpod
 Future<SharedPreferences> settings(SettingsRef ref) async {
-  final prefs = await SharedPreferences.getInstance();
-
-  return prefs;
+  return await SharedPreferences.getInstance();
 }
 
 @riverpod

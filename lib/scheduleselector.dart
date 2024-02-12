@@ -69,8 +69,8 @@ class Manifest {
 
 Future<ManifestData> downloadManifest(WidgetRef ref, String path) async {
     return downloadFileByUri(Uri.https(globalUniScheduleConfiguration.serverIp, path))
-        .then((value)   { return Manifest.fromJson(jsonDecode(value)).data; })
-        .catchError((e) { return Future<ManifestData>.error('Не удалось загрузить список'); });
+        .then((value)   => Manifest.fromJson(jsonDecode(value)).data)
+        .catchError((e) => Future<ManifestData>.error('Не удалось загрузить список'));
 }
 
 class Menu {
@@ -166,38 +166,10 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
             group      = Menu(enabled: yearId       != null, id: groupId,      name: groupName,      getManifest: () => year.id       != null ? getManifest(ref: ref, university: university.id, faculty: faculty.id, year: year.id) : null);
         }
 
-        DropdownMenu getDropDownMenu(String label,
-                                     Menu menu,
-                                     ManifestData manifest,
-                                     void callback(String a, String b, List<DropdownMenuEntry> dropDownMenu)) {
-            final entries = manifest.map((e) => DropdownMenuEntry(value: e.name, label: e.label)).cast<DropdownMenuEntry>().toList();
-
-            return DropdownMenu(
-                enabled: menu.enabled,
-                requestFocusOnTap: entries.length > 3,
-                initialSelection: menu.enabled ? menu.id : null,
-                label: Text(label),
-                leadingIcon: const Icon(Icons.search),
-                width: 184.0,
-                menuHeight: 200.0,
-                inputDecorationTheme: const InputDecorationTheme(
-                    border: null,
-                ),
-                dropdownMenuEntries: menu.entries ?? entries,
-                onSelected: (value) => setState(
-                    () => callback(
-                        value,
-                        manifest.firstWhere((element) => element.name == value).label,
-                        entries
-                    )
-                )
-            );
-        }
-
-        List<Widget> getMenu(AsyncValue<dynamic> manifest, String name, Menu menu, void callback(String name, String label, List<DropdownMenuEntry> manifestData)) {
+        List<Widget> getMenu(AsyncValue<ManifestData> manifest, String name, Menu menu, void callback(String name, String label, List<DropdownMenuEntry> manifestData)) {
             const size = 64.0;
 
-            return manifest.when<List<Widget>>(
+            return manifest.when(
                 loading: () {
                     canLoadSchedule = false;
 
@@ -226,22 +198,44 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                     ];
                 },
 
-                data: (list) {
+                data: (manifestData) {
                     canLoadSchedule = true;
+
+                    final entries = manifestData.map(
+                        (e) => DropdownMenuEntry(
+                            value: e.name,
+                            label: e.label
+                        )
+                    ).cast<DropdownMenuEntry>()
+                    .toList();
 
                     return <Widget>[
                         SizedBox(
                             height: size,
                             // Width is specified in getDropDownMenu().
-                            child: getDropDownMenu(
-                                name,
-                                menu,
-                                list,
-                                (value, label, entries) {
-                                    callback(value, label, entries);
-                                },
+                            child: DropdownMenu(
+                                enabled: menu.enabled,
+                                requestFocusOnTap: entries.length > 3,
+                                initialSelection: menu.enabled ? menu.id : null,
+                                label: Text(name),
+                                leadingIcon: const Icon(Icons.search),
+                                width: 184.0,
+                                menuHeight: 200.0,
+                                inputDecorationTheme: const InputDecorationTheme(
+                                    border: null,
+                                ),
+                                dropdownMenuEntries: menu.entries ?? entries,
+                                onSelected: (value) => setState(
+                                    () => callback(
+                                        value!,
+                                        manifestData.firstWhere(
+                                            (element) => element.name == value
+                                        ).label,
+                                        entries
+                                    )
+                                )
                             )
-                        ),
+                        )
                     ];
                 }
             );
@@ -327,35 +321,26 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                                 : () {
                                                     final prefs = ref.watch(settingsProvider).value!;
 
-                                                    prefs.setString('initialized',  '1');
-                                                    prefs.setString('universityId', university.id!);
-                                                    prefs.setString('facultyId',    faculty.id!);
-                                                    prefs.setString('yearId',       year.id!);
-                                                    prefs.setString('groupId',      group.id!);
+                                                    prefs.setString('initialized', '1');
 
-                                                    if (university.name != null) {
-                                                        prefs.setString('universityName', university.name!);
-                                                    } else {
-                                                        prefs.remove('universityName');
-                                                    }
+                                                    final m = {
+                                                        'university': university,
+                                                        'faculty':    faculty,
+                                                        'year':       year,
+                                                        'group':      group,
+                                                    };
 
-                                                    if (faculty.name != null) {
-                                                        prefs.setString('facultyName', faculty.name!);
-                                                    } else {
-                                                        prefs.remove('facultyName');
-                                                    }
+                                                    m.forEach(
+                                                        (k, v) {
+                                                            prefs.setString('${k}Id', v.id!);
 
-                                                    if (year.name != null) {
-                                                        prefs.setString('yearName', year.name!);
-                                                    } else {
-                                                        prefs.remove('yearName');
-                                                    }
-
-                                                    if (group.name != null) {
-                                                        prefs.setString('groupName', group.name!);
-                                                    } else {
-                                                        prefs.remove('groupName');
-                                                    }
+                                                            if (v.name != null) {
+                                                                prefs.setString('${k}Name', v.name!);
+                                                            } else {
+                                                                prefs.remove('${k}Name');
+                                                            }
+                                                        }
+                                                    );
 
                                                     prefs.remove('fallbackSchedule');
                                                     ref.invalidate(settingsProvider);
@@ -364,6 +349,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                                         Navigator.pop(context);
                                                     }
                                                 },
+
                                                 child: const Text('Загрузить расписание'),
                                             ),
                                         ]

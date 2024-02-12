@@ -19,7 +19,7 @@ class UniScheduleApp extends ConsumerWidget {
     @override
     Widget build(BuildContext context, WidgetRef ref) {
         final prefs = ref.watch(settingsProvider).value;
-        final theme = uniScheduleThemes.firstWhere((t) => (t.key == (prefs?.getString('theme') ?? 'system')))!;
+        final theme = uniScheduleThemes.firstWhere((t) => (t.key == (prefs?.getString('theme') ?? 'system')));
 
         bool firstRun = (prefs?.getString('initialized') == null);
 
@@ -51,18 +51,20 @@ class UniScheduleApp extends ConsumerWidget {
             final configuration = ref.watch(uniScheduleConfigurationProvider);
 
             return configuration.when(
-                loading: () => wrapper(
-                    () => [
-                        const Padding(
-                            padding: EdgeInsets.only(top: 16),
-                            child: SizedBox(
-                                width: 60,
-                                height: 60,
-                                child: CircularProgressIndicator(),
-                            )
-                        )
-                    ]
-                ),
+                loading: () => Scaffold(body: getLoadingIndicator(() => Future.value())),
+
+                // wrapper(
+                //     () => [
+                //         const Padding(
+                //             padding: EdgeInsets.only(top: 16),
+                //             child: SizedBox(
+                //                 width: 60,
+                //                 height: 60,
+                //                 child: CircularProgressIndicator(),
+                //             )
+                //         )
+                //     ]
+                // ),
 
                 error: (e, st) => wrapper(
                     () => [
@@ -101,8 +103,8 @@ class UniScheduleApp extends ConsumerWidget {
             ),
             home: preloadConfiguration(
                 () => firstRun
-                ? const ScheduleSelector(firstRun: true)
-                : const HomeScreen()
+                    ? const ScheduleSelector(firstRun: true)
+                    : const HomeScreen()
             ),
             // // // // TODO
             //  builder: (context, child) {

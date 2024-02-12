@@ -12,7 +12,7 @@ class SettingsPage extends ConsumerWidget {
 
     @override
     Widget build(BuildContext context, WidgetRef ref) {
-        final prefs = ref.watch(settingsProvider).value;
+        final prefs = ref.watch(settingsProvider).value!;
 
         return ListView(
             children: [
@@ -22,7 +22,7 @@ class SettingsPage extends ConsumerWidget {
                         style: Theme.of(context).textTheme.titleMedium
                     ),
                     trailing: DropdownMenu(
-                        initialSelection: prefs!.getString('theme') ?? 'system',
+                        initialSelection: prefs.getString('theme') ?? 'system',
                         enableSearch: false,
                         inputDecorationTheme: const InputDecorationTheme(
                             border: null,
@@ -32,7 +32,7 @@ class SettingsPage extends ConsumerWidget {
                             (t) => DropdownMenuEntry(value: t.key, label: t.label)
                         ).toList(),
                         onSelected: (value) {
-                            prefs!.setString('theme', value!);
+                            prefs.setString('theme', value!);
                             ref.invalidate(settingsProvider);
                         },
                     )
@@ -69,28 +69,28 @@ class SettingsPage extends ConsumerWidget {
                             onPressed: () {
                                 showDialog(
                                     context: context,
-                                    builder: (BuildContext context) => AlertDialog( // TODO Change to dialog
+                                    builder: (final context) => AlertDialog( // TODO Change to dialog
                                         title: const Text('Поддержать проект'),
                                         content: Text(globalUniScheduleConfiguration.supportGoals),
-                                        actions: globalUniScheduleConfiguration.supportVariants?.map(
+                                        actions: globalUniScheduleConfiguration.supportVariants.map(
                                             (e) => ElevatedButton(
                                                 child: Text(e.label),
-                                                onPressed: () => launchUrl(context, e.link),
-                                            ),
+                                                onPressed: () => launchUrl(context, e.link)
+                                            )
                                         ).toList()
-                                    ),
+                                    )
                                 );
                             },
                             child: Text(
                                 'Поддержать проект',
                                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
                                     color: Theme.of(context).colorScheme.primary
-                                ),
-                            ),
+                                )
+                            )
                         )
                     )
                 )
-            ],
+            ]
         );
 
         // ListTile(

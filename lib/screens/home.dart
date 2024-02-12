@@ -31,7 +31,7 @@ class UniSchedulePages {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
     int _selPage = UniSchedulePages.main;
-    bool showCurrentWeek = DateTime.now().weekday != DateTime.sunday;
+    bool showNextWeek = DateTime.now().weekday == DateTime.sunday;
     bool warningShown = false;
 
     @override
@@ -59,7 +59,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         // Set to default if user toggled a page.
         if (_selPage != UniSchedulePages.schedule) {
-            showCurrentWeek = DateTime.now().weekday != DateTime.sunday;
+            showNextWeek = DateTime.now().weekday == DateTime.sunday;
         }
 
         final weekIndex = ref.watch(scheduleProvider).unwrapPrevious().when<int?>(
@@ -121,7 +121,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             body: <Widget>[
                 const HomePage(),
-                SchedulePage(showCurrentWeek: showCurrentWeek),
+                SchedulePage(showNextWeek: showNextWeek),
                 // MapPage(), // TBI
                 const SettingsPage(),
             ][_selPage],
@@ -132,7 +132,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onPressed: () {
                     setState(
                         () {
-                            showCurrentWeek ^= true;
+                            showNextWeek ^= true;
                         }
                     );
                 },
@@ -141,14 +141,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                         Icon(
-                            showCurrentWeek ? Icons.arrow_forward_sharp : Icons.arrow_back_sharp,
+                            showNextWeek ? Icons.arrow_back_sharp : Icons.arrow_forward_sharp,
                             size: Theme.of(context).textTheme.titleMedium!.fontSize
                         ),
 
                         const SizedBox(width: 8),
 
                         Text(
-                            showCurrentWeek ? 'К следующей неделе' : 'К текущей неделе',
+                            showNextWeek ? 'К текущей неделе' : 'К следующей неделе',
                             style: Theme.of(context).textTheme.titleMedium!.copyWith(
                                 color: Theme.of(context).colorScheme.primary)
                         ),
@@ -171,7 +171,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                  && globalUniScheduleConfiguration.latestApplicationVersion!.greaterThan(version)) {
                     showDialog(
                         context: context,
-                        builder: (BuildContext context) => AlertDialog(
+                        builder: (final context) => AlertDialog(
                             title: const Text('Доступно обновление!'),
                             content: const Text('Установить новую версию?'),
                             actions: <Widget>[
