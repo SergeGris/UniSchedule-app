@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 import './provider.dart';
 import './configuration.dart';
@@ -68,8 +69,8 @@ class Manifest {
 }
 
 Future<ManifestData> downloadManifest(WidgetRef ref, String path) async {
-    return downloadFileByUri(Uri.https(globalUniScheduleConfiguration.serverIp, path))
-        .then((value)   => Manifest.fromJson(jsonDecode(value)).data)
+    return http.get(Uri.https(globalUniScheduleConfiguration.serverIp, path))
+        .then((value)   => Manifest.fromJson(jsonDecode(value.body)).data)
         .catchError((e) => Future<ManifestData>.error('Не удалось загрузить список'));
 }
 
@@ -219,7 +220,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                 initialSelection: menu.enabled ? menu.id : null,
                                 label: Text(name),
                                 leadingIcon: const Icon(Icons.search),
-                                width: 184.0,
+                                width: 240.0,
                                 menuHeight: 200.0,
                                 inputDecorationTheme: const InputDecorationTheme(
                                     border: null,

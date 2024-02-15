@@ -8,7 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../pages/home.dart';
 import '../pages/schedule.dart';
-//import '../pages/map.dart';
+import '../pages/map.dart';
 import '../pages/settings.dart';
 
 import '../utils.dart';
@@ -26,11 +26,34 @@ class HomeScreen extends ConsumerStatefulWidget {
 class UniSchedulePages {
     static const int main     = 0;
     static const int schedule = 1;
-    static const int settings = 2;
+    static const int map      = 2;
+    static const int settings = 3;
+}
+
+class WeekNumberWidget extends ConsumerWidget {
+    @override
+    Widget build(BuildContext context, WidgetRef ref) {
+        final weekIndex = ref.watch(scheduleProvider).unwrapPrevious().when<int?>(
+            loading: ()      => null,
+            error:   (e, st) => null,
+            data:    (value) => getWeekIndex(DateTime.now(), value),
+        );
+
+        //if (weekIndex != null)
+        //Text('Учебная неделя №${weekIndex + 1}', style: Theme.of(context).textTheme.titleMedium)
+        //TODO!!! else
+        //Text('Учёба ещё не началась', style: Theme.of(context).textTheme.titleMedium!)
+
+        if (weekIndex == null) {
+            return SizedBox(); // Do nothing if we do not know the week
+        }
+
+        return Text('Учебная неделя №${weekIndex + 1}', style: Theme.of(context).textTheme.titleMedium);
+    }
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-    int _selPage = UniSchedulePages.main;
+    int  _selPage     = UniSchedulePages.main;
     bool showNextWeek = DateTime.now().weekday == DateTime.sunday;
     bool warningShown = false;
 
@@ -39,21 +62,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         if (!warningShown && globalUniScheduleConfiguration.manifestUpdated) {
             warningShown = true;
 
-            Future(() async {
-                    showDialog(
-                        context: context,
-                        builder: (BuildContext context) => AlertDialog(
-                            title: const Text('Внимание!'),
-                            content: const Text('Обновите приложение. Скоро ваше приложение перестанет поддерживать формат расписания'),
-                            actions: <Widget>[
-                                TextButton(
-                                    onPressed: () { Navigator.pop(context); },
-                                    child: const Text('Хорошо'),
-                                ),
-                            ],
-                        ),
-                    );
-                }
+            Future(
+                () async => showDialog(
+                    context: context,
+                    builder: (BuildContext context) => AlertDialog(
+                        title: const Text('Внимание!'),
+                        content: const Text('Обновите приложение. Скоро ваше приложение перестанет поддерживать формат расписания'),
+                        actions: <Widget>[
+                            TextButton(
+                                onPressed: () { Navigator.pop(context); },
+                                child: const Text('Хорошо'),
+                            ),
+                        ],
+                    ),
+                ),
             );
         }
 
@@ -62,30 +84,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             showNextWeek = DateTime.now().weekday == DateTime.sunday;
         }
 
-        final weekIndex = ref.watch(scheduleProvider).unwrapPrevious().when<int?>(
-            loading: ()      => null,
-            error:   (e, st) => null,
-            data:    (value) => getWeekIndex(DateTime.now(), value),
-        );
+        final pagesNavigation = const {
+            UniSchedulePages.main:     NavigationDestination(icon: Icon(Icons.home),     label: 'Главная'),
+            UniSchedulePages.schedule: NavigationDestination(icon: Icon(Icons.schedule), label: 'Расписание'),
+            UniSchedulePages.map:      NavigationDestination(icon: Icon(Icons.map),      label: 'Карта'), // TBI
+            UniSchedulePages.settings: NavigationDestination(icon: Icon(Icons.settings), label: 'Настройки'),
+        };
+
+        final pages = {
+            UniSchedulePages.main:     const HomePage(),
+            UniSchedulePages.schedule: SchedulePage(showNextWeek: showNextWeek),
+            UniSchedulePages.map:      const MapPage(),
+            UniSchedulePages.settings: const SettingsPage(),
+        };
 
         return Scaffold(
             appBar: AppBar(
                 title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                        Text(dateTitle(ref)),
-                        if (weekIndex != null)
-                        Text('Учебная неделя №${weekIndex + 1}', style: Theme.of(context).textTheme.titleMedium)
-                        //TODO!!! else
-                        //Text('Учёба ещё не началась', style: Theme.of(context).textTheme.titleMedium!)
+                        Text(dateTitle()),
+                        WeekNumberWidget(),
                     ]
                 ),
-                // [
-                //     Text("Расписание на сегодня"),
-                //     Text("Текущее расписание"),
-                //     // Text("Карта"), // TBI
-                //     Text("Настройки"),
-                // ][_selPage],
                 shadowColor: Theme.of(context).shadowColor,
 
                 bottom: const Tab(
@@ -104,39 +125,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
 
             bottomNavigationBar: NavigationBar(
-                destinations: const [
-                    NavigationDestination(icon: Icon(Icons.home),     label: 'Главная'),
-                    NavigationDestination(icon: Icon(Icons.schedule), label: 'Расписание'),
-                    // NavigationDestination(icon: Icon(Icons.map), label: 'Карта'), // TBI
-                    NavigationDestination(icon: Icon(Icons.settings), label: 'Настройки')
-                ],
+                destinations: pagesNavigation.values.toList(),
                 selectedIndex: _selPage,
-                onDestinationSelected: (index) {
-                    setState(
-                        () {
-                            _selPage = index;
-                        }
-                    );
-                },
+                onDestinationSelected: (index) => setState(() => _selPage = index)
             ),
-            body: <Widget>[
-                const HomePage(),
-                SchedulePage(showNextWeek: showNextWeek),
-                // MapPage(), // TBI
-                const SettingsPage(),
-            ][_selPage],
+
+            body: pages[_selPage],
 
             floatingActionButton: (_selPage != UniSchedulePages.schedule)
             ? null
             : ElevatedButton(
-                onPressed: () {
-                    setState(
-                        () {
-                            showNextWeek ^= true;
-                        }
-                    );
-                },
-
+                onPressed: () => setState(() => showNextWeek ^= true),
                 child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -162,7 +161,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     void initState() {
         super.initState();
 
-        Future(() async {
+        Future(
+            () async {
                 final packageInfo = await PackageInfo.fromPlatform();
                 var version = Version.fromString(packageInfo.version);
 
@@ -178,12 +178,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ...globalUniScheduleConfiguration.updateVariants.map(
                                     (e) => ElevatedButton(
                                         child: Text(e.label),
-                                        onPressed: () => launchUrl(context, e.link),
-                                    ),
+                                        onPressed: () => launchLink(context, e.link),
+                                    )
                                 ),
 
                                 TextButton(
-                                    onPressed: () { Navigator.pop(context); },
+                                    onPressed: () => Navigator.pop(context),
                                     child: const Text('Не сейчас'),
                                 ),
                             ],

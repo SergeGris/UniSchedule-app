@@ -112,7 +112,7 @@ Future<SharedPreferences> settings(SettingsRef ref) async {
 
 @riverpod
 Future<DateTime> datetime(DatetimeRef ref) async {
-    final now = DateTime.now();
+    final now = DateTime.now();//TODO
     Timer(Duration(minutes: 0, seconds: 60 - now.second), () => ref.invalidateSelf());
     return now;
 }
@@ -124,8 +124,9 @@ Future<UniScheduleConfiguration> uniScheduleConfiguration(UniScheduleConfigurati
             'raw.githubusercontent.com',
             '/SergeGris/sergegris.github.io/main/configuration.json'
         );
-        final manifestDataJson = await downloadFileByUri(uri);
-        final json = jsonDecode(manifestDataJson);
+
+        final manifestDataJson = await http.get(uri);
+        final json = jsonDecode(manifestDataJson.body);
         return UniScheduleConfiguration.fromJson(json);
     } catch (e) {
         //TODO print('can not download $e');

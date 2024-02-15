@@ -1,7 +1,7 @@
 name: UniSchedule
 description: UniSchedule - application to view an university schedule.
 publish_to: 'none'
-version: 0.1.8+12
+version: 0.1.9+13
 
 environment:
   sdk: '>=3.1.2 <4.0.0'
@@ -11,6 +11,7 @@ dependencies:
     sdk: flutter
   flutter_linkify: ^6.0.0
   flutter_riverpod: ^2.4.9
+  flutter_svg: ^2.0.9
   http: ^1.2.0
   meta: ^1.10.0
   package_info_plus: ^5.0.1
@@ -26,3 +27,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/cmc-floor-plan-1.svg.vec
+    - assets/cmc-floor-plan-2.svg.vec

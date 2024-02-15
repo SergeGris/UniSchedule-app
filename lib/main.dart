@@ -19,8 +19,7 @@ class UniScheduleApp extends ConsumerWidget {
     @override
     Widget build(BuildContext context, WidgetRef ref) {
         final prefs = ref.watch(settingsProvider).value;
-        final theme = uniScheduleThemes.firstWhere((t) => (t.key == (prefs?.getString('theme') ?? 'system')));
-
+        final theme = uniScheduleThemes[prefs?.getString('theme') ?? 'system']!;
         bool firstRun = (prefs?.getString('initialized') == null);
 
         // Check that all preferences available.

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:week_of_year/week_of_year.dart';
 
@@ -30,9 +29,9 @@ RefreshIndicator getLoadingIndicator(RefreshCallback onRefresh) {
                         height: constraints.maxHeight,
                         width: constraints.maxWidth,
                         child: const Center(child: CircularProgressIndicator.adaptive()))
-                ]
-            )
-        )
+                ],
+            ),
+        ),
     );
 }
 
@@ -68,13 +67,8 @@ String plural(int n, List<String> variants) {
     return variants[i];
 }
 
-Future<String> downloadFileByUri(Uri uri) async {
-    final response = await http.get(uri);
-    return response.body;
-}
-
 // Возвращает строку в формате "День-недели, число месяц"
-String dateTitle(WidgetRef ref) {
+String dateTitle() {
     final date = DateTime.now();
 
     // Именительный падеж (кто?/что?)
@@ -128,6 +122,10 @@ extension ExtendedIterable<E> on Iterable<E> {
     }
 }
 
+extension ListFromMap<Key, Element> on Map<Key, Element> {
+    List<T> toList<T>(T Function(MapEntry<Key, Element> entry) getElement) => entries.map(getElement).toList();
+}
+
 class Version {
     Version.fromString(String string) {
         final s = string.split('.');
@@ -151,17 +149,18 @@ class Version {
 
 extension TimeOfDayExtension on TimeOfDay {
     int differenceInMinutes(TimeOfDay other) => (hour - other.hour) * 60 + (minute - other.minute);
-
-    bool isAfterThan(TimeOfDay other)     => hour * 60 + minute > other.hour * 60 + other.minute;
-    bool isBeforeThan(TimeOfDay other)    => hour * 60 + minute < other.hour * 60 + other.minute;
-    bool isNotAfterThan(TimeOfDay other)  => !isAfterThan(other);
-    bool isNotBeforeThan(TimeOfDay other) => !isBeforeThan(other);
+    bool isAfterThan(TimeOfDay other)        => differenceInMinutes(other) > 0;
+    bool isBeforeThan(TimeOfDay other)       => differenceInMinutes(other) < 0;
+    bool isNotAfterThan(TimeOfDay other)     => !isAfterThan(other);
+    bool isNotBeforeThan(TimeOfDay other)    => !isBeforeThan(other);
 }
 
-Future<void> launchUrl(BuildContext context, String url) async {
-    if (await canLaunch(url)) {
-        await launch(url);
-    } else {
+Future<void> launchLink(BuildContext context, String link) async {
+    final url = Uri.parse(link);
+
+    // TODO add can launch url check which won't work on some phones
+    // TODO fails on web version, but launchs link
+    if (!await launchUrl(url)) {
         showDialog(
             context: context,
             builder: (final context) => AlertDialog(
@@ -171,9 +170,9 @@ Future<void> launchUrl(BuildContext context, String url) async {
                     TextButton(
                         onPressed: () => Navigator.pop(context),
                         child: const Text('Понятно'),
-                    ),
-                ],
-            ),
+                    )
+                ]
+            )
         );
     }
 }
@@ -181,20 +180,18 @@ Future<void> launchUrl(BuildContext context, String url) async {
 class UniScheduleTheme {
     const UniScheduleTheme({required this.themeMode,
                             required this.colorSchemeSeed,
-                            required this.key,
                             required this.label});
     final ThemeMode themeMode;
     final Color colorSchemeSeed;
-    final String key;
     final String label;
 }
 
-const uniScheduleThemes = [
-    UniScheduleTheme(themeMode: ThemeMode.system, colorSchemeSeed: Colors.indigoAccent, key: 'system', label: 'Системная'),
-    UniScheduleTheme(themeMode: ThemeMode.light,  colorSchemeSeed: Colors.indigoAccent, key: 'light',  label: 'Светлая'),
-    UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.indigoAccent, key: 'dark',   label: 'Тёмная'),
+const uniScheduleThemes = {
+    'system': UniScheduleTheme(themeMode: ThemeMode.system, colorSchemeSeed: Colors.indigoAccent, label: 'Системная'),
+    'light':  UniScheduleTheme(themeMode: ThemeMode.light,  colorSchemeSeed: Colors.indigoAccent, label: 'Светлая'),
+    'dark':   UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.indigoAccent, label: 'Тёмная'),
 
     //TODO Add new color themes
-//    UniScheduleTheme(themeMode: ThemeMode.light,  colorSchemeSeed: Colors.pinkAccent,   key: 'light-pink', label: 'Светло-розовая'),
-//    UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.pinkAccent,   key: 'dark-pink',  label: 'Тёмно-розовая'),
-];
+    //    UniScheduleTheme(themeMode: ThemeMode.light,  colorSchemeSeed: Colors.pinkAccent,   key: 'light-pink', label: 'Светло-розовая'),
+    //    UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.pinkAccent,   key: 'dark-pink',  label: 'Тёмно-розовая'),
+};

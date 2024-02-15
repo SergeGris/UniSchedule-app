@@ -42,12 +42,11 @@ class SchedulePage extends ConsumerWidget {
 
         final currentWeekDay = (DateTime.now().weekday - 1);
 
-        DateTime getScheduleDay(int index) =>
-            DateTime.now().add(
-                Duration(
-                    days: index + 1 - currentWeekDay - 1 + (showNextWeek ? 7 : 0)
-                )
-            );
+        DateTime getScheduleDay(int index) => DateTime.now().add(
+            Duration(
+                days: index + 1 - currentWeekDay - 1 + (showNextWeek ? 7 : 0)
+            )
+        );
 
         return ScheduleLoader(
             (schedule) {
@@ -80,7 +79,8 @@ class SchedulePage extends ConsumerWidget {
                                         ]
                                     )
                                 )
-                            ).toList();
+                            )
+                            .toList();
 
                             const horizontalMargin = 8.0;
                             const borderRadius = 8.0;
@@ -93,6 +93,7 @@ class SchedulePage extends ConsumerWidget {
                                         toolbarHeight: 0,
                                         bottom: TabBar(tabs: weekdayTabs),
                                     ),
+
                                     body: TabBarView(
                                         children: [
                                             ...week.days.mapIndexed(
@@ -118,29 +119,27 @@ class SchedulePage extends ConsumerWidget {
                                                     : ListView.separated(
                                                         padding: const EdgeInsets.only(top: 8.0, bottom: kFloatingActionButtonMargin + 48.0 /* TODO compute size of floating button. */),
                                                         itemCount: day.classes.length,
-                                                        itemBuilder: (context, index) => (
-                                                            ClassCard(
-                                                                classes: day.classes,
-                                                                index: index,
-                                                                showProgress: false,
-                                                                number: index + 1,
-                                                                horizontalMargin: horizontalMargin,
-                                                                borderRadius: borderRadius
-                                                            )
+                                                        itemBuilder: (context, index) => ClassCard(
+                                                            classes: day.classes,
+                                                            index: index,
+                                                            showProgress: false,
+                                                            number: index + 1,
+                                                            horizontalMargin: horizontalMargin,
+                                                            borderRadius: borderRadius
                                                         ),
                                                         separatorBuilder: (context, index) => const Divider(
                                                             indent: horizontalMargin + borderRadius,
                                                             endIndent: horizontalMargin + borderRadius,
-                                                        )
-                                                    )
-                                                )
-                                            )
-                                        ]
-                                    )
-                                )
+                                                        ),
+                                                    ),
+                                                ),
+                                            ),
+                                        ],
+                                    ),
+                                ),
                             );
                         }
-                    )
+                    ),
                 );
             }
         );
