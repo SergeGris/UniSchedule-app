@@ -21,20 +21,37 @@ class SettingsPage extends ConsumerWidget {
                         'Тема приложения:',
                         style: Theme.of(context).textTheme.titleMedium
                     ),
-                    trailing: DropdownMenu(
+                    // trailing: DropdownMenu(
+                    //     initialSelection: prefs.getString('theme') ?? 'system',
+                    //     enableSearch: false,
+                    //     inputDecorationTheme: const InputDecorationTheme(
+                    //         border: null,
+                    //     ),
+                    //     requestFocusOnTap: false,
+                    //     dropdownMenuEntries: uniScheduleThemes.toList<DropdownMenuEntry>(
+                    //         (entry) => DropdownMenuEntry(
+                    //             value: entry.key,
+                    //             label: entry.value.label
+                    //         )
+                    //     ),
+                    //     onSelected: (value) {
+                    //         prefs.setString('theme', value!);
+                    //         ref.invalidate(settingsProvider);
+                    //     },
+                    // )
+
+                    trailing: UniScheduleDropDownButton(
+                        hint: 'Выберете тему',
+                        alignment: Alignment.center,
                         initialSelection: prefs.getString('theme') ?? 'system',
-                        enableSearch: false,
-                        inputDecorationTheme: const InputDecorationTheme(
-                            border: null,
-                        ),
-                        requestFocusOnTap: false,
-                        dropdownMenuEntries: uniScheduleThemes.toList<DropdownMenuEntry>(
-                            (entry) => DropdownMenuEntry(
-                                value: entry.key,
-                                label: entry.value.label
+                        items: uniScheduleThemes.toList(
+                            (e) => DropdownMenuItem<String>(
+                                value: e.key,
+                                child: Text(e.value.label),
                             )
-                        ),
-                        onSelected: (value) {
+                        )
+                        .toList(),
+                        onSelected: (String? value) {
                             prefs.setString('theme', value!);
                             ref.invalidate(settingsProvider);
                         },
@@ -86,6 +103,25 @@ class SettingsPage extends ConsumerWidget {
                             },
                             child: Text(
                                 'Поддержать проект',
+                                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                                    color: Theme.of(context).colorScheme.primary,
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+
+                if (globalUniScheduleConfiguration.feedbackLink != null)
+                ListTile(
+                    title: Container(
+                        alignment: Alignment.center,
+                        child: ElevatedButton(
+                            onPressed: () => launchLink(
+                                context,
+                                globalUniScheduleConfiguration.feedbackLink!
+                            ),
+                            child: Text(
+                                'Форма обратной связи',
                                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
                                     color: Theme.of(context).colorScheme.primary,
                                 ),

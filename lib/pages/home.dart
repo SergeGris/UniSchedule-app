@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -40,7 +39,6 @@ class HomePage extends ConsumerWidget {
                             var classes = week.days[day].classes
                                 .where((c) => c.end.isNotBeforeThan(time))
                                 .toList();
-
 
                             final firstClass = classes.indexWhere((c) => c.name != null);
 
@@ -92,7 +90,7 @@ class HomePage extends ConsumerWidget {
                                         listTitle = 'До начала меньше минуты';
                                     } else {
                                         final h = hours   > 0 ? ' $hours'   + ' ${plural(hours,   ["час",    "часа",   "часов"])}' : '';
-                                        final m = minutes > 0 ? ' $minutes' + ' ${plural(minutes, ["минуту", "минуты", "минут"])}' : '';
+                                        final m = minutes > 0 ? ' $minutes' + ' ${plural(minutes, ["минута", "минуты", "минут"])}' : '';
 
                                         listSubTitle = 'До начала$h$m';
                                     }

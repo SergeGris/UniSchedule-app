@@ -1,12 +1,13 @@
 name: UniSchedule
 description: UniSchedule - application to view an university schedule.
 publish_to: 'none'
-version: 0.1.9+13
+version: 0.1.9+14
 
 environment:
   sdk: '>=3.1.2 <4.0.0'
 
 dependencies:
+  dropdown_button2: ^2.3.9
   flutter:
     sdk: flutter
   flutter_linkify: ^6.0.0
@@ -28,5 +29,13 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/cmc-floor-plan-1.svg.vec
-    - assets/cmc-floor-plan-2.svg.vec
+  - assets/MSU/PHYS/floor-plan-1.svg.vec
+  - assets/MSU/PHYS/floor-plan1.svg.vec
+  - assets/MSU/PHYS/floor-plan2.svg.vec
+  - assets/MSU/PHYS/floor-plan3.svg.vec
+  - assets/MSU/PHYS/floor-plan4.svg.vec
+  - assets/MSU/PHYS/floor-plan5.svg.vec
+  - assets/MSU/SAB/floor-plan1.svg.vec
+  - assets/MSU/SAB/floor-plan2.svg.vec
+  - assets/MSU/SAB/floor-plan2.svg.vec
+  - assets/MSU/BIO/floor-plan1.svg.vec

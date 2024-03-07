@@ -9,7 +9,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import './models/schedule.dart';
 import './configuration.dart';
-import './utils.dart';
 import './globalkeys.dart';
 
 part 'provider.g.dart';
@@ -51,21 +50,34 @@ Future<Schedule> schedule(ScheduleRef ref) async {
         }
     }
 
+    bool cached = false;
     var schedule;
 
     try {
+        // Download gziped version.
         final scheduleJsonGzipUri = Uri.https(globalUniScheduleConfiguration.serverIp, '$path.gz');
         var response = await getAndTrack(ref, scheduleJsonGzipUri);
         schedule = utf8.decode(GZipCodec().decode(response.bodyBytes));
     } catch (e) {
         try {
-            final scheduleJsonRawUri  = Uri.https(globalUniScheduleConfiguration.serverIp, '$path');
+            // Or try download json as is.
+            final scheduleJsonRawUri = Uri.https(globalUniScheduleConfiguration.serverIp, '$path');
             var response = await getAndTrack(ref, scheduleJsonRawUri);
             schedule = response.body;
         } catch (e) {
-            final error = 'Не удалось обновить расписание';
-            GlobalKeys.showWarningBanner(error);
-            throw Exception(error);
+            // Or... Maybe we cached something?
+            final prefs = ref.watch(settingsProvider).value!;
+            final fallbackSchedule = prefs.getString('fallbackSchedule');
+
+            if (fallbackSchedule != null) {
+                cached = true;
+                final scheduleLastUpdate = prefs.getString('scheduleLastUpdate');
+                schedule = fallbackSchedule;
+            } else {
+                final error = 'Не удалось обновить расписание';
+                GlobalKeys.showWarningBanner(error);
+                throw Exception(error);
+            }
         }
     }
 
@@ -80,13 +92,30 @@ Future<Schedule> schedule(ScheduleRef ref) async {
     final json;
 
     try {
+        // Use for get 01.01.1970, but not 1.1.1970.
+        String f(int s) {
+            if (s >= 10) {
+                return '$s';
+            } else {
+                return '0$s';
+            }
+        }
+
         json = jsonDecode(schedule) as Map<String, dynamic>;
         await prefs.setString('fallbackSchedule', schedule);
+        final dt = await DateTime.now();
+        await prefs.setString('scheduleLastUpdate', '${f(dt.hour)}:${f(dt.hour)} ${f(dt.day)}.${f(dt.month)}.${dt.year}');
     } catch (e) {
         throw Exception('Не удалось обработать расписание');
     }
 
-    return Schedule.fromJson(json);
+    final s = Schedule.fromJson(json);
+
+    if (cached) {
+        GlobalKeys.showWarningBanner('Отображается версия расписания на ${prefs.getString("scheduleLastUpdate")}');
+    }
+
+    return s;
 }
 
 /*
@@ -112,7 +141,8 @@ Future<SharedPreferences> settings(SettingsRef ref) async {
 
 @riverpod
 Future<DateTime> datetime(DatetimeRef ref) async {
-    final now = DateTime.now();//TODO
+    final now = DateTime.now();
+    // Invalidate ref every minute.
     Timer(Duration(minutes: 0, seconds: 60 - now.second), () => ref.invalidateSelf());
     return now;
 }
@@ -121,15 +151,14 @@ Future<DateTime> datetime(DatetimeRef ref) async {
 Future<UniScheduleConfiguration> uniScheduleConfiguration(UniScheduleConfigurationRef ref) async {
     try {
         final uri = Uri.https(
-            'raw.githubusercontent.com',
-            '/SergeGris/sergegris.github.io/main/configuration.json'
+            defaultServerIp,
+            defaultSchedulePathPrefix + '/configuration.json',
         );
 
         final manifestDataJson = await http.get(uri);
         final json = jsonDecode(manifestDataJson.body);
         return UniScheduleConfiguration.fromJson(json);
     } catch (e) {
-        //TODO print('can not download $e');
         return UniScheduleConfiguration.createEmpty();
     }
 }

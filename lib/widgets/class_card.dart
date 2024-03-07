@@ -91,6 +91,21 @@ class ClassCardTile extends StatelessWidget {
             )
         );
 
+        // Use it to make all columns with time same width
+        double textWidth(String text, TextStyle style) {
+            final TextPainter textPainter = TextPainter(
+                text: TextSpan(text: text, style: style), maxLines: 1, textDirection: TextDirection.ltr)
+            ..layout(minWidth: 0, maxWidth: double.infinity);
+            return textPainter.width;
+        }
+
+        double getTimeWidth() => textWidth(
+            TimeOfDay(hour: 0, minute: 0).format(context),
+            Theme.of(context).textTheme.titleMedium!.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+            )
+        );
+
         return Card(
             color: color,
             margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
@@ -104,18 +119,26 @@ class ClassCardTile extends StatelessWidget {
                         children: [
                             const SizedBox(height: 12),
 
-                            Text(
-                                begin,
-                                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                    color: Theme.of(context).colorScheme.primary,
-                                )
+                            Container(
+                                alignment: Alignment.center,
+                                width: getTimeWidth(),
+                                child: Text(
+                                    begin,
+                                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                                        color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                ),
                             ),
 
-                            Text(
-                                end,
-                                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                    color: Theme.of(context).colorScheme.secondary,
-                                )
+                            Container(
+                                alignment: Alignment.center,
+                                width: getTimeWidth(),
+                                child: Text(
+                                    end,
+                                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                        color: Theme.of(context).colorScheme.secondary,
+                                    ),
+                                ),
                             ),
 
                             const SizedBox(height: 12),
@@ -232,13 +255,12 @@ class ClassCard extends StatelessWidget {
 
         return Column(
             children: [
-                if (begin != null && end != null)
                 ClassCardTile(
                     haveClass: haveClass,
                     color: cardColor[index % 2],
                     number: number,
-                    begin: begin,
-                    end: end,
+                    begin: begin ?? "--:--",
+                    end: end ?? "--:--",
                     name: class0.name,
                     teachersAndRooms: class0.teachersAndRooms,
                     building: class0.building,
@@ -246,17 +268,6 @@ class ClassCard extends StatelessWidget {
                     note: class0.note,
                     borderRadius: borderRadius,
                     horizontalMargin: horizontalMargin,
-                )
-                else if (index + 1 < classes.length)
-                Container(
-                    alignment: Alignment.center,
-                    margin: const EdgeInsets.all(8.0),
-                    child: Text(
-                        'Пары нет',
-                        style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                        )
-                    )
                 ),
                 if (showProgress)
                 Padding(

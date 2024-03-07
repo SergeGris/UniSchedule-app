@@ -217,7 +217,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                             child: DropdownMenu(
                                 enabled: menu.enabled,
                                 requestFocusOnTap: entries.length > 3,
-                                initialSelection: menu.enabled ? menu.id : null,
+                                initialSelection: menu.enabled ? menu.id : null, // TODO preselect only value
                                 label: Text(name),
                                 leadingIcon: const Icon(Icons.search),
                                 width: 240.0,

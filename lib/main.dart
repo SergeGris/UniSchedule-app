@@ -50,7 +50,9 @@ class UniScheduleApp extends ConsumerWidget {
             final configuration = ref.watch(uniScheduleConfigurationProvider);
 
             return configuration.when(
-                loading: () => Scaffold(body: getLoadingIndicator(() => Future.value())),
+                loading: () => Scaffold(
+                    body: getLoadingIndicator(() => Future.value())
+                ),
 
                 // wrapper(
                 //     () => [
@@ -90,16 +92,45 @@ class UniScheduleApp extends ConsumerWidget {
             // TODO debugShowCheckedModeBanner: false,
             scaffoldMessengerKey: GlobalKeys.globalScaffoldKey,
             themeMode: theme.themeMode,
+
             theme: ThemeData(
                 useMaterial3: true,
                 brightness: Brightness.light,
                 colorSchemeSeed: theme.colorSchemeSeed,
+
+                dropdownMenuTheme: DropdownMenuThemeData(
+					inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
+                        isDense: true,
+                        //border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                        contentPadding: const EdgeInsets.all(8),
+                    ),
+                    menuStyle: MenuStyle(
+                        shape: MaterialStatePropertyAll(
+                            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))
+                        ),
+                    ),
+                ),
             ),
             darkTheme: ThemeData(
                 useMaterial3: true,
                 brightness: Brightness.dark,
                 colorSchemeSeed: theme.colorSchemeSeed,
+
+                dropdownMenuTheme: DropdownMenuThemeData(
+					inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
+                        isDense: true,
+                        //border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                        contentPadding: const EdgeInsets.all(8),
+                    ),
+                    menuStyle: MenuStyle(
+                        shape: MaterialStatePropertyAll(
+                            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))
+                        ),
+                    ),
+                ),
             ),
+
+
             home: preloadConfiguration(
                 () => firstRun
                     ? const ScheduleSelector(firstRun: true)

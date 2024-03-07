@@ -36,12 +36,8 @@ class GlobalKeys {
                             contentTextStyle: const TextStyle(color: textColor, fontWeight: FontWeight.bold),
                             actions: <Widget>[
                                 ElevatedButton(
-                                    onPressed: () {
-                                        Future(
-                                            () async {
-                                                hideWarningBanner();
-                                            }
-                                        );
+                                    onPressed: () async {
+                                        hideWarningBanner();
                                     },
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.resolveWith<Color?>(

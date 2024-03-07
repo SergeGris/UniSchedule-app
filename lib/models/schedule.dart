@@ -78,7 +78,6 @@ ClassType? classTypeFromString(String type) {
         'практикум':    'practicum',
         'лабораторная': 'lab',
         'консультация': 'consultation',
-
     };
 
     const typesMap = {

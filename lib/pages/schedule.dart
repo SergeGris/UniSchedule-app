@@ -12,6 +12,7 @@ class SchedulePage extends ConsumerWidget {
     @override
     Widget build(BuildContext context, WidgetRef ref) {
         List<Widget> dateTitleShort(WidgetRef ref, DateTime date) {
+            // Винительный падеж (кого?/чего?)
             final month = [
                 'янв',
                 'фев',
@@ -40,9 +41,10 @@ class SchedulePage extends ConsumerWidget {
             ];
         }
 
-        final currentWeekDay = (DateTime.now().weekday - 1);
+        final date = DateTime.now();
+        final currentWeekDay = (date.weekday - 1);
 
-        DateTime getScheduleDay(int index) => DateTime.now().add(
+        DateTime getScheduleDay(int index) => date.add(
             Duration(
                 days: index + 1 - currentWeekDay - 1 + (showNextWeek ? 7 : 0)
             )
@@ -52,7 +54,7 @@ class SchedulePage extends ConsumerWidget {
             (schedule) {
                 return ScaffoldMessenger(
                     child: Builder(builder: (context) {
-                            final weekParity = getWeekParity(DateTime.now(), schedule, showNextWeek: showNextWeek); //((getWeekIndex(DateTime.now(), schedule) ?? 0) + (showCurrentWeek ? 0 : 1)) % schedule.weeks.length; // TODO
+                            final weekParity = getWeekParity(date, schedule, showNextWeek: showNextWeek);
                             final week = schedule.weeks[weekParity];
                             final weekdayTabs = week.days.mapIndexed(
                                 (day, index) => Tab(

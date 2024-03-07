@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:week_of_year/week_of_year.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 
 import 'configuration.dart';
 import 'globalkeys.dart';
@@ -195,3 +196,62 @@ const uniScheduleThemes = {
     //    UniScheduleTheme(themeMode: ThemeMode.light,  colorSchemeSeed: Colors.pinkAccent,   key: 'light-pink', label: 'Светло-розовая'),
     //    UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.pinkAccent,   key: 'dark-pink',  label: 'Тёмно-розовая'),
 };
+
+class UniScheduleDropDownButton extends StatelessWidget {
+  const UniScheduleDropDownButton({
+    required this.hint,
+    required this.initialSelection,
+    required this.items,
+    required this.onSelected,
+    this.alignment = Alignment.center,
+    super.key,
+  });
+
+  final String hint;
+  final String? initialSelection;
+  final List<DropdownMenuItem<String>> items;
+  final ValueChanged<String?>? onSelected;
+  final Alignment alignment;
+
+  @override
+  Widget build(BuildContext context) {
+      return DropdownButtonHideUnderline(
+          child: DropdownButton2<String>(
+              isExpanded: false,
+              //isDense: true,
+              alignment: alignment,
+              hint: Text(hint),
+              items: items,
+              value: initialSelection,
+              onChanged: onSelected,
+
+              buttonStyleData: ButtonStyleData(
+                  padding: const EdgeInsets.only(left: 8, right: 8),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      // border: Border.all(
+                      //     color: Colors.black26,
+                      // ),
+                  ),
+                  elevation: 1,
+              ),
+
+              dropdownStyleData: DropdownStyleData(
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      // color: Colors.redAccent,
+                  ),
+                  scrollbarTheme: ScrollbarThemeData(
+                      radius: const Radius.circular(16),
+                      thickness: MaterialStateProperty.all<double>(8),
+                      thumbVisibility: MaterialStateProperty.all<bool>(true),
+                  ),
+              ),
+              menuItemStyleData: const MenuItemStyleData(
+                  // height: 40,
+                  padding: EdgeInsets.only(left: 16, right: 16),
+              ),
+          ),
+      );
+  }
+    }

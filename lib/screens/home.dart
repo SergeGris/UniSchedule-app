@@ -14,6 +14,7 @@ import '../pages/settings.dart';
 import '../utils.dart';
 import '../provider.dart';
 import '../scheduleselector.dart';
+import '../floormapselector.dart';
 import '../configuration.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -38,7 +39,6 @@ class WeekNumberWidget extends ConsumerWidget {
             error:   (e, st) => null,
             data:    (value) => getWeekIndex(DateTime.now(), value),
         );
-
         //if (weekIndex != null)
         //Text('Учебная неделя №${weekIndex + 1}', style: Theme.of(context).textTheme.titleMedium)
         //TODO!!! else
@@ -56,6 +56,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     int  _selPage     = UniSchedulePages.main;
     bool showNextWeek = DateTime.now().weekday == DateTime.sunday;
     bool warningShown = false;
+
+    final pagesNavigation = const {
+        UniSchedulePages.main:     NavigationDestination(icon: Icon(Icons.home),     label: 'Главная'),
+        UniSchedulePages.schedule: NavigationDestination(icon: Icon(Icons.schedule), label: 'Расписание'),
+        UniSchedulePages.map:      NavigationDestination(icon: Icon(Icons.map),      label: 'Карта'), // TBI
+        UniSchedulePages.settings: NavigationDestination(icon: Icon(Icons.settings), label: 'Настройки'),
+    };
+
+    @override
+    void initState() {
+        super.initState();
+
+        Future(
+            () async {
+                final packageInfo = await PackageInfo.fromPlatform();
+                var version = Version.fromString(packageInfo.version);
+
+                if (globalUniScheduleConfiguration.updateVariants.isNotEmpty
+                 && (globalUniScheduleConfiguration.latestApplicationVersion?.greaterThan(version) ?? false)) {
+                    showDialog(
+                        context: context,
+                        builder: (final context) => AlertDialog(
+                            title: const Text('Доступно обновление!'),
+                            content: const Text('Установить новую версию?'),
+                            actions: <Widget>[
+                                ...globalUniScheduleConfiguration.updateVariants.map(
+                                    (e) => ElevatedButton(
+                                        child: Text(e.label),
+                                        onPressed: () => launchLink(context, e.link),
+                                    ),
+                                ),
+
+                                TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Не сейчас'),
+                                ),
+                            ],
+                        ),
+                    );
+                }
+            }
+        );
+    }
 
     @override
     Widget build(BuildContext context) {
@@ -84,20 +127,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             showNextWeek = DateTime.now().weekday == DateTime.sunday;
         }
 
-        final pagesNavigation = const {
-            UniSchedulePages.main:     NavigationDestination(icon: Icon(Icons.home),     label: 'Главная'),
-            UniSchedulePages.schedule: NavigationDestination(icon: Icon(Icons.schedule), label: 'Расписание'),
-            UniSchedulePages.map:      NavigationDestination(icon: Icon(Icons.map),      label: 'Карта'), // TBI
-            UniSchedulePages.settings: NavigationDestination(icon: Icon(Icons.settings), label: 'Настройки'),
-        };
-
-        final pages = {
-            UniSchedulePages.main:     const HomePage(),
-            UniSchedulePages.schedule: SchedulePage(showNextWeek: showNextWeek),
-            UniSchedulePages.map:      const MapPage(),
-            UniSchedulePages.settings: const SettingsPage(),
-        };
-
         return Scaffold(
             appBar: AppBar(
                 title: Column(
@@ -109,15 +138,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 shadowColor: Theme.of(context).shadowColor,
 
-                bottom: const Tab(
+                bottom: Tab(
                     child: Padding(
-                        padding: EdgeInsets.all(3),
+                        padding: EdgeInsets.all(8),
                         child: OverflowBar(
                             overflowAlignment: OverflowBarAlignment.center,
                             alignment: MainAxisAlignment.center,
                             overflowSpacing: 3.0,
                             children: <Widget>[
-                                ScheduleSelectorButton(),
+                                _selPage != UniSchedulePages.map ? ScheduleSelectorButton() : FloorMapSelectorButton(),
                             ],
                         ),
                     ),
@@ -130,7 +159,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onDestinationSelected: (index) => setState(() => _selPage = index)
             ),
 
-            body: pages[_selPage],
+            body: {
+                UniSchedulePages.main:     () => const HomePage(),
+                UniSchedulePages.schedule: () => SchedulePage(showNextWeek: showNextWeek),
+                UniSchedulePages.map:      () => const MapPage(),
+                UniSchedulePages.settings: () => const SettingsPage(),
+            }[_selPage]!(),
 
             floatingActionButton: (_selPage != UniSchedulePages.schedule)
             ? null
@@ -154,43 +188,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ],
                 ),
             ),
-        );
-    }
-
-    @override
-    void initState() {
-        super.initState();
-
-        Future(
-            () async {
-                final packageInfo = await PackageInfo.fromPlatform();
-                var version = Version.fromString(packageInfo.version);
-
-                if (globalUniScheduleConfiguration.updateVariants.isNotEmpty
-                 && globalUniScheduleConfiguration.latestApplicationVersion != null
-                 && globalUniScheduleConfiguration.latestApplicationVersion!.greaterThan(version)) {
-                    showDialog(
-                        context: context,
-                        builder: (final context) => AlertDialog(
-                            title: const Text('Доступно обновление!'),
-                            content: const Text('Установить новую версию?'),
-                            actions: <Widget>[
-                                ...globalUniScheduleConfiguration.updateVariants.map(
-                                    (e) => ElevatedButton(
-                                        child: Text(e.label),
-                                        onPressed: () => launchLink(context, e.link),
-                                    )
-                                ),
-
-                                TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Не сейчас'),
-                                ),
-                            ],
-                        ),
-                    );
-                }
-            }
         );
     }
 

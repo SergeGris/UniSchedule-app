@@ -2,6 +2,8 @@
 import 'utils.dart';
 
 const int scheduleFormatVersion = 3;
+const String defaultServerIp = 'raw.githubusercontent.com';
+const String defaultSchedulePathPrefix = '/SergeGris/sergegris.github.io/main';
 late UniScheduleConfiguration globalUniScheduleConfiguration;
 
 class NamedLink {
@@ -43,19 +45,23 @@ class UniScheduleConfiguration {
                 (e) => NamedLink(label: e[0].toString(), link: e[1].toString())
             ).cast<NamedLink>().toList();
         }
+        if (json['feedback.link'] != null) {
+            _feedbackLink = json['feedback.link'];
+        }
     }
 
     UniScheduleConfiguration.createEmpty();
 
     static bool            _manifestUpdated          = false;
-    static String          _serverIp                 = 'raw.githubusercontent.com';
-    static String          _schedulePathPrefix       = '/SergeGris/sergegris.github.io/main';
+    static String          _serverIp                 = defaultServerIp;
+    static String          _schedulePathPrefix       = defaultSchedulePathPrefix;
     static String?         _channelLink              = null;
     static String          _supportGoals             = 'Поддержать развитие проекта';
     static List<NamedLink> _supportVariants          = [];
     static Version?        _latestApplicationVersion = null;
     static List<NamedLink> _updateVariants           = [];
     static bool            _loaded                   = false;
+    static String?         _feedbackLink             = null;
 
     bool            get manifestUpdated          => _manifestUpdated;
     String          get serverIp                 => _serverIp;
@@ -66,4 +72,5 @@ class UniScheduleConfiguration {
     Version?        get latestApplicationVersion => _latestApplicationVersion;
     List<NamedLink> get updateVariants           => _updateVariants;
     bool            get loaded                   => _loaded;
+    String?         get feedbackLink             => _feedbackLink;
 }
