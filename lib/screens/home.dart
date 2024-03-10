@@ -140,13 +140,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 bottom: Tab(
                     child: Padding(
-                        padding: EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(8),
                         child: OverflowBar(
                             overflowAlignment: OverflowBarAlignment.center,
                             alignment: MainAxisAlignment.center,
                             overflowSpacing: 3.0,
                             children: <Widget>[
-                                _selPage != UniSchedulePages.map ? ScheduleSelectorButton() : FloorMapSelectorButton(),
+                                if (_selPage != UniSchedulePages.map)
+                                const ScheduleSelectorButton()
+                                else
+                                const FloorMapSelectorButton(),
                             ],
                         ),
                     ),

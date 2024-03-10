@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,28 +50,26 @@ Future<Schedule> schedule(ScheduleRef ref) async {
         }
     }
 
-    bool cached = false;
+    String? scheduleLastUpdate = null;
     var schedule;
 
     try {
         // Download gziped version.
-        final scheduleJsonGzipUri = Uri.https(globalUniScheduleConfiguration.serverIp, '$path.gz');
+        final scheduleJsonGzipUri = Uri.https(globalUniScheduleConfiguration.serverIp, path + '.gz');
         var response = await getAndTrack(ref, scheduleJsonGzipUri);
         schedule = utf8.decode(GZipCodec().decode(response.bodyBytes));
     } catch (e) {
         try {
             // Or try download json as is.
-            final scheduleJsonRawUri = Uri.https(globalUniScheduleConfiguration.serverIp, '$path');
+            final scheduleJsonRawUri = Uri.https(globalUniScheduleConfiguration.serverIp, path);
             var response = await getAndTrack(ref, scheduleJsonRawUri);
             schedule = response.body;
         } catch (e) {
             // Or... Maybe we cached something?
-            final prefs = ref.watch(settingsProvider).value!;
             final fallbackSchedule = prefs.getString('fallbackSchedule');
 
             if (fallbackSchedule != null) {
-                cached = true;
-                final scheduleLastUpdate = prefs.getString('scheduleLastUpdate');
+                scheduleLastUpdate = prefs.getString('scheduleLastUpdate');
                 schedule = fallbackSchedule;
             } else {
                 final error = 'Не удалось обновить расписание';
@@ -92,30 +90,32 @@ Future<Schedule> schedule(ScheduleRef ref) async {
     final json;
 
     try {
-        // Use for get 01.01.1970, but not 1.1.1970.
-        String f(int s) {
-            if (s >= 10) {
-                return '$s';
-            } else {
-                return '0$s';
-            }
+        String dateTimeToString(DateTime datetime) {
+            // Returns at least two-digit stringified number
+            String _twoDigits(int n) => (n >= 10) ? '$n' : '0$n';
+
+            final year   = datetime.year;
+            final month  = _twoDigits(datetime.month);
+            final day    = _twoDigits(datetime.day);
+            final hour   = _twoDigits(datetime.hour);
+            final minute = _twoDigits(datetime.minute);
+
+            return '$hour:$minute $day.$month.$year';
         }
 
         json = jsonDecode(schedule) as Map<String, dynamic>;
         await prefs.setString('fallbackSchedule', schedule);
-        final dt = await DateTime.now();
-        await prefs.setString('scheduleLastUpdate', '${f(dt.hour)}:${f(dt.hour)} ${f(dt.day)}.${f(dt.month)}.${dt.year}');
+        final dt = DateTime.now();
+        await prefs.setString('scheduleLastUpdate', dateTimeToString(dt));
     } catch (e) {
         throw Exception('Не удалось обработать расписание');
     }
 
-    final s = Schedule.fromJson(json);
-
-    if (cached) {
-        GlobalKeys.showWarningBanner('Отображается версия расписания на ${prefs.getString("scheduleLastUpdate")}');
+    if (scheduleLastUpdate != null) {
+        GlobalKeys.showWarningBanner('Отображается версия расписания на $scheduleLastUpdate');
     }
 
-    return s;
+    return Schedule.fromJson(json);
 }
 
 /*
@@ -136,7 +136,7 @@ Future<
 
 @riverpod
 Future<SharedPreferences> settings(SettingsRef ref) async {
-  return await SharedPreferences.getInstance();
+  return SharedPreferences.getInstance();
 }
 
 @riverpod
@@ -161,4 +161,16 @@ Future<UniScheduleConfiguration> uniScheduleConfiguration(UniScheduleConfigurati
     } catch (e) {
         return UniScheduleConfiguration.createEmpty();
     }
+}
+
+// Used for notifing about updating selected building
+@riverpod
+Future<void> building(BuildingRef ref) async {
+    return;
+}
+
+// Used for notifing about updating selected building
+@riverpod
+Future<void> theme(ThemeRef ref) async {
+    return;
 }

@@ -6,7 +6,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../provider.dart';
 import '../floormapselector.dart';
-import '../globalkeys.dart';
 
 class MapSvgViewer extends StatelessWidget {
     MapSvgViewer(this.svg, {super.key});
@@ -28,12 +27,28 @@ class MapSvgViewer extends StatelessWidget {
     }
 }
 
-class MapPage extends ConsumerWidget {
+class MapPage extends ConsumerStatefulWidget {
     const MapPage({super.key});
 
     @override
-    Widget build(BuildContext context, WidgetRef ref) {
+    ConsumerState<MapPage> createState() => _MapPageState();
+}
+
+/// [AnimationController]s can be created with `vsync: this` because of
+/// [TickerProviderStateMixin].
+class _MapPageState extends ConsumerState<MapPage> with TickerProviderStateMixin {
+    TabController? _tabController = null;
+
+    @override
+    void dispose() {
+        _tabController?.dispose();
+        super.dispose();
+    }
+
+    @override
+    Widget build(BuildContext context) {
         final prefs = ref.watch(settingsProvider).value!;
+        ref.watch(buildingProvider);
         final universityId = prefs.getString('universityId');
         final buildingId = prefs.getString('buildingId');
 
@@ -42,7 +57,6 @@ class MapPage extends ConsumerWidget {
          || buildingId == null   /* TODO */) {
             return const SizedBox(); // TODO
         }
-
         final floorNumbers = buildingsFloors[buildingId]!;
 
         final floors = floorNumbers.map(
@@ -54,33 +68,30 @@ class MapPage extends ConsumerWidget {
             return MapSvgViewer(floors[0]);
         }
 
-        final initialFloor = buildingsFloors[buildingId]!.indexOf(1);
-        print('$initialFloor $buildingId');
+        _tabController = TabController(length: floors.length, vsync: this, initialIndex: buildingsFloors[buildingId]!.indexOf(1));
 
-        return DefaultTabController(
-            length: floors.length,
-            initialIndex: initialFloor!,
-            child: Scaffold(
-                appBar: AppBar(
-                    toolbarHeight: 0,
-                    bottom: TabBar(
-                        tabs: floorNumbers.map(
-                            (number) => Tab(
-                                child: Text(
-                                    '$number',
-                                    style: Theme.of(context).textTheme.titleMedium
-                                )
+        return Scaffold(
+            appBar: AppBar(
+                toolbarHeight: 0,
+                bottom: TabBar(
+                    controller: _tabController,
+                    tabs: floorNumbers.map(
+                        (number) => Tab(
+                            child: Text(
+                                '$number',
+                                style: Theme.of(context).textTheme.titleMedium
                             )
                         )
-                        .toList()
                     )
-                ),
-
-                body: TabBarView(
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: floors.map((svg) => MapSvgViewer(svg)).toList()
+                    .toList()
                 )
             ),
+
+            body: TabBarView(
+                controller: _tabController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: floors.map((svg) => MapSvgViewer(svg)).toList()
+            )
         );
     }
 }

@@ -73,7 +73,7 @@ class HomePage extends ConsumerWidget {
                                     listTitle = 'Идёт ' + (classes[0].type?.name.toLowerCase() ?? 'пара');
 
                                     if (hours == 0 && minutes == 0) {
-                                        listSubTitle = 'До конца меньше минуты';
+                                        listSubTitle = 'Пара закончилась';
                                     } else {
                                         final h = hours   > 0 ? ' $hours'   + ' ${plural(hours,   ["час",    "часа",   "часов"])}' : '';
                                         final m = minutes > 0 ? ' $minutes' + ' ${plural(minutes, ["минута", "минуты", "минут"])}' : '';
@@ -87,7 +87,7 @@ class HomePage extends ConsumerWidget {
                                     listTitle = 'Сейчас пары нет';
 
                                     if (hours == 0 && minutes == 0) {
-                                        listTitle = 'До начала меньше минуты';
+                                        listTitle = 'Пара началась';
                                     } else {
                                         final h = hours   > 0 ? ' $hours'   + ' ${plural(hours,   ["час",    "часа",   "часов"])}' : '';
                                         final m = minutes > 0 ? ' $minutes' + ' ${plural(minutes, ["минута", "минуты", "минут"])}' : '';
@@ -132,7 +132,7 @@ class HomePage extends ConsumerWidget {
 
                                                 if (listSubTitle != null)
                                                 Text(
-                                                    listSubTitle!,
+                                                    listSubTitle,
                                                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                                         color: Theme.of(context).colorScheme.primary,
                                                     ),

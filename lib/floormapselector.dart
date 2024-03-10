@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import './utils.dart';
 import './provider.dart';
@@ -8,7 +7,7 @@ import './provider.dart';
 const buildingsNames = {
     'SAB':  'Второй гуманитарный корпус',
     'PHYS': 'Физический корпус',
-    'BIO':  'Биологический корпус'
+    'BIO':  'Биологический корпус',
 };
 
 const buildingsFloors = {
@@ -17,38 +16,37 @@ const buildingsFloors = {
     'BIO':  [1],
 };
 
-class FloorMapSelectorButton extends ConsumerStatefulWidget {
-    FloorMapSelectorButton({super.key});
+class FloorMapSelectorButton extends ConsumerWidget {
+    const FloorMapSelectorButton({super.key});
 
     @override
-    ConsumerState<FloorMapSelectorButton> createState() => _FloorMapSelectorState();
-}
-
-class _FloorMapSelectorState extends ConsumerState<FloorMapSelectorButton> {
-    _FloorMapSelectorState();
-
-    String? buildingName;
-    String? buildingId;
-
-    @override
-    Widget build(BuildContext context) {
+    Widget build(BuildContext context, WidgetRef ref) {
+        ref.watch(buildingProvider);
         final prefs = ref.watch(settingsProvider).value!;
 
         return UniScheduleDropDownButton(
             hint: 'Выберете корпус',
             alignment: Alignment.center,
+
             items: buildingsNames.toList(
                 (e) => DropdownMenuItem<String>(
                     value: e.key,
-                    child: Text(e.value),
-                )
+                    child: Container(
+                        alignment: Alignment.center,
+                        child: Text(e.value, maxLines: 1),
+                    ),
+                ),
             )
             .toList(),
+
             initialSelection: prefs.getString('buildingId'),
+
             onSelected: (String? value) {
-                prefs.setString('buildingId', value!);
-                prefs.setString('buildingName', buildingsNames[value!]!);
-                ref.invalidate(settingsProvider);
+                if (prefs.getString('buildingId') != value) {
+                    prefs.setString('buildingId', value!);
+                    prefs.setString('buildingName', buildingsNames[value]!);
+                    ref.invalidate(buildingProvider);
+                }
             },
         );
     }

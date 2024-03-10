@@ -48,6 +48,9 @@ class UniScheduleConfiguration {
         if (json['feedback.link'] != null) {
             _feedbackLink = json['feedback.link'];
         }
+        if (json['student.disk.link'] != null) {
+            _studentDiskLink = json['student.disk.link'];
+        }
     }
 
     UniScheduleConfiguration.createEmpty();
@@ -62,6 +65,7 @@ class UniScheduleConfiguration {
     static List<NamedLink> _updateVariants           = [];
     static bool            _loaded                   = false;
     static String?         _feedbackLink             = null;
+    static String?         _studentDiskLink          = null;
 
     bool            get manifestUpdated          => _manifestUpdated;
     String          get serverIp                 => _serverIp;
@@ -73,4 +77,5 @@ class UniScheduleConfiguration {
     List<NamedLink> get updateVariants           => _updateVariants;
     bool            get loaded                   => _loaded;
     String?         get feedbackLink             => _feedbackLink;
+    String?         get studentDiskLink          => _studentDiskLink;
 }

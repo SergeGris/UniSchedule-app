@@ -26,10 +26,10 @@ class ScheduleSelectorButton extends ConsumerWidget {
     Widget build(BuildContext context, WidgetRef ref) {
         final prefs = ref.watch(settingsProvider).value!;
 
-        final String university = prefs.getString('universityName') ?? prefs.getString('universityId')!;
-        final String faculty    = prefs.getString('facultyName')    ?? prefs.getString('facultyId')!;
-        final String year       = prefs.getString('yearName')       ?? prefs.getString('yearId')!;
-        final String group      = prefs.getString('groupName')      ?? prefs.getString('groupId')!;
+        final university = prefs.getString('universityName') ?? prefs.getString('universityId')!;
+        final faculty    = prefs.getString('facultyName')    ?? prefs.getString('facultyId')!;
+        final year       = prefs.getString('yearName')       ?? prefs.getString('yearId')!;
+        final group      = prefs.getString('groupName')      ?? prefs.getString('groupId')!;
 
         return ElevatedButton(
             child: Text('$group группа $year курса $faculty $university'),
@@ -99,7 +99,10 @@ Future<ManifestData> getManifest({required WidgetRef ref, String? university = n
         }
     }
 
-    return downloadManifest(ref, globalUniScheduleConfiguration.schedulePathPrefix + path + '/manifest.json');
+    return downloadManifest(
+        ref,
+        globalUniScheduleConfiguration.schedulePathPrefix + path + '/manifest.json'
+    );
 }
 
 @riverpod
@@ -205,15 +208,27 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                     final entries = manifestData.map(
                         (e) => DropdownMenuEntry(
                             value: e.name,
-                            label: e.label
+                            label: e.label,
                         )
                     ).cast<DropdownMenuEntry>()
                     .toList();
+
+                    // final entries = manifestData.map(
+                    //     (e) => DropdownMenuItem<String>(
+                    //         value: e.name,
+                    //         child: Text(e.label)
+                    //     )
+                    // ).cast<DropdownMenuItem<String>>()
+                    // .toList();
+
+                    // final textEditingController = TextEditingController();
 
                     return <Widget>[
                         SizedBox(
                             height: size,
                             // Width is specified in getDropDownMenu().
+
+                            // TODO aligne entries to center
                             child: DropdownMenu(
                                 enabled: menu.enabled,
                                 requestFocusOnTap: entries.length > 3,

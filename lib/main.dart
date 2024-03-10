@@ -54,19 +54,6 @@ class UniScheduleApp extends ConsumerWidget {
                     body: getLoadingIndicator(() => Future.value())
                 ),
 
-                // wrapper(
-                //     () => [
-                //         const Padding(
-                //             padding: EdgeInsets.only(top: 16),
-                //             child: SizedBox(
-                //                 width: 60,
-                //                 height: 60,
-                //                 child: CircularProgressIndicator(),
-                //             )
-                //         )
-                //     ]
-                // ),
-
                 error: (e, st) => wrapper(
                     () => [
                         const Icon(
@@ -88,48 +75,36 @@ class UniScheduleApp extends ConsumerWidget {
             );
         }
 
+        ThemeData getThemeData(Brightness brightness) => ThemeData(
+            useMaterial3: true,
+            brightness: brightness,
+            colorSchemeSeed: theme.colorSchemeSeed,
+
+            tabBarTheme: Theme.of(context).tabBarTheme.copyWith(
+                indicatorSize: TabBarIndicatorSize.tab
+            ),
+
+            dropdownMenuTheme: DropdownMenuThemeData(
+				inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
+                    isDense: true,
+                    // border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    contentPadding: const EdgeInsets.all(8),
+                ),
+                menuStyle: MenuStyle(
+                    shape: MaterialStatePropertyAll(
+                        RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
+                    ),
+                ),
+            ),
+        );
+
         return MaterialApp(
             // TODO debugShowCheckedModeBanner: false,
             scaffoldMessengerKey: GlobalKeys.globalScaffoldKey,
             themeMode: theme.themeMode,
 
-            theme: ThemeData(
-                useMaterial3: true,
-                brightness: Brightness.light,
-                colorSchemeSeed: theme.colorSchemeSeed,
-
-                dropdownMenuTheme: DropdownMenuThemeData(
-					inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
-                        isDense: true,
-                        //border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                        contentPadding: const EdgeInsets.all(8),
-                    ),
-                    menuStyle: MenuStyle(
-                        shape: MaterialStatePropertyAll(
-                            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))
-                        ),
-                    ),
-                ),
-            ),
-            darkTheme: ThemeData(
-                useMaterial3: true,
-                brightness: Brightness.dark,
-                colorSchemeSeed: theme.colorSchemeSeed,
-
-                dropdownMenuTheme: DropdownMenuThemeData(
-					inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
-                        isDense: true,
-                        //border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                        contentPadding: const EdgeInsets.all(8),
-                    ),
-                    menuStyle: MenuStyle(
-                        shape: MaterialStatePropertyAll(
-                            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))
-                        ),
-                    ),
-                ),
-            ),
-
+            theme: getThemeData(Brightness.light),
+            darkTheme: getThemeData(Brightness.dark),
 
             home: preloadConfiguration(
                 () => firstRun

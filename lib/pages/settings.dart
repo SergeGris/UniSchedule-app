@@ -42,12 +42,14 @@ class SettingsPage extends ConsumerWidget {
 
                     trailing: UniScheduleDropDownButton(
                         hint: 'Выберете тему',
-                        alignment: Alignment.center,
                         initialSelection: prefs.getString('theme') ?? 'system',
                         items: uniScheduleThemes.toList(
                             (e) => DropdownMenuItem<String>(
                                 value: e.key,
-                                child: Text(e.value.label),
+                                child: Container(
+                                    alignment: Alignment.center,
+                                    child: Text(e.value.label, maxLines: 1),
+                                ),
                             )
                         )
                         .toList(),
@@ -103,6 +105,25 @@ class SettingsPage extends ConsumerWidget {
                             },
                             child: Text(
                                 'Поддержать проект',
+                                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                                    color: Theme.of(context).colorScheme.primary,
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+
+                if (globalUniScheduleConfiguration.studentDiskLink != null)
+                ListTile(
+                    title: Container(
+                        alignment: Alignment.center,
+                        child: ElevatedButton(
+                            onPressed: () => launchLink(
+                                context,
+                                globalUniScheduleConfiguration.studentDiskLink!
+                            ),
+                            child: Text(
+                                'Студенческий диск',
                                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
                                     color: Theme.of(context).colorScheme.primary,
                                 ),

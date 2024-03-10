@@ -99,12 +99,17 @@ class ClassCardTile extends StatelessWidget {
             return textPainter.width;
         }
 
+        // TODO Remove
+        double max(double a, double b) {
+            return a >= b ? a : b;
+        }
+
         double getTimeWidth() => textWidth(
             TimeOfDay(hour: 0, minute: 0).format(context),
             Theme.of(context).textTheme.titleMedium!.copyWith(
                 color: Theme.of(context).colorScheme.primary,
             )
-        );
+        ) * max(MediaQuery.of(context).textScaleFactor, 1.0); // FUCK TODO fucking magic constant. Pay attention to <https://stackoverflow.com/a/62536187>
 
         return Card(
             color: color,

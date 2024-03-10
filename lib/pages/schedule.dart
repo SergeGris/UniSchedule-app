@@ -34,7 +34,7 @@ class SchedulePage extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleSmall
                 ),
-                Text('$month',
+                Text(month,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall
                 )
@@ -42,7 +42,7 @@ class SchedulePage extends ConsumerWidget {
         }
 
         final date = DateTime.now();
-        final currentWeekDay = (date.weekday - 1);
+        final currentWeekDay = date.weekday - 1;
 
         DateTime getScheduleDay(int index) => date.add(
             Duration(

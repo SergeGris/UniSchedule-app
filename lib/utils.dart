@@ -29,7 +29,8 @@ RefreshIndicator getLoadingIndicator(RefreshCallback onRefresh) {
                     SizedBox(
                         height: constraints.maxHeight,
                         width: constraints.maxWidth,
-                        child: const Center(child: CircularProgressIndicator.adaptive()))
+                        child: const Center(child: CircularProgressIndicator.adaptive())
+                    )
                 ],
             ),
         ),
@@ -198,60 +199,60 @@ const uniScheduleThemes = {
 };
 
 class UniScheduleDropDownButton extends StatelessWidget {
-  const UniScheduleDropDownButton({
-    required this.hint,
-    required this.initialSelection,
-    required this.items,
-    required this.onSelected,
-    this.alignment = Alignment.center,
-    super.key,
-  });
+    const UniScheduleDropDownButton({
+            required this.hint,
+            required this.initialSelection,
+            required this.items,
+            required this.onSelected,
+            this.alignment = Alignment.center,
+            super.key,
+    });
 
-  final String hint;
-  final String? initialSelection;
-  final List<DropdownMenuItem<String>> items;
-  final ValueChanged<String?>? onSelected;
-  final Alignment alignment;
+    final String hint;
+    final String? initialSelection;
+    final List<DropdownMenuItem<String>>? items;
+    final ValueChanged<String?>? onSelected;
+    final Alignment alignment;
 
-  @override
-  Widget build(BuildContext context) {
-      return DropdownButtonHideUnderline(
-          child: DropdownButton2<String>(
-              isExpanded: false,
-              //isDense: true,
-              alignment: alignment,
-              hint: Text(hint),
-              items: items,
-              value: initialSelection,
-              onChanged: onSelected,
+    @override
+    Widget build(BuildContext context) {
+        return DropdownButtonHideUnderline(
+            child: DropdownButton2<String>(
+                isExpanded: false,
+                isDense: false,
+                alignment: alignment,
+                hint: Text(hint),
+                items: items,
+                value: initialSelection,
+                onChanged: onSelected,
 
-              buttonStyleData: ButtonStyleData(
-                  padding: const EdgeInsets.only(left: 8, right: 8),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      // border: Border.all(
-                      //     color: Colors.black26,
-                      // ),
-                  ),
-                  elevation: 1,
-              ),
+                iconStyleData: const IconStyleData(
+                    icon: Icon(Icons.arrow_drop_down),
+                    openMenuIcon: Icon(Icons.arrow_drop_up),
+                ),
 
-              dropdownStyleData: DropdownStyleData(
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      // color: Colors.redAccent,
-                  ),
-                  scrollbarTheme: ScrollbarThemeData(
-                      radius: const Radius.circular(16),
-                      thickness: MaterialStateProperty.all<double>(8),
-                      thumbVisibility: MaterialStateProperty.all<bool>(true),
-                  ),
-              ),
-              menuItemStyleData: const MenuItemStyleData(
-                  // height: 40,
-                  padding: EdgeInsets.only(left: 16, right: 16),
-              ),
-          ),
-      );
-  }
+                buttonStyleData: ButtonStyleData(
+                    // padding: const EdgeInsets.only(left: 8, right: 8),
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
+                    elevation: 1,
+                ),
+
+                dropdownStyleData: DropdownStyleData(
+                    // isOverButton: true,
+
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
+                    scrollbarTheme: ScrollbarThemeData(
+                        radius: const Radius.circular(16),
+                        thickness: MaterialStateProperty.all<double>(16),
+                        thumbVisibility: MaterialStateProperty.all<bool>(true),
+                    ),
+                ),
+
+                menuItemStyleData: const MenuItemStyleData(
+                    // height: 40,
+                    //padding: EdgeInsets.only(left: 16, right: 16),
+                ),
+            ),
+        );
     }
+}
