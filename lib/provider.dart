@@ -1,5 +1,5 @@
-import 'dart:convert';
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,9 +7,9 @@ import 'package:http/http.dart' as http;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import './models/schedule.dart';
 import './configuration.dart';
 import './globalkeys.dart';
+import './models/schedule.dart';
 
 part 'provider.g.dart';
 
@@ -72,7 +72,7 @@ Future<Schedule> schedule(ScheduleRef ref) async {
                 scheduleLastUpdate = prefs.getString('scheduleLastUpdate');
                 schedule = fallbackSchedule;
             } else {
-                final error = 'Не удалось обновить расписание';
+                const error = 'Не удалось обновить расписание';
                 GlobalKeys.showWarningBanner(error);
                 throw Exception(error);
             }
@@ -149,6 +149,10 @@ Future<DateTime> datetime(DatetimeRef ref) async {
 
 @riverpod
 Future<UniScheduleConfiguration> uniScheduleConfiguration(UniScheduleConfigurationRef ref) async {
+    var configuration;
+    final stopwatch = Stopwatch();
+    stopwatch.start();
+
     try {
         final uri = Uri.https(
             defaultServerIp,
@@ -156,11 +160,21 @@ Future<UniScheduleConfiguration> uniScheduleConfiguration(UniScheduleConfigurati
         );
 
         final manifestDataJson = await http.get(uri);
-        final json = jsonDecode(manifestDataJson.body);
-        return UniScheduleConfiguration.fromJson(json);
+        final json = await jsonDecode(manifestDataJson.body);
+        configuration = await UniScheduleConfiguration.fromJson(json);
     } catch (e) {
-        return UniScheduleConfiguration.createEmpty();
+        configuration = UniScheduleConfiguration.createEmpty();
     }
+
+    stopwatch.stop();
+    ref.read(scheduleProvider); // Initialize schedule when configuration downloaded
+
+    // NOTE: We a doing a delation for at least 500 for showing logo
+    if (stopwatch.elapsed.inMilliseconds < 500) {
+        await Future.delayed(const Duration(milliseconds: 500));
+    }
+
+    return configuration;
 }
 
 // Used for notifing about updating selected building

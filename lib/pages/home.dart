@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../widgets/class_card.dart';
+import '../provider.dart';
 import '../scheduleloader.dart';
 import '../utils.dart';
-import '../provider.dart';
+import '../widgets/class_card.dart';
 
 class HomePage extends ConsumerWidget {
     const HomePage({super.key});
@@ -26,7 +26,7 @@ class HomePage extends ConsumerWidget {
 
                         late Iterable<ClassCard> nextClasses;
                         late String listTitle;
-                        String? listSubTitle = null;
+                        String? listSubTitle;
 
                         if (day >= week.days.length
                             || week.days[day].classes.isEmpty
@@ -62,6 +62,21 @@ class HomePage extends ConsumerWidget {
                                 .toList()
                                 .nonNulls;
 
+                            String timeToPrettyView(int hours, int minutes) {
+                                final ph = plural(hours, ['час',  'часа',  'часов']);
+                                final pm = plural(minutes, ['минута', 'минуты', 'минут']);
+
+                                if (hours > 0 && minutes > 0) {
+                                    return '$hours ' + ph + ' $minutes ' + pm;
+                                } else if (hours > 0) {
+                                    return '$hours ' + ph;
+                                } else if (minutes > 0) {
+                                    return '$minutes ' + pm;
+                                } else {
+                                    return '';
+                                }
+                            }
+
                             if (nextClasses.isNotEmpty) {
                                 final untilBegin = classes[0].start.differenceInMinutes(time);
 
@@ -75,10 +90,7 @@ class HomePage extends ConsumerWidget {
                                     if (hours == 0 && minutes == 0) {
                                         listSubTitle = 'Пара закончилась';
                                     } else {
-                                        final h = hours   > 0 ? ' $hours'   + ' ${plural(hours,   ["час",    "часа",   "часов"])}' : '';
-                                        final m = minutes > 0 ? ' $minutes' + ' ${plural(minutes, ["минута", "минуты", "минут"])}' : '';
-
-                                        listSubTitle = 'До конца$h$m';
+                                        listSubTitle = 'До конца ' + timeToPrettyView(hours, minutes);
                                     }
                                 } else {
                                     final hours   = untilBegin ~/ 60;
@@ -89,10 +101,7 @@ class HomePage extends ConsumerWidget {
                                     if (hours == 0 && minutes == 0) {
                                         listTitle = 'Пара началась';
                                     } else {
-                                        final h = hours   > 0 ? ' $hours'   + ' ${plural(hours,   ["час",    "часа",   "часов"])}' : '';
-                                        final m = minutes > 0 ? ' $minutes' + ' ${plural(minutes, ["минута", "минуты", "минут"])}' : '';
-
-                                        listSubTitle = 'До начала$h$m';
+                                        listSubTitle = 'До начала ' + timeToPrettyView(hours, minutes);
                                     }
                                 }
                             } else {

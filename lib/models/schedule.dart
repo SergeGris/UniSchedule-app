@@ -100,11 +100,11 @@ class Class {
     Class({
             required this.start,
             required this.end,
-            this.name = null,
+            this.name,
             this.teachersAndRooms = const [null],
-            this.building = null,
-            this.type = null,
-            this.note = null,
+            this.building,
+            this.type,
+            this.note,
     });
 
     Class.fromJson(final Map<String, dynamic> json)

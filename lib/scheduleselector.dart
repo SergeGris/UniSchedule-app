@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 
-import './provider.dart';
 import './configuration.dart';
-import './utils.dart';
 import './globalkeys.dart';
+import './provider.dart';
+import './utils.dart';
 
 part 'scheduleselector.g.dart';
 
@@ -170,7 +170,10 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
             group      = Menu(enabled: yearId       != null, id: groupId,      name: groupName,      getManifest: () => year.id       != null ? getManifest(ref: ref, university: university.id, faculty: faculty.id, year: year.id) : null);
         }
 
-        List<Widget> getMenu(AsyncValue<ManifestData> manifest, String name, Menu menu, void callback(String name, String label, List<DropdownMenuEntry> manifestData)) {
+        List<Widget> getMenu(AsyncValue<ManifestData> manifest,
+            String name,
+            Menu menu,
+            void Function(String name, String label, List<DropdownMenuEntry> manifestData) callback) {
             const size = 64.0;
 
             return manifest.when(

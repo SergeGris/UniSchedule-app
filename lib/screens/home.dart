@@ -11,11 +11,11 @@ import '../pages/schedule.dart';
 import '../pages/map.dart';
 import '../pages/settings.dart';
 
-import '../utils.dart';
+import '../configuration.dart';
+import '../floormapselector.dart';
 import '../provider.dart';
 import '../scheduleselector.dart';
-import '../floormapselector.dart';
-import '../configuration.dart';
+import '../utils.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
     const HomeScreen({super.key});
@@ -32,6 +32,8 @@ class UniSchedulePages {
 }
 
 class WeekNumberWidget extends ConsumerWidget {
+    WeekNumberWidget({super.key});
+
     @override
     Widget build(BuildContext context, WidgetRef ref) {
         final weekIndex = ref.watch(scheduleProvider).unwrapPrevious().when<int?>(

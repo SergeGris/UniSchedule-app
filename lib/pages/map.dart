@@ -1,11 +1,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vector_graphics/vector_graphics.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:vector_graphics/vector_graphics.dart';
 
-import '../provider.dart';
 import '../floormapselector.dart';
+import '../provider.dart';
 
 class MapSvgViewer extends StatelessWidget {
     MapSvgViewer(this.svg, {super.key});
@@ -14,7 +14,7 @@ class MapSvgViewer extends StatelessWidget {
 
     @override
     Widget build(BuildContext context) {
-        return Container(
+        return ColoredBox(
             color: Colors.white, // For white background for all image
             child: Center(
                 child: InteractiveViewer(
@@ -37,7 +37,7 @@ class MapPage extends ConsumerStatefulWidget {
 /// [AnimationController]s can be created with `vsync: this` because of
 /// [TickerProviderStateMixin].
 class _MapPageState extends ConsumerState<MapPage> with TickerProviderStateMixin {
-    TabController? _tabController = null;
+    TabController? _tabController;
 
     @override
     void dispose() {
@@ -60,7 +60,7 @@ class _MapPageState extends ConsumerState<MapPage> with TickerProviderStateMixin
         final floorNumbers = buildingsFloors[buildingId]!;
 
         final floors = floorNumbers.map(
-            (i) => AssetBytesLoader('assets/$universityId/$buildingId/floor-plan$i.svg.vec')
+            (i) => AssetBytesLoader('assets/plans/$universityId/$buildingId/floor-plan$i.svg.vec')
         )
         .toList();
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import './globalkeys.dart';
 import './configuration.dart';
+import './globalkeys.dart';
 import './provider.dart';
 import './scheduleselector.dart';
 import './screens/home.dart';
@@ -17,7 +17,7 @@ class UniScheduleApp extends ConsumerWidget {
     const UniScheduleApp({super.key});
 
     @override
-    Widget build(BuildContext context, WidgetRef ref) {
+    Widget build(final BuildContext context, final WidgetRef ref) {
         final prefs = ref.watch(settingsProvider).value;
         final theme = uniScheduleThemes[prefs?.getString('theme') ?? 'system']!;
         bool firstRun = (prefs?.getString('initialized') == null);
@@ -33,8 +33,8 @@ class UniScheduleApp extends ConsumerWidget {
             }
         }
 
-        Widget preloadConfiguration(Widget callback()) {
-            Widget wrapper(List<Widget> callback()) {
+        Widget preloadConfiguration(final Widget Function() callback) {
+            Widget wrapper(final List<Widget> Function() callback) {
                 return Scaffold(
                     body: ListView(
                         children: [
@@ -51,7 +51,13 @@ class UniScheduleApp extends ConsumerWidget {
 
             return configuration.when(
                 loading: () => Scaffold(
-                    body: getLoadingIndicator(() => Future.value())
+                    body: Center(
+                        child: SizedBox(
+                            height: 200,
+                            width: 200,
+                            child: Image.asset('assets/images/icon.png') //getLoadingIndicator(() => Future.value())
+                        )
+                    )
                 ),
 
                 error: (e, st) => wrapper(
@@ -75,7 +81,7 @@ class UniScheduleApp extends ConsumerWidget {
             );
         }
 
-        ThemeData getThemeData(Brightness brightness) => ThemeData(
+        ThemeData getThemeData(final Brightness brightness) => ThemeData(
             useMaterial3: true,
             brightness: brightness,
             colorSchemeSeed: theme.colorSchemeSeed,

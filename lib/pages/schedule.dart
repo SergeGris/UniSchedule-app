@@ -1,6 +1,6 @@
+import 'package:UniSchedule/widgets/class_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:UniSchedule/widgets/class_card.dart';
 
 import '../scheduleloader.dart';
 import '../utils.dart';
@@ -10,8 +10,8 @@ class SchedulePage extends ConsumerWidget {
     final bool showNextWeek;
 
     @override
-    Widget build(BuildContext context, WidgetRef ref) {
-        List<Widget> dateTitleShort(WidgetRef ref, DateTime date) {
+    Widget build(final BuildContext context, final WidgetRef ref) {
+        List<Widget> dateTitleShort(final WidgetRef ref, final DateTime date) {
             // Винительный падеж (кого?/чего?)
             final month = [
                 'янв',

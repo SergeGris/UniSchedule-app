@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import './utils.dart';
 import './provider.dart';
+import './utils.dart';
 
 const buildingsNames = {
     'SAB':  'Второй гуманитарный корпус',

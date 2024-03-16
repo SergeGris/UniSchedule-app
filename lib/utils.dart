@@ -1,8 +1,8 @@
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:week_of_year/week_of_year.dart';
-import 'package:dropdown_button2/dropdown_button2.dart';
 
 import 'configuration.dart';
 import 'globalkeys.dart';
@@ -100,7 +100,11 @@ String dateTitle() {
         'декабря',
     ];
 
-    return '${weekdays[date.weekday - 1]}, ${date.day} ${months[date.month - 1]}';
+    final weekday = weekdays[date.weekday - 1];
+    final day = date.day;
+    final month = months[date.month - 1];
+
+    return '$weekday, $day $month';
 }
 
 int? getWeekIndex(DateTime date, Schedule schedule) {
@@ -137,7 +141,7 @@ class Version {
         patch = s.length > 2 ? int.parse(s[2]) : 0;
     }
 
-    bool greaterThan(Version other) =>
+    bool greaterThan(final Version other) =>
         (major > other.major
             || (major == other.major
                 && (minor > other.minor
@@ -150,11 +154,11 @@ class Version {
 }
 
 extension TimeOfDayExtension on TimeOfDay {
-    int differenceInMinutes(TimeOfDay other) => (hour - other.hour) * 60 + (minute - other.minute);
-    bool isAfterThan(TimeOfDay other)        => differenceInMinutes(other) > 0;
-    bool isBeforeThan(TimeOfDay other)       => differenceInMinutes(other) < 0;
-    bool isNotAfterThan(TimeOfDay other)     => !isAfterThan(other);
-    bool isNotBeforeThan(TimeOfDay other)    => !isBeforeThan(other);
+    int differenceInMinutes(final TimeOfDay other) => (hour - other.hour) * 60 + (minute - other.minute);
+    bool isAfterThan(final TimeOfDay other)        => differenceInMinutes(other) > 0;
+    bool isBeforeThan(final TimeOfDay other)       => differenceInMinutes(other) < 0;
+    bool isNotAfterThan(final TimeOfDay other)     => !isAfterThan(other);
+    bool isNotBeforeThan(final TimeOfDay other)    => !isBeforeThan(other);
 }
 
 Future<void> launchLink(BuildContext context, String link) async {
@@ -163,14 +167,14 @@ Future<void> launchLink(BuildContext context, String link) async {
     // TODO add can launch url check which won't work on some phones
     // TODO fails on web version, but launchs link
     if (!await launchUrl(url)) {
-        showDialog(
+        await showDialog(
             context: context,
             builder: (final context) => AlertDialog(
                 title: const Text('Ошибка!'),
                 content: Text('Не удалось открыть $url'),
                 actions: <Widget>[
                     TextButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => Navigator.pop(context), // TODO pop context?..
                         child: const Text('Понятно'),
                     )
                 ]
