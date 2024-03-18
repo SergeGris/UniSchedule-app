@@ -10,6 +10,7 @@ import '../pages/home.dart';
 import '../pages/schedule.dart';
 import '../pages/map.dart';
 import '../pages/settings.dart';
+import '../pages/services.dart';
 
 import '../configuration.dart';
 import '../floormapselector.dart';
@@ -168,7 +169,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 UniSchedulePages.main:     () => const HomePage(),
                 UniSchedulePages.schedule: () => SchedulePage(showNextWeek: showNextWeek),
                 UniSchedulePages.map:      () => const MapPage(),
-                UniSchedulePages.settings: () => const SettingsPage(),
+                UniSchedulePages.settings: () => const ServicesPage(),
             }[_selPage]!(),
 
             floatingActionButton: (_selPage != UniSchedulePages.schedule)
