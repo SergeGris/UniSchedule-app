@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../configuration.dart';
 import '../provider.dart';
 import '../utils.dart';
 

@@ -39,9 +39,9 @@ class ScheduleSelectorButton extends ConsumerWidget {
                     // TODO barrierLabel: 'Назад',
                     builder: (context) => const ScheduleSelectorRoute()
                 )
-            ).then((_) => refreshSchedule(ref))
+            )
+            .then((_) => refreshSchedule(ref))
         );
-
     }
 }
 
@@ -69,7 +69,7 @@ class Manifest {
 }
 
 Future<ManifestData> downloadManifest(WidgetRef ref, String path) async {
-    return http.get(Uri.https(globalUniScheduleConfiguration.serverIp, path))
+    return http.get(Uri.https(UniScheduleConfiguration.serverIp, path))
         .then((value)   => Manifest.fromJson(jsonDecode(value.body)).data)
         .catchError((e) => Future<ManifestData>.error('Не удалось загрузить список'));
 }
@@ -85,7 +85,7 @@ class Menu {
 }
 
 Future<ManifestData> getManifest({required WidgetRef ref, String? university = null, String? faculty = null, String? year = null}) async {
-    String path = '/$scheduleFormatVersion';
+    String path = '/${UniScheduleConfiguration.scheduleFormatVersion}';
 
     if (university != null) {
         path += '/' + university;
@@ -101,7 +101,7 @@ Future<ManifestData> getManifest({required WidgetRef ref, String? university = n
 
     return downloadManifest(
         ref,
-        globalUniScheduleConfiguration.schedulePathPrefix + path + '/manifest.json'
+        UniScheduleConfiguration.schedulePathPrefix + path + '/manifest.json'
     );
 }
 
@@ -127,13 +127,12 @@ class ScheduleSelector extends ConsumerStatefulWidget {
     final bool firstRun;
 
     @override
-    ConsumerState<ScheduleSelector> createState() => _ScheduleSelectorState(firstRun: firstRun);
+    ConsumerState<ScheduleSelector> createState() => _ScheduleSelectorState();
 }
 
 class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
-    _ScheduleSelectorState({required this.firstRun});
+    _ScheduleSelectorState();
 
-    final bool firstRun;
     SharedPreferences? prefs;
 
     // Do initialization in build to avoid troubles because of setState() and sequences tree rebuilding.
@@ -170,51 +169,50 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
             group      = Menu(enabled: yearId       != null, id: groupId,      name: groupName,      getManifest: () => year.id       != null ? getManifest(ref: ref, university: university.id, faculty: faculty.id, year: year.id) : null);
         }
 
-        List<Widget> getMenu(AsyncValue<ManifestData> manifest,
+        Widget getMenu(AsyncValue<ManifestData> manifest,
             String name,
             Menu menu,
             void Function(String name, String label, List<DropdownMenuEntry> manifestData) callback) {
-            const size = 64.0;
+            //const size = 64.0;
+            final size = min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) / 7;
 
             return manifest.when(
                 loading: () {
                     canLoadSchedule = false;
 
-                    return <Widget>[
-                        const SizedBox(
-                            width: size,
-                            height: size,
-                            child: CircularProgressIndicator(),
-                        ),
-                    ];
+                    return SizedBox(
+                        width: size,
+                        height: size,
+                        child: const CircularProgressIndicator(),
+                    );
                 },
 
                 error: (e, st) {
                     canLoadSchedule = false;
 
-                    return <Widget>[
-                        const Icon(
-                            Icons.error_outline,
-                            color: Colors.red,
-                            size: size,
-                        ),
-                        Padding(
-                            padding: const EdgeInsets.only(top: 16),
-                            child: Text('${manifest.error}'),
-                        ),
-                    ];
+                    return SizedBox(
+                        height: size,
+                        child: Column(
+                            children: <Widget>[
+                                const Expanded(
+                                    child: Icon(
+                                        Icons.error_outline,
+                                        color: Colors.red,
+                                    )
+                                ),
+                                Padding(
+                                    padding: const EdgeInsets.only(top: 16),
+                                    child: Text('${manifest.error}'),
+                                ),
+                            ]
+                        )
+                    );
                 },
 
                 data: (manifestData) {
                     canLoadSchedule = true;
 
-                    final entries = manifestData.map(
-                        (e) => DropdownMenuEntry(
-                            value: e.name,
-                            label: e.label,
-                        )
-                    ).cast<DropdownMenuEntry>()
-                    .toList();
+                    final entries = manifestData.map((e) => DropdownMenuEntry(value: e.name, label: e.label)).toList();
 
                     // final entries = manifestData.map(
                     //     (e) => DropdownMenuItem<String>(
@@ -226,36 +224,33 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
 
                     // final textEditingController = TextEditingController();
 
-                    return <Widget>[
-                        SizedBox(
-                            height: size,
-                            // Width is specified in getDropDownMenu().
+                    return SizedBox(
+                        height: size,
+                        width: MediaQuery.of(context).size.width * Constants.goldenRatio,
+                        // Width is specified in DropdownMenu().
 
-                            // TODO aligne entries to center
-                            child: DropdownMenu(
-                                enabled: menu.enabled,
-                                requestFocusOnTap: entries.length > 3,
-                                initialSelection: menu.enabled ? menu.id : null, // TODO preselect only value
-                                label: Text(name),
-                                leadingIcon: const Icon(Icons.search),
-                                width: 240.0,
-                                menuHeight: 200.0,
-                                inputDecorationTheme: const InputDecorationTheme(
-                                    border: null,
-                                ),
-                                dropdownMenuEntries: menu.entries ?? entries,
-                                onSelected: (value) => setState(
-                                    () => callback(
-                                        value!,
-                                        manifestData.firstWhere(
-                                            (element) => element.name == value
-                                        ).label,
-                                        entries
-                                    )
+                        // TODO aligne entries to center
+                        child: DropdownMenu(
+                            enabled: menu.enabled,
+                            requestFocusOnTap: entries.length > 3,
+                            initialSelection: menu.enabled ? menu.id : null, // TODO preselect only value
+                            label: Text(name),
+                            leadingIcon: const Icon(Icons.search),
+                            width: MediaQuery.of(context).size.width * Constants.goldenRatio,
+                            menuHeight: MediaQuery.of(context).size.height * 0.4, // Take no more than 40% of available height
+                            inputDecorationTheme: const InputDecorationTheme(
+                                border: null,
+                            ),
+                            dropdownMenuEntries: menu.entries ?? entries,
+                            onSelected: (value) => setState(
+                                () => callback(
+                                    value!,
+                                    manifestData.firstWhere((element) => element.name == value).label,
+                                    entries
                                 )
                             )
                         )
-                    ];
+                    );
                 }
             );
         }
@@ -285,7 +280,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                         direction: Axis.vertical,
                                         spacing: 24,
                                         children: [
-                                            ...getMenu(
+                                            getMenu(
                                                 ref.watch(manifestProvider(university)),
                                                 'Университет',
                                                 university,
@@ -298,7 +293,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                                 }
                                             ),
 
-                                            ...getMenu(
+                                            getMenu(
                                                 ref.watch(manifestProvider(faculty)),
                                                 'Факультет',
                                                 faculty,
@@ -310,7 +305,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                                 }
                                             ),
 
-                                            ...getMenu(
+                                            getMenu(
                                                 ref.watch(manifestProvider(year)),
                                                 'Курс',
                                                 year,
@@ -321,7 +316,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                                 }
                                             ),
 
-                                            ...getMenu(
+                                            getMenu(
                                                 ref.watch(manifestProvider(group)),
                                                 'Группа',
                                                 group,
@@ -331,6 +326,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                             ),
 
                                             TextButton(
+                                                child: const Text('Загрузить расписание'),
                                                 style: TextButton.styleFrom(
                                                     textStyle: const TextStyle(fontSize: 20.0),
                                                     padding: const EdgeInsets.all(20.0),
@@ -364,12 +360,10 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                                     prefs.remove('fallbackSchedule');
                                                     ref.invalidate(settingsProvider);
 
-                                                    if (!firstRun) {
+                                                    if (!widget.firstRun) {
                                                         Navigator.pop(context);
                                                     }
                                                 },
-
-                                                child: const Text('Загрузить расписание'),
                                             ),
                                         ]
                                     )

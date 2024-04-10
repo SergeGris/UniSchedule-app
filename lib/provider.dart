@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,7 +20,7 @@ Future<Schedule> schedule(ScheduleRef ref) async {
     final facultyId    = prefs.getString('facultyId')!;
     final yearId       = prefs.getString('yearId')!;
     final groupId      = prefs.getString('groupId')!;
-    final path = '${globalUniScheduleConfiguration.schedulePathPrefix}/$scheduleFormatVersion/$universityId/$facultyId/$yearId/$groupId.json';
+    final path = '${UniScheduleConfiguration.schedulePathPrefix}/${UniScheduleConfiguration.scheduleFormatVersion}/$universityId/$facultyId/$yearId/$groupId.json';
 
     //TODO print(scheduleJsonRawUri);
 
@@ -35,7 +34,6 @@ Future<Schedule> schedule(ScheduleRef ref) async {
                 () async {
                     final newResponse = await http.get(uri);
                     // Resumed
-
                     if (newResponse.body != response.body) {
                         // Flagged
                         link.close();
@@ -51,18 +49,18 @@ Future<Schedule> schedule(ScheduleRef ref) async {
     }
 
     String? scheduleLastUpdate = null;
-    var schedule;
+    String schedule;
 
     try {
         // Download gziped version.
-        final scheduleJsonGzipUri = Uri.https(globalUniScheduleConfiguration.serverIp, path + '.gz');
-        var response = await getAndTrack(ref, scheduleJsonGzipUri);
+        final scheduleJsonGzipUri = Uri.https(UniScheduleConfiguration.serverIp, '$path.gz');
+        final response = await getAndTrack(ref, scheduleJsonGzipUri);
         schedule = utf8.decode(GZipCodec().decode(response.bodyBytes));
     } catch (e) {
         try {
             // Or try download json as is.
-            final scheduleJsonRawUri = Uri.https(globalUniScheduleConfiguration.serverIp, path);
-            var response = await getAndTrack(ref, scheduleJsonRawUri);
+            final scheduleJsonRawUri = Uri.https(UniScheduleConfiguration.serverIp, path);
+            final response = await getAndTrack(ref, scheduleJsonRawUri);
             schedule = response.body;
         } catch (e) {
             // Or... Maybe we cached something?
@@ -139,43 +137,58 @@ Future<SharedPreferences> settings(SettingsRef ref) async {
   return SharedPreferences.getInstance();
 }
 
-@riverpod
-Future<DateTime> datetime(DatetimeRef ref) async {
-    final now = DateTime.now();
-    // Invalidate ref every minute.
-    Timer(Duration(minutes: 0, seconds: 60 - now.second), () => ref.invalidateSelf());
-    return now;
-}
+// @riverpod
+// Future<DateTime> datetime(DatetimeRef ref) async {
+//     final now = DateTime.now();//.add(Duration(days: 0, hours: 18)); //.subtract(Duration(days: 0, hours: 5)); ///TODO OOOOOOO
+//     // Invalidate ref every minute.
+//     Timer(Duration(minutes: 0, seconds: 60 - now.second), () => ref.invalidateSelf());
+//     return now;
+// }
 
 @riverpod
-Future<UniScheduleConfiguration> uniScheduleConfiguration(UniScheduleConfigurationRef ref) async {
-    var configuration;
+Future<void> uniScheduleConfiguration(UniScheduleConfigurationRef ref) async {
     final stopwatch = Stopwatch();
     stopwatch.start();
 
     try {
         final uri = Uri.https(
-            defaultServerIp,
-            defaultSchedulePathPrefix + '/configuration.json',
+            UniScheduleConfiguration.defaultServerIp,
+            '${UniScheduleConfiguration.defaultSchedulePathPrefix}/configuration.json',
         );
 
         final manifestDataJson = await http.get(uri);
-        final json = await jsonDecode(manifestDataJson.body);
-        configuration = await UniScheduleConfiguration.fromJson(json);
+        UniScheduleConfiguration.fromJson(await jsonDecode(manifestDataJson.body));
     } catch (e) {
-        configuration = UniScheduleConfiguration.createEmpty();
+        UniScheduleConfiguration.createEmpty();
     }
 
     stopwatch.stop();
-    ref.read(scheduleProvider); // Initialize schedule when configuration downloaded
+    ref.read(scheduleProvider); // TODO (it works?) Initialize schedule when configuration downloaded
 
-    // NOTE: We a doing a delation for at least 500 for showing logo
-    if (stopwatch.elapsed.inMilliseconds < 500) {
-        await Future.delayed(const Duration(milliseconds: 500));
+    // NOTE: We a doing a delation for at least 300 for showing logo
+    if (stopwatch.elapsed.inMilliseconds < 300) {
+        await Future.delayed(Duration(milliseconds: 300 - stopwatch.elapsed.inMilliseconds));
     }
-
-    return configuration;
 }
+
+// @riverpod
+// Future<UniScheduleServices> uniScheduleServices(UniScheduleServicesRef ref) async {
+//     UniScheduleServices services;
+
+//     try {
+//         final uri = Uri.https(
+//             defaultServerIp,
+//             '$defaultSchedulePathPrefix/configuration.json',
+//         );
+
+//         final manifestDataJson = await http.get(uri);
+//         configuration = UniScheduleConfiguration.fromJson(await jsonDecode(manifestDataJson.body));
+//     } catch (e) {
+//         configuration = UniScheduleConfiguration.createEmpty();
+//     }
+
+//     return services;
+// }
 
 // Used for notifing about updating selected building
 @riverpod

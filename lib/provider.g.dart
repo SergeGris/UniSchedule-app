@@ -6,7 +6,7 @@ part of 'provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$scheduleHash() => r'9150f967863948874023bc428bc531560341ef73';
+String _$scheduleHash() => r'7136465af08a5f5d3dd5fd24d3f9b6d757be9fd1';
 
 /// See also [schedule].
 @ProviderFor(schedule)
@@ -34,27 +34,13 @@ final settingsProvider = AutoDisposeFutureProvider<SharedPreferences>.internal(
 );
 
 typedef SettingsRef = AutoDisposeFutureProviderRef<SharedPreferences>;
-String _$datetimeHash() => r'9f66512e1af4e0a1879995fa1cf42f705a775bf4';
-
-/// See also [datetime].
-@ProviderFor(datetime)
-final datetimeProvider = AutoDisposeFutureProvider<DateTime>.internal(
-  datetime,
-  name: r'datetimeProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$datetimeHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef DatetimeRef = AutoDisposeFutureProviderRef<DateTime>;
 String _$uniScheduleConfigurationHash() =>
-    r'94c92525885109af824e9cd0157e933b5b03ed7b';
+    r'61f950bda59895c2da591a200fb189ccbfcd4d85';
 
 /// See also [uniScheduleConfiguration].
 @ProviderFor(uniScheduleConfiguration)
 final uniScheduleConfigurationProvider =
-    AutoDisposeFutureProvider<UniScheduleConfiguration>.internal(
+    AutoDisposeFutureProvider<void>.internal(
   uniScheduleConfiguration,
   name: r'uniScheduleConfigurationProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -64,8 +50,7 @@ final uniScheduleConfigurationProvider =
   allTransitiveDependencies: null,
 );
 
-typedef UniScheduleConfigurationRef
-    = AutoDisposeFutureProviderRef<UniScheduleConfiguration>;
+typedef UniScheduleConfigurationRef = AutoDisposeFutureProviderRef<void>;
 String _$buildingHash() => r'63bd3bfd73e610f0e6e1916b7fc1d8621235a46d';
 
 /// See also [building].

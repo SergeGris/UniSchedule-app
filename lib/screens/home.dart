@@ -8,12 +8,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../pages/home.dart';
 import '../pages/schedule.dart';
-import '../pages/map.dart';
-import '../pages/settings.dart';
 import '../pages/services.dart';
 
 import '../configuration.dart';
-import '../floormapselector.dart';
 import '../provider.dart';
 import '../scheduleselector.dart';
 import '../utils.dart';
@@ -23,13 +20,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 
     @override
     ConsumerState<HomeScreen> createState() => _HomeScreenState();
-}
-
-class UniSchedulePages {
-    static const int main     = 0;
-    static const int schedule = 1;
-    static const int map      = 2;
-    static const int settings = 3;
 }
 
 class WeekNumberWidget extends ConsumerWidget {
@@ -42,29 +32,38 @@ class WeekNumberWidget extends ConsumerWidget {
             error:   (e, st) => null,
             data:    (value) => getWeekIndex(DateTime.now(), value),
         );
+
         //if (weekIndex != null)
         //Text('Учебная неделя №${weekIndex + 1}', style: Theme.of(context).textTheme.titleMedium)
         //TODO!!! else
         //Text('Учёба ещё не началась', style: Theme.of(context).textTheme.titleMedium!)
 
         if (weekIndex == null) {
-            return SizedBox(); // Do nothing if we do not know the week
+            return const SizedBox.shrink(); // Do nothing if we do not know the week
         }
 
-        return Text('Учебная неделя №${weekIndex + 1}', style: Theme.of(context).textTheme.titleMedium);
+        return Text(
+            'Идёт ${weekIndex + 1} учебная неделя',
+            style: TextStyle(fontSize: Theme.of(context).textTheme.titleMedium?.fontSize)
+        );
     }
 }
 
+enum UniSchedulePages {
+    main,
+    schedule,
+    services,
+}
+
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-    int  _selPage     = UniSchedulePages.main;
+    int  _selPage     = UniSchedulePages.main.index;
     bool showNextWeek = DateTime.now().weekday == DateTime.sunday;
     bool warningShown = false;
 
     final pagesNavigation = const {
-        UniSchedulePages.main:     NavigationDestination(icon: Icon(Icons.home),     label: 'Главная'),
-        UniSchedulePages.schedule: NavigationDestination(icon: Icon(Icons.schedule), label: 'Расписание'),
-        UniSchedulePages.map:      NavigationDestination(icon: Icon(Icons.map),      label: 'Карта'), // TBI
-        UniSchedulePages.settings: NavigationDestination(icon: Icon(Icons.settings), label: 'Настройки'),
+        UniSchedulePages.main:     NavigationDestination(icon: Icon(Icons.home),       label: 'Главная'),
+        UniSchedulePages.schedule: NavigationDestination(icon: Icon(Icons.schedule),   label: 'Расписание'),
+        UniSchedulePages.services: NavigationDestination(icon: Icon(Icons.more_horiz), label: 'Сервисы'),
     };
 
     @override
@@ -74,17 +73,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Future(
             () async {
                 final packageInfo = await PackageInfo.fromPlatform();
-                var version = Version.fromString(packageInfo.version);
+                final version = Version.fromString(packageInfo.version);
 
-                if (globalUniScheduleConfiguration.updateVariants.isNotEmpty
-                 && (globalUniScheduleConfiguration.latestApplicationVersion?.greaterThan(version) ?? false)) {
-                    showDialog(
+                if (UniScheduleConfiguration.updateVariants.isNotEmpty
+                 && (UniScheduleConfiguration.latestApplicationVersion?.greaterThan(version) ?? false)) {
+                    await showDialog(
                         context: context,
                         builder: (final context) => AlertDialog(
                             title: const Text('Доступно обновление!'),
                             content: const Text('Установить новую версию?'),
                             actions: <Widget>[
-                                ...globalUniScheduleConfiguration.updateVariants.map(
+                                ...UniScheduleConfiguration.updateVariants.map(
                                     (e) => ElevatedButton(
                                         child: Text(e.label),
                                         onPressed: () => launchLink(context, e.link),
@@ -105,18 +104,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     @override
     Widget build(BuildContext context) {
-        if (!warningShown && globalUniScheduleConfiguration.manifestUpdated) {
+        if (!warningShown && UniScheduleConfiguration.manifestUpdated) {
             warningShown = true;
 
             Future(
                 () async => showDialog(
                     context: context,
-                    builder: (BuildContext context) => AlertDialog(
+                    builder: (context) => AlertDialog(
                         title: const Text('Внимание!'),
                         content: const Text('Обновите приложение. Скоро ваше приложение перестанет поддерживать формат расписания'),
                         actions: <Widget>[
                             TextButton(
-                                onPressed: () { Navigator.pop(context); },
+                                onPressed: () => Navigator.pop(context),
                                 child: const Text('Хорошо'),
                             ),
                         ],
@@ -126,7 +125,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         }
 
         // Set to default if user toggled a page.
-        if (_selPage != UniSchedulePages.schedule) {
+        if (_selPage != UniSchedulePages.schedule.index) {
             showNextWeek = DateTime.now().weekday == DateTime.sunday;
         }
 
@@ -134,29 +133,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             appBar: AppBar(
                 title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    children: <Widget>[
                         Text(dateTitle()),
                         WeekNumberWidget(),
-                    ]
+                    ],
                 ),
+
                 shadowColor: Theme.of(context).shadowColor,
 
-                bottom: Tab(
-                    child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: OverflowBar(
-                            overflowAlignment: OverflowBarAlignment.center,
-                            alignment: MainAxisAlignment.center,
-                            overflowSpacing: 3.0,
-                            children: <Widget>[
-                                if (_selPage != UniSchedulePages.map)
-                                const ScheduleSelectorButton()
-                                else
-                                const FloorMapSelectorButton(),
-                            ],
-                        ),
-                    ),
-                ),
+                bottom: const Tab(child: ScheduleSelectorButton()) // TODO Tab?
             ),
 
             bottomNavigationBar: NavigationBar(
@@ -168,28 +153,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             body: {
                 UniSchedulePages.main:     () => const HomePage(),
                 UniSchedulePages.schedule: () => SchedulePage(showNextWeek: showNextWeek),
-                UniSchedulePages.map:      () => const MapPage(),
-                UniSchedulePages.settings: () => const ServicesPage(),
-            }[_selPage]!(),
+                UniSchedulePages.services: () => const ServicesPage(),
+            }[UniSchedulePages.values[_selPage]]!(),
 
-            floatingActionButton: (_selPage != UniSchedulePages.schedule)
+            floatingActionButton: (_selPage != UniSchedulePages.schedule.index)
             ? null
             : ElevatedButton(
                 onPressed: () => setState(() => showNextWeek ^= true),
                 child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: [
+                    children: <Widget>[
                         Icon(
-                            showNextWeek ? Icons.arrow_back_sharp : Icons.arrow_forward_sharp,
-                            size: Theme.of(context).textTheme.titleMedium!.fontSize
+                            showNextWeek ? Icons.arrow_back : Icons.arrow_forward,
+                            size: Theme.of(context).textTheme.titleLarge?.fontSize
                         ),
 
                         const SizedBox(width: 8),
 
                         Text(
                             showNextWeek ? 'К текущей неделе' : 'К следующей неделе',
-                            style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                color: Theme.of(context).colorScheme.primary)
+                            style: TextStyle(fontSize: Theme.of(context).textTheme.titleMedium?.fontSize)
                         ),
                     ],
                 ),

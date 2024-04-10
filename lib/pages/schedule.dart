@@ -6,81 +6,96 @@ import '../scheduleloader.dart';
 import '../utils.dart';
 
 class SchedulePage extends ConsumerWidget {
-    const SchedulePage({required this.showNextWeek, super.key});
+    const SchedulePage({super.key, required this.showNextWeek});
     final bool showNextWeek;
 
     @override
     Widget build(final BuildContext context, final WidgetRef ref) {
-        List<Widget> dateTitleShort(final WidgetRef ref, final DateTime date) {
-            // Винительный падеж (кого?/чего?)
-            final month = [
-                'янв',
-                'фев',
-                'мар',
-                'апр',
-                'мая',
-                'июн',
-                'июл',
-                'авг',
-                'сен',
-                'окт',
-                'ноя',
-                'дек',
-            ][date.month - 1];
-
-            //return [ Text('${date.day}, $month', overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall!) ];
-            return [
-                Text('${date.day}',
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall
-                ),
-                Text(month,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall
-                )
-            ];
-        }
-
         final date = DateTime.now();
         final currentWeekDay = date.weekday - 1;
 
-        DateTime getScheduleDay(int index) => date.add(
-            Duration(
-                days: index + 1 - currentWeekDay - 1 + (showNextWeek ? 7 : 0)
-            )
-        );
+        // Винительный падеж (кого?/чего?)
+        const monthAbbrs = [
+            'янв',
+            'фев',
+            'мар',
+            'апр',
+            'мая',
+            'июн',
+            'июл',
+            'авг',
+            'сен',
+            'окт',
+            'ноя',
+            'дек',
+        ];
+
+        DateTime getScheduleDay(int index) {
+            return date.add(
+                Duration(
+                    days: index + 1 - (currentWeekDay + 1) + (showNextWeek ? 7 : 0)
+                )
+            );
+        }
 
         return ScheduleLoader(
             (schedule) {
                 return ScaffoldMessenger(
-                    child: Builder(builder: (context) {
+                    child: Builder(
+                        builder: (context) {
                             final weekParity = getWeekParity(date, schedule, showNextWeek: showNextWeek);
                             final week = schedule.weeks[weekParity];
                             final weekdayTabs = week.days.mapIndexed(
-                                (day, index) => Tab(
-                                    height: 60.0 * MediaQuery.of(context).textScaleFactor, // FUCK TODO fucking magic constant. Pay attention to <https://stackoverflow.com/a/62536187>
-                                    child: OverflowBar(
-                                        overflowAlignment: OverflowBarAlignment.center,
-                                        alignment: MainAxisAlignment.center,
-                                        overflowSpacing: 1.0,
-                                        children: <Widget>[
-                                            Column(
-                                                children: [
-                                                    Text(
-                                                        day.dayAbbr,
-                                                        overflow: TextOverflow.ellipsis,
-                                                        style: Theme.of(context).textTheme.bodyMedium,
-                                                        softWrap: true
-                                                    ),
-                                                    ...dateTitleShort(
-                                                        ref,
-                                                        getScheduleDay(index)
-                                                    )
-                                                ]
-                                            )
-                                        ]
-                                    )
-                                )
+                                (day, index) {
+                                    final dayDate = getScheduleDay(index); // Дата конкретного дня недели.
+
+                                    final tabText = [
+                                        // Каждая вкладка имеет следующий вид:
+                                        //  Пн
+                                        //   1
+                                        //  янв
+                                        Text(
+                                            day.dayAbbr,
+                                            overflow: TextOverflow.fade,
+                                            style: TextStyle(fontSize: Theme.of(context).textTheme.titleMedium?.fontSize ?? 14),
+                                        ),
+                                        Text(
+                                            '${dayDate.day}',
+                                            overflow: TextOverflow.fade,
+                                            style: TextStyle(fontSize: Theme.of(context).textTheme.titleSmall?.fontSize ?? 14)
+                                        ),
+                                        Text(
+                                            monthAbbrs[dayDate.month - 1],
+                                            overflow: TextOverflow.fade,
+                                            style: TextStyle(fontSize: Theme.of(context).textTheme.bodySmall?.fontSize ?? 14)
+                                        )
+                                    ];
+
+                                    // double computeHeight(String? text, TextStyle? textStyle) {
+                                    //     final Size size = (TextPainter(
+                                    //             text: TextSpan(text: text, style: textStyle),
+                                    //             maxLines: 1,
+                                    //             textScaleFactor: MediaQuery.of(context).textScaleFactor,
+                                    //             textDirection: TextDirection.ltr)
+                                    //         ..layout())
+                                    //     .size;
+
+                                    //     return size.height * (textStyle?.height ?? 1.0);
+                                    //     //return (style!.fontSize ?? 1) * (style!.height ?? 1);
+                                    // }
+
+                                    // final textHeight = tabText.fold(10.0, (previous, element) => previous + computeHeight(element.data, element.style));
+
+                                    // print('$textHeight');
+
+                                    return Tab(
+                                        // FUCK TODO fucking magic constant. Pay attention to <https://stackoverflow.com/a/62536187>
+                                        height: 60.0 * MediaQuery.of(context).textScaleFactor,
+                                        child: Column(
+                                            children: tabText
+                                        ),
+                                    );
+                                }
                             )
                             .toList();
 
@@ -97,46 +112,39 @@ class SchedulePage extends ConsumerWidget {
                                     ),
 
                                     body: TabBarView(
-                                        children: [
-                                            ...week.days.mapIndexed(
-                                                (day, index) => RefreshIndicator(
-                                                    onRefresh: () => refreshSchedule(ref),
-                                                    child: day.classes.isEmpty
-                                                    || (schedule.studiesBegin?.isAfter(getScheduleDay(index)) ?? false)
-                                                    || (schedule.studiesEnd?.isBefore(getScheduleDay(index)) ?? false)
-                                                    ? ListView(
-                                                        children: [
-                                                            Container(
-                                                                alignment: Alignment.center,
-                                                                margin: const EdgeInsets.all(8.0),
-                                                                child: Text(
-                                                                    'Свободный день',
-                                                                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                                                        color: Theme.of(context).colorScheme.primary,
-                                                                    )
-                                                                )
-                                                            )
-                                                        ]
-                                                    )
-                                                    : ListView.separated(
-                                                        padding: const EdgeInsets.only(top: 8.0, bottom: kFloatingActionButtonMargin + 48.0 /* TODO compute size of floating button. */),
-                                                        itemCount: day.classes.length,
-                                                        itemBuilder: (context, index) => ClassCard(
-                                                            classes: day.classes,
-                                                            index: index,
-                                                            showProgress: false,
-                                                            number: index + 1,
-                                                            horizontalMargin: horizontalMargin,
-                                                            borderRadius: borderRadius
+                                        children: week.days.mapIndexed(
+                                            (day, index) => RefreshIndicator(
+                                                onRefresh: () => refreshSchedule(ref),
+                                                child: day.classes.isEmpty
+                                                || (schedule.studiesBegin?.isAfter(getScheduleDay(index)) ?? false)
+                                                || (schedule.studiesEnd?.isBefore(getScheduleDay(index)) ?? false)
+                                                ? Center(
+                                                    child: Text(
+                                                        'Свободный день',
+                                                        style: TextStyle(
+                                                            fontSize: Theme.of(context).textTheme.headlineMedium?.fontSize,
+                                                            color: Theme.of(context).colorScheme.primary,
                                                         ),
-                                                        separatorBuilder: (context, index) => const Divider(
-                                                            indent: horizontalMargin + borderRadius,
-                                                            endIndent: horizontalMargin + borderRadius,
-                                                        ),
+                                                    ),
+                                                )
+                                                : ListView.separated(
+                                                    padding: const EdgeInsets.only(top: 8.0, bottom: kFloatingActionButtonMargin + 48.0 /* TODO compute size of floating button. */),
+                                                    itemCount: day.classes.length,
+                                                    itemBuilder: (context, index) => ClassCard(
+                                                        classes: day.classes,
+                                                        index: index,
+                                                        showProgress: false,
+                                                        number: index + 1,
+                                                        horizontalMargin: horizontalMargin,
+                                                        borderRadius: borderRadius,
+                                                    ),
+                                                    separatorBuilder: (context, index) => const Divider(
+                                                        indent: horizontalMargin + borderRadius,
+                                                        endIndent: horizontalMargin + borderRadius,
                                                     ),
                                                 ),
                                             ),
-                                        ],
+                                        ).toList(),
                                     ),
                                 ),
                             );

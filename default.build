@@ -1,0 +1,48 @@
+
+rule dart_builder {
+     >dart run build_runner build
+}
+
+rule apk-arm64 {
+     >flutter build apk --target-platform=android-arm64 --obfuscate --split-debug-info=./debug-info
+}
+
+rule apk-release {
+     >flutter build apk --obfuscate --split-debug-info=./debug-info --pub
+}
+
+rule aab-release {
+     >flutter build appbundle --obfuscate --split-debug-info=./debug-info --pub
+}
+
+rule run {
+     >flutter run --pub
+}
+
+rule profile {
+     >flutter run --pub --profile
+}
+
+target 'gen' {
+       dart_builder
+}
+
+target 'release-apk' {
+       apk-release
+}
+
+target 'release-aab' {
+       aab-release
+}
+
+target 'run' {
+       run
+}
+
+target 'profile' {
+       profile
+}
+
+target 'default' {
+       apk-arm64
+}

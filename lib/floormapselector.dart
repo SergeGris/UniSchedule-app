@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import './widgets/dropdownbutton.dart';
 import './provider.dart';
 import './utils.dart';
 
@@ -33,7 +34,7 @@ class FloorMapSelectorButton extends ConsumerWidget {
                     value: e.key,
                     child: Container(
                         alignment: Alignment.center,
-                        child: Text(e.value, maxLines: 1),
+                        child: Text(e.value, maxLines: 1, overflow: TextOverflow.fade),
                     ),
                 ),
             )
@@ -41,10 +42,10 @@ class FloorMapSelectorButton extends ConsumerWidget {
 
             initialSelection: prefs.getString('buildingId'),
 
-            onSelected: (String? value) {
+            onSelected: (String? value) async {
                 if (prefs.getString('buildingId') != value) {
-                    prefs.setString('buildingId', value!);
-                    prefs.setString('buildingName', buildingsNames[value]!);
+                    await prefs.setString('buildingId', value!);
+                    await prefs.setString('buildingName', buildingsNames[value]!);
                     ref.invalidate(buildingProvider);
                 }
             },

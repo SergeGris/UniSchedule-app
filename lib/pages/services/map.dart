@@ -4,13 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:vector_graphics/vector_graphics.dart';
 
-import '../floormapselector.dart';
-import '../provider.dart';
+import '../../floormapselector.dart';
+import '../../provider.dart';
 
 class MapSvgViewer extends StatelessWidget {
     MapSvgViewer(this.svg, {super.key});
 
-    AssetBytesLoader svg;
+    final AssetBytesLoader svg;
 
     @override
     Widget build(BuildContext context) {
@@ -18,11 +18,32 @@ class MapSvgViewer extends StatelessWidget {
             color: Colors.white, // For white background for all image
             child: Center(
                 child: InteractiveViewer(
-                    minScale: 0.5,
+                    minScale: 1,
                     maxScale: 10.0,
                     child: SvgPicture(svg),
                 ),
             ),
+        );
+    }
+}
+
+class MapRoute extends StatelessWidget {
+    const MapRoute({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        return  Scaffold(
+            appBar: AppBar(
+                title: const Text('План этажей'),
+                shadowColor: Theme.of(context).shadowColor,
+                bottom: const Tab(
+                    child: Padding(
+                        padding: EdgeInsets.all(8),
+                        child: FloorMapSelectorButton()
+                    ),
+                ),
+            ),
+            body: const MapPage()
         );
     }
 }
@@ -53,9 +74,24 @@ class _MapPageState extends ConsumerState<MapPage> with TickerProviderStateMixin
         final buildingId = prefs.getString('buildingId');
 
         if (buildingsFloors[buildingId] == null
-         || universityId == null /* TODO */
-         || buildingId == null   /* TODO */) {
-            return const SizedBox(); // TODO
+            || universityId == null
+            || buildingId == null) {
+            return Center(
+                child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16.0),
+                    child: Container(
+                        padding: const EdgeInsets.all(16),
+                        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
+                        child: Text(
+                            'Выберете корпус',
+                            style: TextStyle(
+                                fontSize: Theme.of(context).textTheme.displayMedium?.fontSize,
+                                color: Theme.of(context).colorScheme.onPrimaryContainer
+                            ),
+                        ),
+                    ),
+                ),
+            );
         }
         final floorNumbers = buildingsFloors[buildingId]!;
 
@@ -68,7 +104,11 @@ class _MapPageState extends ConsumerState<MapPage> with TickerProviderStateMixin
             return MapSvgViewer(floors[0]);
         }
 
-        _tabController = TabController(length: floors.length, vsync: this, initialIndex: buildingsFloors[buildingId]!.indexOf(1));
+        _tabController = TabController(
+            length: floors.length,
+            vsync: this,
+            initialIndex: buildingsFloors[buildingId]!.indexOf(1)
+        );
 
         return Scaffold(
             appBar: AppBar(
@@ -79,7 +119,9 @@ class _MapPageState extends ConsumerState<MapPage> with TickerProviderStateMixin
                         (number) => Tab(
                             child: Text(
                                 '$number',
-                                style: Theme.of(context).textTheme.titleMedium
+                                style: TextStyle(
+                                    fontSize: Theme.of(context).textTheme.titleMedium?.fontSize
+                                )
                             )
                         )
                     )

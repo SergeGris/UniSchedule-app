@@ -1,7 +1,7 @@
 name: UniSchedule
 description: UniSchedule - application to view an university schedule.
 publish_to: 'none'
-version: 0.1.11+16
+version: 0.2.0+17
 
 environment:
   sdk: '>=3.1.2 <4.0.0'
@@ -15,11 +15,18 @@ dependencies:
   flutter_svg: ^2.0.9
   http: ^1.2.0
   meta: ^1.10.0
-  package_info_plus: ^5.0.1
+  package_info_plus: ^7.0.0
+  path_provider: ^2.1.2 # wanted by inappwebview
   riverpod_annotation: ^2.3.3
   shared_preferences: ^2.2.2
   url_launcher: ^6.2.4
+  flutter_inappwebview: ^6.0.0
   week_of_year: ^2.2.0
+  share_plus: ^8.0.2
+  permission_handler: ^11.3.0
+  flutter_colorpicker: ^1.0.3
+  intl: ^0.19.0
+  flutter_downloader: ^1.11.6
 
 dev_dependencies:
   build_runner:
@@ -30,7 +37,22 @@ flutter:
   uses-material-design: true
   assets:
   - assets/images/icon.png
-  - assets/images/services/
+
+  - assets/dino-runner/index.html
+
+  - assets/images/services/cmc-logo.svg.vec
+  - assets/images/services/trex.svg.vec
+  - assets/images/services/courses.svg.vec
+  - assets/images/services/feedback.svg.vec
+  - assets/images/services/info.svg.vec
+  - assets/images/services/join.svg.vec
+  - assets/images/services/map.svg.vec
+  - assets/images/services/money.svg.vec
+  - assets/images/services/report.svg.vec
+  - assets/images/services/study_office.svg.vec
+  - assets/images/services/write_us.svg.vec
+  - assets/images/services/yandex_disk.svg.vec
+
   - assets/plans/MSU/PHYS/floor-plan-1.svg.vec
   - assets/plans/MSU/PHYS/floor-plan1.svg.vec
   - assets/plans/MSU/PHYS/floor-plan2.svg.vec

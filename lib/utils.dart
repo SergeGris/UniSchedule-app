@@ -1,4 +1,3 @@
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -12,11 +11,16 @@ import 'provider.dart';
 Future<void> refreshSchedule(WidgetRef ref) {
     GlobalKeys.hideWarningBanner();
 
-    if (!globalUniScheduleConfiguration.loaded) {
+    if (!UniScheduleConfiguration.loaded) {
         ref.invalidate(uniScheduleConfigurationProvider);
     }
 
     ref.invalidate(scheduleProvider);
+    return Future<void>.value();
+}
+
+Future<void> refreshConfiguration(WidgetRef ref) {
+    ref.invalidate(uniScheduleConfigurationProvider);
     return Future<void>.value();
 }
 
@@ -25,12 +29,12 @@ RefreshIndicator getLoadingIndicator(RefreshCallback onRefresh) {
         onRefresh: onRefresh,
         child: LayoutBuilder(
             builder: (final context, final constraints) => ListView(
-                children: [
+                children: <Widget>[
                     SizedBox(
                         height: constraints.maxHeight,
                         width: constraints.maxWidth,
                         child: const Center(child: CircularProgressIndicator.adaptive())
-                    )
+                    ),
                 ],
             ),
         ),
@@ -46,27 +50,21 @@ Widget getErrorContainer(String message) {
                         Icons.error_outline,
                         color: Colors.red,
                         size: 60,
-                    )
+                    ),
                 ),
                 Center(
                     child: Padding(
                         padding: const EdgeInsets.only(top: 16),
                         child: Text(message),
-                    )
-                )
-            ]
-        )
+                    ),
+                ),
+            ],
+        ),
     );
 }
 
-String plural(int n, List<String> variants) {
-    final i = n % 10 == 1 && n % 100 != 11
-        ? 0
-        : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)
-            ? 1
-            : 2;
-
-    return variants[i];
+void showSnackBar(BuildContext context, Widget content) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: content));
 }
 
 // Возвращает строку в формате "День-недели, число месяц"
@@ -120,6 +118,60 @@ int getWeekParity(DateTime date, Schedule schedule, {bool showNextWeek = false})
     return ((getWeekIndex(date, schedule) ?? 0) + (showNextWeek ? 1 : 0)) % schedule.weeks.length;
 }
 
+String numberToWords(int n) {
+    // Just a number. As is.
+    if (n >= 100) {
+        return '$n';
+    }
+
+    const a = [
+        'ноль',
+        'один',
+        'два',
+        'три',
+        'четыре',
+        'пять',
+        'шесть',
+        'семь',
+        'восемь',
+        'девять',
+    ];
+
+    const b = [
+        'десять',
+        'двадцать',
+        'тридцать',
+        'сорок',
+        'пятьдесят',
+        'шестьдесят',
+        'семьдесят',
+        'восемьдесят',
+        'девяносто',
+    ];
+
+    const c = [
+        'одиннадцать',
+        'двенадцать',
+        'тринадцать',
+        'четырнадцать',
+        'пятнадцать',
+        'шестнадцать',
+        'семнадцать',
+        'восемнадцать',
+        'девятнадцать',
+    ];
+
+    if (n < 10) {
+        return a[n];
+    } else if (10 < n && n < 20) {
+        return c[n - 11];
+    } else if (n % 10 == 0) {
+        return b[n ~/ 10 - 1];
+    } else {
+        return b[(n - (n % 10)) ~/ 10 - 1] + ' ' + a[n % 10];
+    }
+}
+
 extension ExtendedIterable<E> on Iterable<E> {
     // Like Iterable<T>.map but the callback has index as second argument.
     Iterable<T> mapIndexed<T>(T Function(E e, int i) callback) {
@@ -161,7 +213,7 @@ extension TimeOfDayExtension on TimeOfDay {
     bool isNotBeforeThan(final TimeOfDay other)    => !isBeforeThan(other);
 }
 
-Future<void> launchLink(BuildContext context, String link) async {
+Future<bool> launchLink(BuildContext context, String link) async {
     final url = Uri.parse(link);
 
     // TODO add can launch url check which won't work on some phones
@@ -180,83 +232,62 @@ Future<void> launchLink(BuildContext context, String link) async {
                 ]
             )
         );
+
+        return Future.value(false);
     }
+
+    return Future.value(true);
+}
+
+bool isDarkMode(final BuildContext context) => Theme.of(context).brightness == Brightness.dark;
+
+double min(double a, double b) => a <= b ? a : b;
+
+class Constants {
+    static const double goldenRatio = 0.618033988751;
 }
 
 class UniScheduleTheme {
-    const UniScheduleTheme({required this.themeMode,
-                            required this.colorSchemeSeed,
-                            required this.label});
-    final ThemeMode themeMode;
-    final Color colorSchemeSeed;
+     UniScheduleTheme({required this.themeMode,
+                       required this.colorSchemeSeed,
+                       required this.label});
+    ThemeMode themeMode;
+    Color colorSchemeSeed;
     final String label;
 }
 
-const uniScheduleThemes = {
-    'system': UniScheduleTheme(themeMode: ThemeMode.system, colorSchemeSeed: Colors.indigoAccent, label: 'Системная'),
-    'light':  UniScheduleTheme(themeMode: ThemeMode.light,  colorSchemeSeed: Colors.indigoAccent, label: 'Светлая'),
-    'dark':   UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.indigoAccent, label: 'Тёмная'),
+final uniScheduleThemeSystem = UniScheduleTheme(themeMode: ThemeMode.system, colorSchemeSeed: Colors.indigoAccent, label: 'Системная');
+final uniScheduleThemeLight  = UniScheduleTheme(themeMode: ThemeMode.light,  colorSchemeSeed: Colors.indigoAccent, label: 'Светлая');
+final uniScheduleThemeDark   = UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.indigoAccent, label: 'Тёмная');
+var   uniScheduleThemeCustom = UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.indigoAccent, label: 'Персональная');
 
-    //TODO Add new color themes
-    //    UniScheduleTheme(themeMode: ThemeMode.light,  colorSchemeSeed: Colors.pinkAccent,   key: 'light-pink', label: 'Светло-розовая'),
-    //    UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.pinkAccent,   key: 'dark-pink',  label: 'Тёмно-розовая'),
+final uniScheduleThemes = {
+    'system': () => uniScheduleThemeSystem,
+    'light':  () => uniScheduleThemeLight,
+    'dark':   () => uniScheduleThemeDark,
+    'custom': () => uniScheduleThemeCustom,
 };
 
-class UniScheduleDropDownButton extends StatelessWidget {
-    const UniScheduleDropDownButton({
-            required this.hint,
-            required this.initialSelection,
-            required this.items,
-            required this.onSelected,
-            this.alignment = Alignment.center,
-            super.key,
-    });
+//TODO need?
+// extension ColorExtension on String {
+//   toColor() {
+//       var hexColor = this.replaceAll("#", "");
+//       if (hexColor.length == 6) {
+//           hexColor = "FF" + hexColor;
+//       }
+//       if (hexColor.length == 8) {
+//           return Color(int.parse("0x$hexColor"));
+//       }
+//   }
+// }
 
-    final String hint;
-    final String? initialSelection;
-    final List<DropdownMenuItem<String>>? items;
-    final ValueChanged<String?>? onSelected;
-    final Alignment alignment;
-
-    @override
-    Widget build(BuildContext context) {
-        return DropdownButtonHideUnderline(
-            child: DropdownButton2<String>(
-                isExpanded: false,
-                isDense: false,
-                alignment: alignment,
-                hint: Text(hint),
-                items: items,
-                value: initialSelection,
-                onChanged: onSelected,
-
-                iconStyleData: const IconStyleData(
-                    icon: Icon(Icons.arrow_drop_down),
-                    openMenuIcon: Icon(Icons.arrow_drop_up),
-                ),
-
-                buttonStyleData: ButtonStyleData(
-                    // padding: const EdgeInsets.only(left: 8, right: 8),
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
-                    elevation: 1,
-                ),
-
-                dropdownStyleData: DropdownStyleData(
-                    // isOverButton: true,
-
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
-                    scrollbarTheme: ScrollbarThemeData(
-                        radius: const Radius.circular(16),
-                        thickness: MaterialStateProperty.all<double>(16),
-                        thumbVisibility: MaterialStateProperty.all<bool>(true),
-                    ),
-                ),
-
-                menuItemStyleData: const MenuItemStyleData(
-                    // height: 40,
-                    //padding: EdgeInsets.only(left: 16, right: 16),
-                ),
-            ),
-        );
+extension StringExtension on Color {
+    String toPrettyString({bool showAlpha = false}) {
+        String twoDigits(int n) => (n >= 0x10 ? '' : '0') + n.toRadixString(16).toUpperCase();
+        return '#'
+        + twoDigits(red)
+        + twoDigits(green)
+        + twoDigits(blue)
+        + (showAlpha ? twoDigits(alpha) : '');
     }
 }

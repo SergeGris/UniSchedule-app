@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import './configuration.dart';
 import './globalkeys.dart';
+import './pages/webview/util.dart';
 import './provider.dart';
 import './scheduleselector.dart';
 import './screens/home.dart';
@@ -10,6 +11,16 @@ import './utils.dart';
 
 void main() async {
     WidgetsFlutterBinding.ensureInitialized();
+
+    // TODO Webview enabled only on this platforms
+    if (Util.isAndroid() || Util.isIOS()) {
+        // Plugin must be initialized before using
+        await FlutterDownloader.initialize(
+            debug: false,   // optional: set to false to disable printing logs to console (default: true)
+            ignoreSsl: true // option: set to false to disable working with http links (default: false)
+        );
+    }
+
     runApp(const ProviderScope(child: UniScheduleApp()));
 }
 
@@ -19,7 +30,6 @@ class UniScheduleApp extends ConsumerWidget {
     @override
     Widget build(final BuildContext context, final WidgetRef ref) {
         final prefs = ref.watch(settingsProvider).value;
-        final theme = uniScheduleThemes[prefs?.getString('theme') ?? 'system']!;
         bool firstRun = (prefs?.getString('initialized') == null);
 
         // Check that all preferences available.
@@ -33,53 +43,14 @@ class UniScheduleApp extends ConsumerWidget {
             }
         }
 
-        Widget preloadConfiguration(final Widget Function() callback) {
-            Widget wrapper(final List<Widget> Function() callback) {
-                return Scaffold(
-                    body: ListView(
-                        children: [
-                            Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: callback(),
-                            )
-                        ]
-                    )
-                );
-            }
+        ref.watch(themeProvider);
+        final theme = (uniScheduleThemes[prefs?.getString('theme')] ?? () => uniScheduleThemeSystem)();
+        final themeMode = prefs?.getString('custom.theme.mode');
 
-            final configuration = ref.watch(uniScheduleConfigurationProvider);
-
-            return configuration.when(
-                loading: () => Scaffold(
-                    body: Center(
-                        child: SizedBox(
-                            height: 200,
-                            width: 200,
-                            child: Image.asset('assets/images/icon.png') //getLoadingIndicator(() => Future.value())
-                        )
-                    )
-                ),
-
-                error: (e, st) => wrapper(
-                    () => [
-                        const Icon(
-                            Icons.error_outline,
-                            color: Colors.red,
-                            size: 60,
-                        ),
-                        Padding(
-                            padding: const EdgeInsets.only(top: 16),
-                            child: Text('${configuration.error}'),
-                        ),
-                    ]
-                ),
-
-                data: (value) {
-                    globalUniScheduleConfiguration = value;
-                    return callback();
-                }
-            );
-        }
+        uniScheduleThemeCustom.colorSchemeSeed = Color(prefs?.getInt('custom.color.scheme.seed') ?? Colors.indigoAccent.value);
+        uniScheduleThemeCustom.themeMode = (themeMode != null)
+        ? (themeMode == 'light' ? ThemeMode.light : ThemeMode.dark)
+        : theme.themeMode;
 
         ThemeData getThemeData(final Brightness brightness) => ThemeData(
             useMaterial3: true,
@@ -94,15 +65,21 @@ class UniScheduleApp extends ConsumerWidget {
 				inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
                     isDense: true,
                     // border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                    contentPadding: const EdgeInsets.all(8),
+                    contentPadding: const EdgeInsets.all(8.0),
                 ),
+
                 menuStyle: MenuStyle(
                     shape: MaterialStatePropertyAll(
-                        RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
+                        RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0)
+                        )
                     ),
                 ),
             ),
         );
+
+        //TODO
+        ref.read(scheduleProvider);//TODO.init();
 
         return MaterialApp(
             // TODO debugShowCheckedModeBanner: false,
@@ -112,10 +89,43 @@ class UniScheduleApp extends ConsumerWidget {
             theme: getThemeData(Brightness.light),
             darkTheme: getThemeData(Brightness.dark),
 
-            home: preloadConfiguration(
-                () => firstRun
+            home: ref.watch(uniScheduleConfigurationProvider).when(
+                loading: () => Scaffold(
+                    body: Center(
+                        child: SizedBox(
+                            height: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) / 2,
+                            width: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) / 2 ,
+                            child: Image.asset('assets/images/icon.png') //getLoadingIndicator(() => Future.value())
+                        )
+                    )
+                ),
+
+                error: (error, stack) => Scaffold(
+                    body: ListView(
+                        children: <Widget>[
+                            Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                    const Icon(
+                                        Icons.error_outline,
+                                        color: Colors.red,
+                                        size: 60,
+                                    ),
+                                    Padding(
+                                        padding: const EdgeInsets.only(top: 16),
+                                        child: Text('${error}'),
+                                    ),
+                                ],
+                            )
+                        ]
+                    )
+                ),
+
+                data: (_) {
+                    return firstRun
                     ? const ScheduleSelector(firstRun: true)
-                    : const HomeScreen()
+                    : const HomeScreen();
+                }
             ),
             // // // // TODO
             //  builder: (context, child) {
