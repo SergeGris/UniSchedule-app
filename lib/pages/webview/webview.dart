@@ -25,10 +25,14 @@ class WebViewDino extends StatelessWidget {
 
     @override
     Widget build(BuildContext context) {
+        var initialSettings = InAppWebViewSettings();
+        initialSettings.forceDark = isDarkMode(context) ? ForceDark.ON : ForceDark.OFF;
+
         return Scaffold(
             backgroundColor: Theme.of(context).colorScheme.background,
             appBar: AppBar(title: const Text('Динозаврик!')),
             body: InAppWebView(
+                initialSettings: initialSettings,
                 initialFile: 'assets/dino-runner/index.html',
             )
         );
@@ -405,12 +409,14 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
 
         return PopScope(
             canPop: false,
-            onPopInvoked: (bool didPop) {
+            onPopInvoked: (bool didPop) async {
                 if (didPop) {
                     return;
                 }
 
-                _goBack(context);
+                if (await _goBack(context)) {
+                    Navigator.pop(context);
+                }
             },
             child: Scaffold(
                 backgroundColor: Theme.of(context).colorScheme.background,
@@ -448,8 +454,7 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                                         ),
                                         padding: const EdgeInsets.all(8.0),
                                         preferBelow: true,
-                                        textStyle: TextStyle(
-                                            fontSize: Theme.of(context).textTheme.titleMedium?.fontSize,
+                                        textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
                                             color: Theme.of(context).colorScheme.onPrimary
                                         ),
                                         textAlign: TextAlign.center,
@@ -462,8 +467,7 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                                                     if (title != '' && title != url && !title.startsWith('data:'))
                                                     Text(
                                                         title,
-                                                        style: TextStyle(
-                                                            fontSize: Theme.of(context).textTheme.titleMedium?.fontSize,
+                                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                                             color: Theme.of(context).colorScheme.primary
                                                         ),
                                                         overflow: TextOverflow.fade,
@@ -491,7 +495,7 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                                                             Flexible(
                                                                 child: Text(
                                                                     url,
-                                                                    style: TextStyle(fontSize: Theme.of(context).textTheme.titleSmall?.fontSize ?? 12, color: Theme.of(context).colorScheme.secondary),
+                                                                    style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.secondary),
                                                                     overflow: TextOverflow.fade,
                                                                 ),
                                                             ),
@@ -648,7 +652,7 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                     children: <Widget>[
                         Expanded(
                             child: Stack(
-                                children: [
+                                children: <Widget>[
                                     InAppWebView(
                                         key: webViewKey,
                                         pullToRefreshController: _pullToRefreshController,

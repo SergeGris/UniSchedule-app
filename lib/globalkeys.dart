@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
 
+import './widgets/filledbutton.dart';
+
 // Because of the opened issue <https://github.com/flutter/flutter/issues/89705>.
 // We do as said here <https://github.com/flutter/flutter/issues/89705#issuecomment-1872540014>.
 class GlobalKeys {
@@ -35,14 +37,14 @@ class GlobalKeys {
                             backgroundColor: bannerColor,
                             contentTextStyle: const TextStyle(color: textColor, fontWeight: FontWeight.bold),
                             actions: <Widget>[
-                                ElevatedButton(
+                                FilledButton(
                                     onPressed: () async {
                                         hideWarningBanner();
                                     },
                                     style: ButtonStyle(
                                         backgroundColor: MaterialStateProperty.resolveWith<Color?>(
                                             (Set<MaterialState> states) => bannerColor.withOpacity(
-                                                states.contains(MaterialState.pressed) ? 1.0 : 0.8
+                                                states.contains(MaterialState.pressed) ? 0.4 : 0.8
                                             ),
                                         ),
                                     ),

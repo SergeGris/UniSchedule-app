@@ -16,10 +16,6 @@ class SupporterEntry {
 }
 
 class UniScheduleConfiguration {
-    static const int scheduleFormatVersion = 3;
-    static const String defaultServerIp = 'raw.githubusercontent.com';
-    static const String defaultSchedulePathPrefix = '/SergeGris/sergegris.github.io/main';
-
     UniScheduleConfiguration._();
     UniScheduleConfiguration.createEmpty();
 
@@ -87,6 +83,10 @@ class UniScheduleConfiguration {
             .toList();
         }
     }
+
+    static const int scheduleFormatVersion = 3;
+    static String defaultServerIp = 'raw.githubusercontent.com';
+    static String defaultSchedulePathPrefix = '/SergeGris/sergegris.github.io/main';
 
     static bool                 manifestUpdated          = false;
     static String               serverIp                 = defaultServerIp;

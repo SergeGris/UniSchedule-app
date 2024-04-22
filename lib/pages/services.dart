@@ -4,10 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:vector_graphics/vector_graphics.dart';
 
-//TODO
-
-//import 'package:webview_flutter/webview_flutter.dart';//TODO
-
 import './services/about.dart';
 import './services/map.dart';
 import './services/settings.dart';
@@ -46,15 +42,17 @@ class ServiceButton extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8.0),
                 color: Theme.of(context).colorScheme.primaryContainer,
             ),
+
+            textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.onPrimaryContainer),
             padding: const EdgeInsets.all(8.0),
             preferBelow: true,
-            textStyle: TextStyle(fontSize: Theme.of(context).textTheme.titleSmall?.fontSize, color: Theme.of(context).colorScheme.onPrimaryContainer),
-            verticalOffset: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) * 0.2,
+            verticalOffset: MediaQuery.of(context).size.width * 0.2,
 
-            child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
+            child: TextButton(
+                style: TextButton.styleFrom(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
                     padding: const EdgeInsets.all(8.0),
+                    backgroundColor: primaryContainerColor(context),
                 ),
                 onPressed: onPressed,
                 onLongPress: () {
@@ -65,8 +63,8 @@ class ServiceButton extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                         SizedBox(
-                            height: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) * 0.25,
-                            width: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) * 0.25,
+                            height: MediaQuery.of(context).size.width * 0.25,
+                            width: MediaQuery.of(context).size.width * 0.25,
                             child: SvgPicture(AssetBytesLoader(assetPath))
                         ),
 
@@ -77,7 +75,7 @@ class ServiceButton extends StatelessWidget {
                                 overflow: TextOverflow.fade,
                                 maxLines: 2,
                                 softWrap: true,
-                                style: TextStyle(fontSize: Theme.of(context).textTheme.titleMedium?.fontSize),
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary),
                             ),
                         ),
                     ],
@@ -100,32 +98,15 @@ class ServiceGrid extends StatelessWidget {
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
                 // width / height: fixed for *all* items
-                childAspectRatio: 3 / 4 //0.618033988751, //0.75, // TODO
+                childAspectRatio: 3 / 4,
             ),
             itemBuilder: (context, i) => children[i],
             itemCount: children.length,
             shrinkWrap: true,
             primary: true,
             padding: const EdgeInsets.all(8.0),
-            //crossAxisSpacing: 8.0,
-            //mainAxisSpacing: 8.0,
-            //crossAxisCount: 3,
         );
     }
-
-    // @override
-    // Widget build(BuildContext context) {
-    //     return GridView.count(
-    //         physics: NeverScrollableScrollPhysics(),
-    //         shrinkWrap: true,
-    //         primary: true,
-    //         padding: const EdgeInsets.all(8.0),
-    //         crossAxisSpacing: 8.0,
-    //         mainAxisSpacing: 8.0,
-    //         crossAxisCount: 3,
-    //         children: children,
-    //     );
-    // }
 }
 
 class ServiceTitle extends StatelessWidget {
@@ -137,7 +118,9 @@ class ServiceTitle extends StatelessWidget {
         return Center(
             child: Text(
                 text,
-                style: TextStyle(fontSize: Theme.of(context).textTheme.headlineMedium?.fontSize)
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                )
             )
         );
     }
@@ -152,7 +135,7 @@ class ServiceSubtitle extends StatelessWidget {
         return Center(
             child: Text(
                 text,
-                style: TextStyle(fontSize: Theme.of(context).textTheme.titleMedium?.fontSize)
+                style: Theme.of(context).textTheme.titleMedium
             )
         );
     }
@@ -164,30 +147,13 @@ class ServicesPage extends ConsumerWidget {
     @override
     Widget build(BuildContext context, WidgetRef ref) {
         Future openLinkInWebView(final BuildContext context, final url) async {
-            // TODO
-            // await Permission.camera.request();
-            // await Permission.microphone.request();
-            // await Permission.storage.request();
-
             await Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (context) => WebView(url: url)
-                )
+                MaterialPageRoute(builder: (context) => WebView(url: url))
             );
         }
 
-
-        GlobalKeys.hideWarningBanner();
-
         final useful = <Widget>[
-            // ServiceButton(
-            //     assetPath: 'assets/images/services/write_us.svg.vec',
-            //     subtitle: 'Профком в ВК',
-            //     fullname: 'Паблик профкома '
-            //     onPressed: () => launchLink(context, 'https://vk.com/profkomvmk'),
-            // ),
-
             ServiceButton(
                 assetPath: 'assets/images/services/courses.svg.vec',
                 subtitle: 'МФК',
@@ -196,7 +162,7 @@ class ServicesPage extends ConsumerWidget {
             ),
 
             ServiceButton(
-                assetPath: 'assets/images/services/cmc-logo.svg.vec',
+                assetPath: 'assets/images/services/light-cmc-logo.svg.vec',
                 subtitle: 'Сайт ВМК',
                 fullname: 'Официальный сайт факультета ВМК МГУ',
                 onPressed: () async => openLinkInWebView(context, 'https://cs.msu.ru/'),
@@ -243,13 +209,14 @@ class ServicesPage extends ConsumerWidget {
                 subtitle: 'Поддержать проект',
                 onPressed: () => showDialog(
                     context: context,
-                    builder: (final context) => AlertDialog( // TODO Change to dialog
+                    builder: (final context) => AlertDialog(
                         title: const Text('Поддержать проект'),
                         content: Text(UniScheduleConfiguration.supportGoals),
                         actions: UniScheduleConfiguration.supportVariants.map(
                             (e) => ElevatedButton(
                                 child: Text(e.label),
-                                onPressed: () => launchLink(context, e.link))
+                                onPressed: () => launchLink(context, e.link)
+                            )
                         ).toList()
                     )
                 )
@@ -275,7 +242,6 @@ class ServicesPage extends ConsumerWidget {
                 loading: ()           => getLoadingIndicator(() => refreshSchedule(ref)),
                 error: (error, stack) => getErrorContainer('Не удалось отобразить расписание'),
                 data: (_)             => ListView(
-                    //shrinkWrap: true,
                     primary: true,
                     children: <Widget>[
                         const ServiceTitle('Полезное'),
@@ -284,20 +250,22 @@ class ServicesPage extends ConsumerWidget {
                         ServiceGrid(children: application),
 
                         ListTile(
-                            leading: const Icon(Icons.settings),
-                            title: const Text('Настройки'),
+                            leading: Icon(
+                                Icons.settings,
+                                size: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.titleLarge?.fontSize ?? 16.0),
+                                color: Theme.of(context).colorScheme.primary
+                            ),
+                            title: Text(
+                                'Настройки',
+                                style: TextStyle(
+                                    fontSize: Theme.of(context).textTheme.titleLarge?.fontSize,
+                                    color: Theme.of(context).colorScheme.primary
+                                )
+                            ),
                             onTap: () => Navigator.push(
                                 context, MaterialPageRoute(builder: (context) => const SettingsPage())
                             ),
                         ),
-
-                        // ListTile(
-                        //     leading: Icon(Icons.calculate),
-                        //     title: const Text('Калькулятор твоей нищенской стипы'),
-                        //     onTap: () => Navigator.push(
-                        //         context, MaterialPageRoute(builder: (context) => const StipuhaPage())
-                        //     ),
-                        // ),
                     ]
                 ),
             )

@@ -27,22 +27,22 @@ class AboutPage extends StatelessWidget {
 
                     Text(
                         'UniSchedule',
-                        style: TextStyle(fontSize: Theme.of(context).textTheme.headlineMedium?.fontSize),
+                        style: Theme.of(context).textTheme.headlineMedium,
                         textAlign: TextAlign.center,
                     ),
 
                     Text(
                         '© 2024 Сергей Сушилин',
-                        style: TextStyle(fontSize: Theme.of(context).textTheme.titleMedium?.fontSize),
+                        style: Theme.of(context).textTheme.titleMedium,
                         textAlign: TextAlign.center,
                     ),
 
                     Container(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                            style: TextStyle(fontSize: Theme.of(context).textTheme.titleMedium?.fontSize),
+                            style: Theme.of(context).textTheme.titleMedium,
                             textAlign: TextAlign.center,
-                            'UniSchedule — это бесплатное приложение для студентов, в котором можно найти множество полезных сервисов. Здесь уже доступен просмотр расписания, схема этажей факультета, а также полезные ссылки. В скором времени планируется добавить много нового функционала!'
+                            'UniSchedule — это бесплатное приложение для студентов, в котором можно найти множество полезных сервисов. Здесь уже доступен просмотр расписания, схемы этажей факультета, а также полезные ссылки. В скором времени планируется добавить много нового функционала!'
                         ),
                     ),
 
@@ -56,7 +56,7 @@ class AboutPage extends StatelessWidget {
                             }
 
                             final packageInfo = snapshot.data!;
-                            // TODO String packageDescription = 'Версия: ${packageInfo.version}\nНомер сборки: ${packageInfo.buildNumber}';
+
                             //TODO Copy on long press?
                             return ListTile(
                                 title: const Text(textAlign: TextAlign.center, 'Версия приложения'),
@@ -75,6 +75,7 @@ class AboutPage extends StatelessWidget {
                                 Linkify(
                                     onOpen: (link) => launchLink(context, link.url),
                                     text: UniScheduleConfiguration.authorEmailAddress!,
+                                    style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14.0)),
                                 ),
                             ],
                         )
@@ -86,7 +87,11 @@ class AboutPage extends StatelessWidget {
                         title: const Text(textAlign: TextAlign.center, 'Проект поддержали'),
                         subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
-                            children: UniScheduleConfiguration.supportedBy.map((e) => Text('${e.name}${e.amount != 0 ? " ${e.amount}" : ""}')).cast<Widget>().toList()
+                            children: UniScheduleConfiguration.supportedBy.map(
+                                (e) => Text('${e.name}' + (e.amount != 0 ? ' — ${e.amount} ₽' : ''))
+                            )
+                            .cast<Widget>()
+                            .toList()
                         ),
                     ),
 
@@ -98,13 +103,13 @@ class AboutPage extends StatelessWidget {
                             children: <Widget>[
                                 Text(
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: Theme.of(context).textTheme.bodyLarge?.fontSize),
+                                    style: Theme.of(context).textTheme.bodyLarge,
                                     'Канал в Telegram: '
                                 ),
                                 Linkify(
                                     onOpen: (link) async => launchLink(context, link.url),
                                     text: UniScheduleConfiguration.channelLink!,
-                                    style: TextStyle(fontSize: Theme.of(context).textTheme.bodyLarge?.fontSize),
+                                    style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14.0))
                                 ),
                             ],
                         ),

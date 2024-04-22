@@ -79,8 +79,8 @@ class _HomePageContentState extends ConsumerState<HomePageContent> {
 
         final time = TimeOfDay.fromDateTime(date);
         var showProgress = true;
-        var initialClasses = getClassesForDate(date);
-        var pendingClasses = initialClasses.where((c) => c.name != null && c.end.isNotBeforeThan(time)).toList();
+        var initialClasses = getClassesForDate(date).where((c) => c.name != null);
+        var pendingClasses = initialClasses.where((c) => c.end.isAfterThan(time)).toList();
 
         late String listTitle;
         String? listSubTitle;
@@ -98,12 +98,7 @@ class _HomePageContentState extends ConsumerState<HomePageContent> {
                 final minutes = untilEnd % 60;
 
                 listTitle = 'Идёт ' + (pendingClasses[0].type?.name.toLowerCase() ?? 'пара');
-
-                if (hours == 0 && minutes == 0) {
-                    listSubTitle = 'Пара закончилась';
-                } else {
-                    listSubTitle = 'До конца ${timeToPrettyView(hours, minutes)}';
-                }
+                listSubTitle = 'До конца ${timeToPrettyView(hours, minutes)}';
             } else {
                 final hours   = untilBegin ~/ 60;
                 final minutes = untilBegin % 60;
@@ -147,7 +142,7 @@ class _HomePageContentState extends ConsumerState<HomePageContent> {
         }
 
         return ListView.separated(
-            //padding: const EdgeInsets.only(top: 8.0),
+            padding: const EdgeInsets.only(top: 8.0),
             itemCount: pendingClasses.length + 1,
             itemBuilder: (context, index) => index == 0
             ? ListTile(
@@ -155,21 +150,21 @@ class _HomePageContentState extends ConsumerState<HomePageContent> {
                     listTitle,
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.fade,
-                    style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).colorScheme.primary),
                 ),
                 subtitle: listSubTitle != null
                 ? Text(
                     listSubTitle,
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.fade,
-                    style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary),
                 )
                 : null,
             )
             : ClassCard(
                 classes: pendingClasses,
                 index: index - 1,
-                number: index - 1 + 1 + initialClasses.length - pendingClasses.length, // Учитываем количество прошедших пар
+                number: pendingClasses[index - 1].number,
                 showProgress: showProgress,
                 horizontalMargin: 8.0,
                 borderRadius: 8.0

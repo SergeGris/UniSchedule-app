@@ -14,7 +14,7 @@ class ScheduleLoader extends ConsumerWidget {
     Widget build(BuildContext context, WidgetRef ref) {
         return RefreshIndicator(
             onRefresh: () => refreshSchedule(ref),
-            child: ref.watch(scheduleProvider).unwrapPrevious().when(
+            child: ref.watch(scheduleProvider).when(
                 loading: ()           => getLoadingIndicator(() => refreshSchedule(ref)),
                 error: (error, stack) => getErrorContainer('Не удалось отобразить расписание'),
                 data: (value)         => child(value),

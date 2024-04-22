@@ -1,9 +1,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-//TODO import 'package:flutter_rustore_update/const.dart';
-//TODO import 'package:flutter_rustore_update/flutter_rustore_update.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../pages/home.dart';
@@ -14,20 +11,57 @@ import '../configuration.dart';
 import '../provider.dart';
 import '../scheduleselector.dart';
 import '../utils.dart';
+import '../widgets/filledbutton.dart';
 
-class HomeScreen extends ConsumerStatefulWidget {
-    const HomeScreen({super.key});
+// Возвращает строку в формате "День-недели, число месяц"
+class DateTitle extends StatelessWidget {
+    const DateTitle({super.key});
 
     @override
-    ConsumerState<HomeScreen> createState() => _HomeScreenState();
+    Widget build(BuildContext context) {
+        final date = DateTime.now();
+
+        // Именительный падеж (кто?/что?)
+        const weekdays = [
+            'Понедельник',
+            'Вторник',
+            'Среда',
+            'Четверг',
+            'Пятница',
+            'Суббота',
+            'Воскресенье',
+        ];
+
+        // Винительный падеж (кого?/чего?)
+        const months = [
+            'января',
+            'февраля',
+            'марта',
+            'апреля',
+            'мая',
+            'июня',
+            'июля',
+            'августа',
+            'сентября',
+            'октября',
+            'ноября',
+            'декабря',
+        ];
+
+        final weekday = weekdays[date.weekday - 1];
+        final day = date.day;
+        final month = months[date.month - 1];
+
+        return Text('$weekday, $day $month', style: Theme.of(context).textTheme.titleLarge);
+    }
 }
 
-class WeekNumberWidget extends ConsumerWidget {
-    WeekNumberWidget({super.key});
+class WeekNumber extends ConsumerWidget {
+    const WeekNumber({super.key});
 
     @override
     Widget build(BuildContext context, WidgetRef ref) {
-        final weekIndex = ref.watch(scheduleProvider).unwrapPrevious().when<int?>(
+        final weekIndex = ref.watch(scheduleProvider).when<int?>(
             loading: ()      => null,
             error:   (e, st) => null,
             data:    (value) => getWeekIndex(DateTime.now(), value),
@@ -44,7 +78,7 @@ class WeekNumberWidget extends ConsumerWidget {
 
         return Text(
             'Идёт ${weekIndex + 1} учебная неделя',
-            style: TextStyle(fontSize: Theme.of(context).textTheme.titleMedium?.fontSize)
+            style: Theme.of(context).textTheme.titleMedium
         );
     }
 }
@@ -55,10 +89,16 @@ enum UniSchedulePages {
     services,
 }
 
+class HomeScreen extends ConsumerStatefulWidget {
+    const HomeScreen({super.key});
+
+    @override
+    ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
 class _HomeScreenState extends ConsumerState<HomeScreen> {
     int  _selPage     = UniSchedulePages.main.index;
     bool showNextWeek = DateTime.now().weekday == DateTime.sunday;
-    bool warningShown = false;
 
     final pagesNavigation = const {
         UniSchedulePages.main:     NavigationDestination(icon: Icon(Icons.home),       label: 'Главная'),
@@ -100,13 +140,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 }
             }
         );
-    }
 
-    @override
-    Widget build(BuildContext context) {
-        if (!warningShown && UniScheduleConfiguration.manifestUpdated) {
-            warningShown = true;
-
+        if (UniScheduleConfiguration.manifestUpdated) {
             Future(
                 () async => showDialog(
                     context: context,
@@ -123,7 +158,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
             );
         }
+    }
 
+    @override
+    Widget build(BuildContext context) {
         // Set to default if user toggled a page.
         if (_selPage != UniSchedulePages.schedule.index) {
             showNextWeek = DateTime.now().weekday == DateTime.sunday;
@@ -134,14 +172,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                        Text(dateTitle()),
-                        WeekNumberWidget(),
+                        DateTitle(),
+                        WeekNumber(),
                     ],
                 ),
 
                 shadowColor: Theme.of(context).shadowColor,
 
-                bottom: const Tab(child: ScheduleSelectorButton()) // TODO Tab?
+                // bottom: PreferredSize(
+                //     child: ScheduleSelectorButton(),
+                //     preferredSize: Size.fromHeight(20.0 * getScale(context, Theme.of(context).textTheme.titleMedium?.fontSize ?? 16.0))
+                // ),
+
+                bottom: const Tab( // TODO: Something else, not tab?
+                    //height: 30 * getScale(context, Theme.of(context).textTheme.titleMedium?.fontSize ?? 16.0),
+                    child: ScheduleSelectorButton()
+                )
             ),
 
             bottomNavigationBar: NavigationBar(
@@ -156,6 +202,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 UniSchedulePages.services: () => const ServicesPage(),
             }[UniSchedulePages.values[_selPage]]!(),
 
+            floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+
             floatingActionButton: (_selPage != UniSchedulePages.schedule.index)
             ? null
             : ElevatedButton(
@@ -165,242 +213,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     children: <Widget>[
                         Icon(
                             showNextWeek ? Icons.arrow_back : Icons.arrow_forward,
-                            size: Theme.of(context).textTheme.titleLarge?.fontSize
+                            size: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.titleLarge?.fontSize ?? 16.0),
+                            color: Theme.of(context).colorScheme.primary
                         ),
 
                         const SizedBox(width: 8),
 
                         Text(
                             showNextWeek ? 'К текущей неделе' : 'К следующей неделе',
-                            style: TextStyle(fontSize: Theme.of(context).textTheme.titleMedium?.fontSize)
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.primary
+                            )
                         ),
                     ],
                 ),
             ),
         );
     }
-
-    ///////// TODO!!!!!
-    // vvv RUSTORE IN APP UPDATE CODE
-    // int availableVersionCode = 0;
-    // int installStatus = 0;
-    // String packageName = "";
-    // int updateAvailability = 0;
-    // String infoErr = "";
-    // int bytesDownloaded = 0;
-    // int totalBytesToDownload = 0;
-    // int installErrorCode = 0;
-    // String completeErr = "";
-    // int installCode = 0;
-    // String updateError = "";
-    // String silentError = "";
-    // String immediateError = "";
-
-    // @override
-    // void initState(){
-    //     super.initState();
-
-    //     info();
-
-    //     Future(() async {
-    //             showDialog(
-    //                 context: context,
-    //                 builder: (BuildContext context) => AlertDialog(
-    //                     title: const Text('ТЕСТ!'),
-    //                     content: Text('${availableVersionCode}, ${installStatus}, ${packageName}, ${updateAvailability}, ${infoErr}, ${bytesDownloaded}, ${totalBytesToDownload}, ${installErrorCode}, ${completeErr}, ${installCode}, ${updateError}, ${silentError}, ${immediateError}'),
-    //                     actions: <Widget>[
-    //                         TextButton(
-    //                             onPressed: () { Navigator.pop(context); },
-    //                             child: const Text('Понятно'),
-    //                         ),
-    //                     ],
-    //                 ),
-    //             );
-    //         }
-    //     );
-
-    //     if (infoErr != '') {
-    //         Future(() async {
-    //                 showDialog(
-    //                     context: context,
-    //                     builder: (BuildContext context) => AlertDialog(
-    //                         title: const Text('Возникла ошибка!'),
-    //                         content: const Text('Для упрощения обновления приложения установите последнюю версию RuStore'),
-    //                         actions: <Widget>[
-    //                             TextButton(
-    //                                 onPressed: () { update(); Navigator.pop(context); },
-    //                                 child: const Text('Понятно'),
-    //                             ),
-    //                         ],
-    //                     ),
-    //                 );
-    //             }
-    //         );
-    //     }
-
-    //     if (updateAvailability == UPDATE_AILABILITY_AVAILABLE) {
-    //         Future(() async {
-    //                 showDialog(
-    //                     context: context,
-    //                     builder: (BuildContext context) => AlertDialog(
-    //                         title: const Text('Доступна новая версия!'),
-    //                         content: const Text('Установить?'),
-    //                         actions: <Widget>[
-    //                             TextButton(
-    //                                 onPressed: () { update(); Navigator.pop(context); },
-    //                                 child: const Text('Да'),
-    //                             ),
-    //                             TextButton(
-    //                                 onPressed: () => Navigator.pop(context),
-    //                                 child: const Text('Нет'),
-    //                             ),
-    //                         ],
-    //                     ),
-    //                 );
-    //             }
-    //         );
-    //     }
-    // }
-
-    // void info(){
-    //     RustoreUpdateClient.info().then((info) {
-    //             setState(() {
-    //                     availableVersionCode = info.availableVersionCode;
-    //                     installStatus = info.installStatus;
-    //                     packageName = info.packageName;
-    //                     updateAvailability = info.updateAvailability;
-    //             });
-    //     }).catchError((err) {
-    //             setState(() {
-    //                     infoErr = err.message;
-    //             });
-    //     });
-    // }
-
-    // void update(){
-    //     RustoreUpdateClient.info().then((info) {
-    //             setState(() {
-    //                     availableVersionCode = info.availableVersionCode;
-    //                     installStatus = info.installStatus;
-    //                     packageName = info.packageName;
-    //                     updateAvailability = info.updateAvailability;
-    //             });
-    //             if (info.updateAvailability == UPDATE_AILABILITY_AVAILABLE) {
-    //                 RustoreUpdateClient.listener((value) {
-    //                         setState(() {
-    //                                 installStatus = value.installStatus;
-    //                                 bytesDownloaded = value.bytesDownloaded;
-    //                                 totalBytesToDownload = value.totalBytesToDownload;
-    //                                 installErrorCode = value.installErrorCode;
-    //                         });
-    //                         if (value.installStatus == INSTALL_STATUS_DOWNLOADED) {
-    //                             RustoreUpdateClient.complete().catchError((err) {
-    //                                     setState(() {
-    //                                             completeErr = err.message;
-    //                                     });
-    //                             });
-    //                         }
-    //                 });
-    //                 RustoreUpdateClient.download().then((value) {
-    //                         setState(() {
-    //                                 installCode = value.code;
-    //                         });
-    //                         if (value.code == ACTIVITY_RESULT_CANCELED) {
-    //                         }
-    //                 }).catchError((err) {
-    //                         setState(() {
-    //                                 updateError = err.message;
-    //                         });
-    //                 });
-    //             }
-    //     }).catchError((err) {
-    //             setState(() {
-    //                     infoErr = err.message;
-    //             });
-    //     });
-    // }
-
-    // void immediate(){
-    //     RustoreUpdateClient.info().then((info) {
-    //             setState(() {
-    //                     availableVersionCode = info.availableVersionCode;
-    //                     installStatus = info.installStatus;
-    //                     packageName = info.packageName;
-    //                     updateAvailability = info.updateAvailability;
-    //             });
-    //             if (info.updateAvailability == UPDATE_AILABILITY_AVAILABLE) {
-    //                 RustoreUpdateClient.listener((value) {
-    //                         setState(() {
-    //                                 installStatus = value.installStatus;
-    //                                 bytesDownloaded = value.bytesDownloaded;
-    //                                 totalBytesToDownload = value.totalBytesToDownload;
-    //                                 installErrorCode = value.installErrorCode;
-    //                         });
-    //                         if (value.installStatus == INSTALL_STATUS_DOWNLOADED) {
-    //                             RustoreUpdateClient.complete().catchError((err) {
-    //                                     setState(() {
-    //                                             completeErr = err.message;
-    //                                     });
-    //                             });
-    //                         }
-    //                 });
-    //                 RustoreUpdateClient.immediate().then((value) {
-    //                         setState(() {
-    //                                 installCode = value.code;
-    //                         });
-    //                 }).catchError((err) {
-    //                         setState(() {
-    //                                 immediateError = err.message;
-    //                         });
-    //                 });
-    //             }
-    //     }).catchError((err) {
-    //             setState(() {
-    //                     infoErr = err.message;
-    //             });
-    //     });
-    // }
-
-    // void silent(){
-    //     RustoreUpdateClient.info().then((info) {
-    //             setState(() {
-    //                     availableVersionCode = info.availableVersionCode;
-    //                     installStatus = info.installStatus;
-    //                     packageName = info.packageName;
-    //                     updateAvailability = info.updateAvailability;
-    //             });
-    //             if (info.updateAvailability == UPDATE_AILABILITY_AVAILABLE) {
-    //                 RustoreUpdateClient.listener((value) {
-    //                         setState(() {
-    //                                 installStatus = value.installStatus;
-    //                                 bytesDownloaded = value.bytesDownloaded;
-    //                                 totalBytesToDownload = value.totalBytesToDownload;
-    //                                 installErrorCode = value.installErrorCode;
-    //                         });
-    //                         if (value.installStatus == INSTALL_STATUS_DOWNLOADED) {
-    //                             RustoreUpdateClient.complete().catchError((err) {
-    //                                     setState(() {
-    //                                             completeErr = err.message;
-    //                                     });
-    //                             });
-    //                         }
-    //                 });
-    //                 RustoreUpdateClient.silent().then((value) {
-    //                         setState(() {
-    //                                 installCode = value.code;
-    //                         });
-    //                 }).catchError((err) {
-    //                         setState(() {
-    //                                 silentError = err.message;
-    //                         });
-    //                 });
-    //             }
-    //     }).catchError((err) {
-    //             setState(() {
-    //                     infoErr = err.message;
-    //             });
-    //     });
-    // }
-
-    // ^^^ RUSTORE IN APP UPDATE CODE
 }

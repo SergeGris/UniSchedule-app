@@ -1,6 +1,8 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 
+import '../utils.dart';
+
 class UniScheduleDropDownButton extends StatelessWidget {
     const UniScheduleDropDownButton({
             required this.hint,
@@ -29,27 +31,37 @@ class UniScheduleDropDownButton extends StatelessWidget {
                 value: initialSelection,
                 onChanged: onSelected,
 
-                iconStyleData: const IconStyleData(
-                    icon: Icon(Icons.arrow_drop_down),
-                    openMenuIcon: Icon(Icons.arrow_drop_up),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary
+                ),
+
+                iconStyleData: IconStyleData(
+                    icon: Icon(
+                        Icons.arrow_drop_down,
+                        size: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.titleLarge?.fontSize ?? 16.0),
+                    ),
+                    openMenuIcon: Icon(
+                        Icons.arrow_drop_up,
+                        size: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.titleLarge?.fontSize ?? 16.0),
+                    ),
                 ),
 
                 buttonStyleData: ButtonStyleData(
                     // padding: const EdgeInsets.only(left: 8, right: 8),
                     decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.1), // For elevation effect
+                        borderRadius: BorderRadius.circular(16.0),
+                        color: primaryContainerColor(context),
                     ),
                     elevation: 0,
                 ),
 
                 dropdownStyleData: DropdownStyleData(
                     // isOverButton: true,
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(16.0)),
 
                     scrollbarTheme: ScrollbarThemeData(
-                        radius: const Radius.circular(16),
-                        thickness: MaterialStateProperty.all<double>(16),
+                        radius: const Radius.circular(16.0),
+                        thickness: MaterialStateProperty.all<double>(16.0),
                         thumbVisibility: MaterialStateProperty.all<bool>(true),
                     ),
                 ),

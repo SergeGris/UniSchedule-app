@@ -6,6 +6,7 @@ import 'package:vector_graphics/vector_graphics.dart';
 
 import '../../floormapselector.dart';
 import '../../provider.dart';
+import '../../utils.dart';
 
 class MapSvgViewer extends StatelessWidget {
     MapSvgViewer(this.svg, {super.key});
@@ -36,11 +37,9 @@ class MapRoute extends StatelessWidget {
             appBar: AppBar(
                 title: const Text('План этажей'),
                 shadowColor: Theme.of(context).shadowColor,
-                bottom: const Tab(
-                    child: Padding(
-                        padding: EdgeInsets.all(8),
-                        child: FloorMapSelectorButton()
-                    ),
+                bottom: Tab(
+                    height: 30 * getScale(context, 16.0),
+                    child: FloorMapSelectorButton()
                 ),
             ),
             body: const MapPage()
@@ -93,6 +92,7 @@ class _MapPageState extends ConsumerState<MapPage> with TickerProviderStateMixin
                 ),
             );
         }
+
         final floorNumbers = buildingsFloors[buildingId]!;
 
         final floors = floorNumbers.map(

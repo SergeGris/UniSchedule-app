@@ -12,7 +12,7 @@ import './utils.dart';
 void main() async {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // TODO Webview enabled only on this platforms
+    // Webview works only on this platforms
     if (Util.isAndroid() || Util.isIOS()) {
         // Plugin must be initialized before using
         await FlutterDownloader.initialize(
@@ -49,8 +49,8 @@ class UniScheduleApp extends ConsumerWidget {
 
         uniScheduleThemeCustom.colorSchemeSeed = Color(prefs?.getInt('custom.color.scheme.seed') ?? Colors.indigoAccent.value);
         uniScheduleThemeCustom.themeMode = (themeMode != null)
-        ? (themeMode == 'light' ? ThemeMode.light : ThemeMode.dark)
-        : theme.themeMode;
+            ? (themeMode == 'light' ? ThemeMode.light : ThemeMode.dark)
+            : theme.themeMode;
 
         ThemeData getThemeData(final Brightness brightness) => ThemeData(
             useMaterial3: true,
@@ -64,7 +64,7 @@ class UniScheduleApp extends ConsumerWidget {
             dropdownMenuTheme: DropdownMenuThemeData(
 				inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
                     isDense: true,
-                    // border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                     contentPadding: const EdgeInsets.all(8.0),
                 ),
 
@@ -77,6 +77,8 @@ class UniScheduleApp extends ConsumerWidget {
                 ),
             ),
         );
+
+        debugPrint('h: ${MediaQuery.of(context).size.height}\nw: ${MediaQuery.of(context).size.width}');
 
         //TODO
         ref.read(scheduleProvider);//TODO.init();
@@ -93,14 +95,14 @@ class UniScheduleApp extends ConsumerWidget {
                 loading: () => Scaffold(
                     body: Center(
                         child: SizedBox(
-                            height: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) / 2,
-                            width: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) / 2 ,
+                            height: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) * 0.75,
+                            width: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) * 0.75 ,
                             child: Image.asset('assets/images/icon.png') //getLoadingIndicator(() => Future.value())
-                        )
-                    )
+                        ),
+                    ),
                 ),
 
-                error: (error, stack) => Scaffold(
+                error: (error, _) => Scaffold(
                     body: ListView(
                         children: <Widget>[
                             Column(
@@ -116,26 +118,25 @@ class UniScheduleApp extends ConsumerWidget {
                                         child: Text('${error}'),
                                     ),
                                 ],
-                            )
-                        ]
-                    )
+                            ),
+                        ],
+                    ),
                 ),
 
                 data: (_) {
-                    return firstRun
-                    ? const ScheduleSelector(firstRun: true)
-                    : const HomeScreen();
+                    return firstRun ? const ScheduleSelector(firstRun: true) : const HomeScreen();
                 }
             ),
-            // // // // TODO
-            //  builder: (context, child) {
-            //      final mediaQueryData = MediaQuery.of(context);
-            //      final scale = 1.3;//TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! mediaQueryData.textScaleFactor.clamp(1.0, 1.3);
-            //      return MediaQuery(
-            //          child: child!,
-            //          data: MediaQuery.of(context).copyWith(textScaleFactor: scale),
-            //      );
-            //  },
+
+            //// If you want to test scaled version on app on computer, uncomment this code below
+            // builder: (context, child) {
+            //     final mediaQueryData = MediaQuery.of(context);
+            //     final scale = 2.0; // mediaQueryData.textScaleFactor.clamp(1.0, 1.3);
+            //     return MediaQuery(
+            //         child: child!,
+            //         data: MediaQuery.of(context).copyWith(textScaleFactor: scale),
+            //     );
+            // },
         );
     }
 }

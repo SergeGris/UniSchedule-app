@@ -4,15 +4,15 @@ rule dart_builder {
 }
 
 rule apk-arm64 {
-     >flutter build apk --target-platform=android-arm64 --obfuscate --split-debug-info=./debug-info
+     >flutter build apk --target-platform=android-arm64 --obfuscate --split-debug-info=./debug-info --release
 }
 
 rule apk-release {
-     >flutter build apk --obfuscate --split-debug-info=./debug-info --pub
+     >flutter build apk --obfuscate --split-debug-info=./debug-info --pub --release
 }
 
 rule aab-release {
-     >flutter build appbundle --obfuscate --split-debug-info=./debug-info --pub
+     >flutter build appbundle --obfuscate --split-debug-info=./debug-info --pub --release
 }
 
 rule run {

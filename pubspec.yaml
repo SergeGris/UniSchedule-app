@@ -1,7 +1,7 @@
 name: UniSchedule
 description: UniSchedule - application to view an university schedule.
 publish_to: 'none'
-version: 0.2.0+17
+version: 0.2.1+19
 
 environment:
   sdk: '>=3.1.2 <4.0.0'
@@ -40,6 +40,7 @@ flutter:
 
   - assets/dino-runner/index.html
 
+  - assets/images/services/light-cmc-logo.svg.vec
   - assets/images/services/cmc-logo.svg.vec
   - assets/images/services/trex.svg.vec
   - assets/images/services/courses.svg.vec

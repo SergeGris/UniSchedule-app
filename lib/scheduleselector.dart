@@ -9,6 +9,7 @@ import './configuration.dart';
 import './globalkeys.dart';
 import './provider.dart';
 import './utils.dart';
+import '../widgets/filledbutton.dart';
 
 part 'scheduleselector.g.dart';
 
@@ -31,12 +32,11 @@ class ScheduleSelectorButton extends ConsumerWidget {
         final year       = prefs.getString('yearName')       ?? prefs.getString('yearId')!;
         final group      = prefs.getString('groupName')      ?? prefs.getString('groupId')!;
 
-        return ElevatedButton(
+        return UniScheduleFilledButton(
             child: Text('$group группа $year курса $faculty $university'),
             onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                    // TODO barrierLabel: 'Назад',
                     builder: (context) => const ScheduleSelectorRoute()
                 )
             )
@@ -214,25 +214,15 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
 
                     final entries = manifestData.map((e) => DropdownMenuEntry(value: e.name, label: e.label)).toList();
 
-                    // final entries = manifestData.map(
-                    //     (e) => DropdownMenuItem<String>(
-                    //         value: e.name,
-                    //         child: Text(e.label)
-                    //     )
-                    // ).cast<DropdownMenuItem<String>>()
-                    // .toList();
-
-                    // final textEditingController = TextEditingController();
-
                     return SizedBox(
                         height: size,
                         width: MediaQuery.of(context).size.width * Constants.goldenRatio,
                         // Width is specified in DropdownMenu().
 
-                        // TODO aligne entries to center
+                        // TODO align entries to center
                         child: DropdownMenu(
                             enabled: menu.enabled,
-                            requestFocusOnTap: entries.length > 3,
+                            requestFocusOnTap: entries.length > 5,
                             initialSelection: menu.enabled ? menu.id : null, // TODO preselect only value
                             label: Text(name),
                             leadingIcon: const Icon(Icons.search),
@@ -269,7 +259,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
 
                 child: LayoutBuilder(
                     builder: (context, final constraints) => ListView(
-                        children: [
+                        children: <Widget>[
                             Container(
                                 constraints: BoxConstraints(
                                     minHeight: constraints.maxHeight,
@@ -279,7 +269,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                         crossAxisAlignment: WrapCrossAlignment.center,
                                         direction: Axis.vertical,
                                         spacing: 24,
-                                        children: [
+                                        children: <Widget>[
                                             getMenu(
                                                 ref.watch(manifestProvider(university)),
                                                 'Университет',

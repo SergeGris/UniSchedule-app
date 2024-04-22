@@ -67,44 +67,6 @@ void showSnackBar(BuildContext context, Widget content) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: content));
 }
 
-// Возвращает строку в формате "День-недели, число месяц"
-String dateTitle() {
-    final date = DateTime.now();
-
-    // Именительный падеж (кто?/что?)
-    const weekdays = [
-        'Понедельник',
-        'Вторник',
-        'Среда',
-        'Четверг',
-        'Пятница',
-        'Суббота',
-        'Воскресенье',
-    ];
-
-    // Винительный падеж (кого?/чего?)
-    const months = [
-        'января',
-        'февраля',
-        'марта',
-        'апреля',
-        'мая',
-        'июня',
-        'июля',
-        'августа',
-        'сентября',
-        'октября',
-        'ноября',
-        'декабря',
-    ];
-
-    final weekday = weekdays[date.weekday - 1];
-    final day = date.day;
-    final month = months[date.month - 1];
-
-    return '$weekday, $day $month';
-}
-
 int? getWeekIndex(DateTime date, Schedule schedule) {
     if (schedule.studiesBegin == null || date.isBefore(schedule.studiesBegin!)
      || (schedule.studiesEnd  != null && date.isAfter(schedule.studiesEnd!))) {
@@ -240,6 +202,13 @@ Future<bool> launchLink(BuildContext context, String link) async {
 }
 
 bool isDarkMode(final BuildContext context) => Theme.of(context).brightness == Brightness.dark;
+
+Color primaryContainerColor(final BuildContext context) =>
+    Theme.of(context).colorScheme.primaryContainer.withOpacity(isDarkMode(context) ? 0.2 : 1.0);
+
+double getScale(final context, final fontSize) {
+    return MediaQuery.textScalerOf(context).scale(fontSize) / fontSize;
+}
 
 double min(double a, double b) => a <= b ? a : b;
 

@@ -32,9 +32,7 @@ class SchedulePage extends ConsumerWidget {
 
         DateTime getScheduleDay(int index) {
             return date.add(
-                Duration(
-                    days: index + 1 - (currentWeekDay + 1) + (showNextWeek ? 7 : 0)
-                )
+                Duration(days: index + 1 - (currentWeekDay + 1) + (showNextWeek ? 7 : 0))
             );
         }
 
@@ -49,7 +47,7 @@ class SchedulePage extends ConsumerWidget {
                                 (day, index) {
                                     final dayDate = getScheduleDay(index); // Дата конкретного дня недели.
 
-                                    final tabText = [
+                                    final tabText = <Widget>[
                                         // Каждая вкладка имеет следующий вид:
                                         //  Пн
                                         //   1
@@ -57,17 +55,17 @@ class SchedulePage extends ConsumerWidget {
                                         Text(
                                             day.dayAbbr,
                                             overflow: TextOverflow.fade,
-                                            style: TextStyle(fontSize: Theme.of(context).textTheme.titleMedium?.fontSize ?? 14),
+                                            style: TextStyle(fontSize: Theme.of(context).textTheme.titleMedium?.fontSize),
                                         ),
                                         Text(
                                             '${dayDate.day}',
                                             overflow: TextOverflow.fade,
-                                            style: TextStyle(fontSize: Theme.of(context).textTheme.titleSmall?.fontSize ?? 14)
+                                            style: TextStyle(fontSize: Theme.of(context).textTheme.titleSmall?.fontSize)
                                         ),
                                         Text(
                                             monthAbbrs[dayDate.month - 1],
                                             overflow: TextOverflow.fade,
-                                            style: TextStyle(fontSize: Theme.of(context).textTheme.bodySmall?.fontSize ?? 14)
+                                            style: TextStyle(fontSize: Theme.of(context).textTheme.bodySmall?.fontSize)
                                         )
                                     ];
 
@@ -90,7 +88,7 @@ class SchedulePage extends ConsumerWidget {
 
                                     return Tab(
                                         // FUCK TODO fucking magic constant. Pay attention to <https://stackoverflow.com/a/62536187>
-                                        height: 60.0 * MediaQuery.of(context).textScaleFactor,
+                                        height: 60.0 * getScale(context, Theme.of(context).textTheme.titleMedium?.fontSize ?? 16.0),
                                         child: Column(
                                             children: tabText
                                         ),
@@ -121,8 +119,7 @@ class SchedulePage extends ConsumerWidget {
                                                 ? Center(
                                                     child: Text(
                                                         'Свободный день',
-                                                        style: TextStyle(
-                                                            fontSize: Theme.of(context).textTheme.headlineMedium?.fontSize,
+                                                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                                             color: Theme.of(context).colorScheme.primary,
                                                         ),
                                                     ),

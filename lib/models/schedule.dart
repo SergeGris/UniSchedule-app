@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../utils.dart';
+
 DateTime? studiesDateFromJson(Map<String, dynamic>? json) {
     if (json == null || json.toString() == 'null') {
         return null;
@@ -32,7 +34,7 @@ class Day {
     Day(this.dayNum, this.classes);
 
     Day.fromJson(this.dayNum, final List json)
-        : classes = [...json.map((e) => Class.fromJson(e))];
+        : classes = [...json.mapIndexed((e, i) => Class.fromJson(e, i + 1))];
 
     final int dayNum;
     final List<Class> classes;
@@ -105,9 +107,10 @@ class Class {
             this.building,
             this.type,
             this.note,
+            required this.number,
     });
 
-    Class.fromJson(final Map<String, dynamic> json)
+    Class.fromJson(final Map<String, dynamic> json, final int number)
         : start = TimeOfDay(
             hour:   int.parse(json['begin'].toString().split(':')[0]),
             minute: int.parse(json['begin'].toString().split(':')[1])
@@ -136,7 +139,8 @@ class Class {
         ],
         building = json['building'],
         type     = json['type'] != null ? classTypeFromString(json['type']) : null,
-        note     = json['note'];
+        note     = json['note'],
+        number   = number;
 
     final TimeOfDay start;
     final TimeOfDay end;
@@ -145,4 +149,5 @@ class Class {
     final String? building;
     final ClassType? type;
     final String? note;
+    final int number;
 }
