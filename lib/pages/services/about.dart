@@ -1,9 +1,83 @@
+
+// Copyright (C) 2024 Sergey Sushilin <sushilinsergey@yandex.ru>.
+// This file is part of UniSchedule.
+
+// UniSchedule is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published
+// by the Free Software Foundation, either version 3 of the License,
+// or (at your option) any later version.
+
+// UniSchedule is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty
+// of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with UniSchedule.  If not, see <https://www.gnu.org/licenses/>.
+
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:vector_graphics/vector_graphics.dart';
 
 import '../../configuration.dart';
+import '../../widgets/overflowed_text.dart';
 import '../../utils.dart';
+
+class CopyingPage extends StatelessWidget {
+    const CopyingPage({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        return Scaffold(
+            appBar: AppBar(
+                title: OverflowedText(text: 'GNU General Public License 3', shortText: 'GNU GPLv3', style: Theme.of(context).textTheme.headlineSmall),
+            ),
+            body: FutureBuilder(
+                future: rootBundle.loadString("assets/copying.md"),
+                builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+                    if (snapshot.hasError) {
+                        return Center(
+                            child: Text(
+                                'Не удалось загрузить текст лицензии',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.headlineMedium
+                            )
+                        );
+                    }
+
+                    if (snapshot.hasData) {
+                        // Workaround a bug. When using just Markdown(...), then scrolling works bad.
+                        // Maybe soon it will be fixed in flutter_markdown.
+                        return SingleChildScrollView(
+                            child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: MarkdownBody(
+                                    data: snapshot.data!,
+                                    onTapLink: (text, href, title) {
+                                        if (href != null) {
+                                            launchLink(context, href);
+                                        }
+                                    },
+                                    shrinkWrap: true,
+                                )
+                            )
+                        );
+                    }
+
+                    return Center(
+                        child: const CircularProgressIndicator(),
+                    );
+                }
+            ),
+        );
+    }
+}
 
 class AboutPage extends StatelessWidget {
     const AboutPage({super.key});
@@ -19,9 +93,9 @@ class AboutPage extends StatelessWidget {
                 children: <Widget>[
                     Center(
                         child: SizedBox(
-                            height: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) / 2,
-                            width: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) / 2 ,
-                            child: Image.asset('assets/images/icon.png') //getLoadingIndicator(() => Future.value())
+                            height: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) * 0.5,
+                            width: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) * 0.5 ,
+                            child: Image.asset('assets/images/icon.png'),
                         )
                     ),
 
@@ -75,7 +149,7 @@ class AboutPage extends StatelessWidget {
                                 Linkify(
                                     onOpen: (link) => launchLink(context, link.url),
                                     text: UniScheduleConfiguration.authorEmailAddress!,
-                                    style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14.0)),
+                                    style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                             ],
                         )
@@ -84,13 +158,12 @@ class AboutPage extends StatelessWidget {
 
                     if (UniScheduleConfiguration.supportedBy.isNotEmpty)
                     ListTile(
-                        title: const Text(textAlign: TextAlign.center, 'Проект поддержали'),
+                        title: const Text(textAlign: TextAlign.center, 'Проект поддержали:'),
                         subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: UniScheduleConfiguration.supportedBy.map(
                                 (e) => Text('${e.name}' + (e.amount != 0 ? ' — ${e.amount} ₽' : ''))
                             )
-                            .cast<Widget>()
                             .toList()
                         ),
                     ),
@@ -102,17 +175,30 @@ class AboutPage extends StatelessWidget {
                             direction: Axis.horizontal,
                             children: <Widget>[
                                 Text(
+                                    'Канал в Telegram: ',
                                     textAlign: TextAlign.center,
                                     style: Theme.of(context).textTheme.bodyLarge,
-                                    'Канал в Telegram: '
                                 ),
                                 Linkify(
                                     onOpen: (link) async => launchLink(context, link.url),
                                     text: UniScheduleConfiguration.channelLink!,
-                                    style: TextStyle(fontSize: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14.0))
+                                    style: Theme.of(context).textTheme.bodyLarge,
                                 ),
                             ],
                         ),
+                    ),
+
+                    ListTile(
+                        title: Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: SizedBox(
+                                height: 60,
+                                width: 60,
+                                child: SvgPicture(AssetBytesLoader('assets/images/services/GPLv3Logo.svg.vec')),
+                            )
+                        ),
+                        subtitle: const Text(textAlign: TextAlign.center, 'Лицензия'),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CopyingPage())),
                     ),
                 ],
             ),
