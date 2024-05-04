@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with UniSchedule.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -95,8 +97,6 @@ class UniScheduleApp extends ConsumerWidget {
             ),
         );
 
-        debugPrint('h: ${MediaQuery.of(context).size.height}\nw: ${MediaQuery.of(context).size.width}');
-
         //TODO
         ref.read(scheduleProvider);//TODO.init();
 
@@ -113,9 +113,9 @@ class UniScheduleApp extends ConsumerWidget {
                 loading: () => Scaffold(
                     body: Center(
                         child: SizedBox(
-                            height: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) * 0.75,
-                            width: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) * 0.75 ,
-                            child: Image.asset('assets/images/icon.png') //getLoadingIndicator(() => Future.value())
+                            height: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) * 0.5,
+                            width: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) * 0.5 ,
+                            child: Image.asset('assets/images/icon.png'),
                         ),
                     ),
                 ),

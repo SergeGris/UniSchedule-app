@@ -46,7 +46,6 @@ class UniScheduleConfiguration {
             serverIp = json['server.ip'];
         }
 
-
         if (json['schedule.path.prefix'] != null) {
             schedulePathPrefix = json['schedule.path.prefix'];
         }
@@ -100,9 +99,9 @@ class UniScheduleConfiguration {
         }
     }
 
-    static const int scheduleFormatVersion = 3;
-    static String defaultServerIp = 'raw.githubusercontent.com';
-    static String defaultSchedulePathPrefix = '/SergeGris/sergegris.github.io/main';
+    static const int scheduleFormatVersion        = 3;
+    static const String defaultServerIp           = 'raw.githubusercontent.com';
+    static const String defaultSchedulePathPrefix = '/SergeGris/sergegris.github.io/main';
 
     static bool                 manifestUpdated          = false;
     static String               serverIp                 = defaultServerIp;

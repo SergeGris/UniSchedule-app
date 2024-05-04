@@ -17,12 +17,11 @@
 
 import 'package:flutter/material.dart';
 
-import './widgets/filledbutton.dart';
-
 // Because of the opened issue <https://github.com/flutter/flutter/issues/89705>.
 // We do as said here <https://github.com/flutter/flutter/issues/89705#issuecomment-1872540014>.
 class GlobalKeys {
     static final globalScaffoldKey = GlobalKey<ScaffoldMessengerState>();
+    static int haveWarningBanner = 0;
 
     static ScaffoldMessengerState get globalScaffold {
         final context = globalScaffoldKey.currentState;
@@ -42,8 +41,8 @@ class GlobalKeys {
                 const textColor = Colors.black;
                 const bannerColor = Colors.yellow;
 
-                if (!haveWarningBanner) {
-                    haveWarningBanner = true;
+                if (haveWarningBanner == 0) {
+                    haveWarningBanner++;
 
                     globalScaffoldMessanger.showMaterialBanner(
                         MaterialBanner(
@@ -78,12 +77,10 @@ class GlobalKeys {
     }
 
     static void hideWarningBanner() {
-        if (haveWarningBanner) {
-            haveWarningBanner = false;
+        if (haveWarningBanner != 0) {
+            haveWarningBanner--;
             final globalScaffoldMessanger = GlobalKeys.globalScaffold;
             globalScaffoldMessanger.hideCurrentMaterialBanner();
         }
     }
-
-    static bool haveWarningBanner = false;
 }

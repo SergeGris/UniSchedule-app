@@ -54,11 +54,11 @@ class UniScheduleDropDownButton extends StatelessWidget {
 
                 iconStyleData: IconStyleData(
                     icon: Icon(
-                        Icons.arrow_drop_down,
+                        Icons.expand_more,
                         size: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.titleLarge?.fontSize ?? 16.0),
                     ),
                     openMenuIcon: Icon(
-                        Icons.arrow_drop_up,
+                        Icons.expand_less,
                         size: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.titleLarge?.fontSize ?? 16.0),
                     ),
                 ),

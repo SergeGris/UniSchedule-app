@@ -25,9 +25,9 @@ import '../pages/services.dart';
 
 import '../configuration.dart';
 import '../provider.dart';
+import '../scheduleloader.dart';
 import '../scheduleselector.dart';
 import '../utils.dart';
-import '../widgets/filledbutton.dart';
 
 // Возвращает строку в формате "День-недели, число месяц"
 class DateTitle extends StatelessWidget {
@@ -65,8 +65,8 @@ class DateTitle extends StatelessWidget {
         ];
 
         final weekday = weekdays[date.weekday - 1];
-        final day = date.day;
-        final month = months[date.month - 1];
+        final day     = date.day;
+        final month   = months[date.month - 1];
 
         return Text('$weekday, $day $month', style: Theme.of(context).textTheme.titleLarge);
     }
@@ -185,7 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         return Scaffold(
             appBar: AppBar(
-                title: Column(
+                title: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                         DateTitle(),
@@ -195,13 +195,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 shadowColor: Theme.of(context).shadowColor,
 
-                // bottom: PreferredSize(
-                //     child: ScheduleSelectorButton(),
-                //     preferredSize: Size.fromHeight(20.0 * getScale(context, Theme.of(context).textTheme.titleMedium?.fontSize ?? 16.0))
-                // ),
-
                 bottom: const Tab( // TODO: Something else, not tab?
-                    //height: 30 * getScale(context, Theme.of(context).textTheme.titleMedium?.fontSize ?? 16.0),
                     child: ScheduleSelectorButton()
                 )
             ),
@@ -213,8 +207,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
 
             body: {
-                UniSchedulePages.main:     () => const HomePage(),
-                UniSchedulePages.schedule: () => SchedulePage(showNextWeek: showNextWeek),
+                UniSchedulePages.main:     () => ScheduleLoader((schedule) => HomePage(schedule: schedule)),
+                UniSchedulePages.schedule: () => ScheduleLoader((schedule) => SchedulePage(schedule: schedule, showNextWeek: showNextWeek)),
                 UniSchedulePages.services: () => const ServicesPage(),
             }[UniSchedulePages.values[_selPage]]!(),
 
@@ -223,7 +217,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             floatingActionButton: (_selPage != UniSchedulePages.schedule.index)
             ? null
             : ElevatedButton(
-                onPressed: () => setState(() => showNextWeek ^= true),
+                onPressed: () => setState(() => showNextWeek = !showNextWeek),
                 child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[

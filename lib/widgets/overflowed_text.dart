@@ -20,12 +20,20 @@ import 'package:flutter/material.dart';
 // <https://stackoverflow.com/a/52272545>.
 class OverflowedText extends StatelessWidget {
     // Require style to make this widget work great.
-    const OverflowedText({super.key, required this.text, required this.shortText, required this.style, this.maxLines = 1});
+    const OverflowedText({super.key,
+                          required this.text,
+                          required this.shortText,
+                          this.textAlign = TextAlign.left,
+                          this.textDirection = TextDirection.ltr,
+                          required this.style,
+                          this.maxLines = 1});
 
-    final text;
-    final shortText;
-    final style;
-    final maxLines;
+    final String text;
+    final String? shortText;
+    final TextAlign textAlign;
+    final TextDirection textDirection;
+    final TextStyle style;
+    final int maxLines;
 
     @override
     Widget build(BuildContext context) {
@@ -40,8 +48,8 @@ class OverflowedText extends StatelessWidget {
                 // Use a textpainter to determine if it will exceed max lines.
                 final tp = TextPainter(
                     maxLines: maxLines,
-                    textAlign: TextAlign.left,
-                    textDirection: TextDirection.ltr,
+                    textAlign: textAlign,
+                    textDirection: textDirection,
                     text: span,
                 );
 
@@ -51,7 +59,17 @@ class OverflowedText extends StatelessWidget {
                 // Whether the text overflowed or not.
                 final exceeded = tp.didExceedMaxLines;
 
-                return Text(exceeded ? shortText : text, style: style);
+                if (exceeded && shortText == null) {
+                    return const SizedBox.shrink();
+                }
+
+                return Text(
+                    exceeded ? shortText! : text,
+                    maxLines: maxLines,
+                    textAlign: textAlign,
+                    textDirection: textDirection,
+                    style: style
+                );
             }
         );
     }

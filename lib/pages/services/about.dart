@@ -19,6 +19,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -29,61 +30,64 @@ import '../../configuration.dart';
 import '../../widgets/overflowed_text.dart';
 import '../../utils.dart';
 
-class CopyingPage extends StatelessWidget {
+final packageInfoProvider = FutureProvider<PackageInfo>((ref) => PackageInfo.fromPlatform());
+final copyingProvider = FutureProvider<String>((ref) => rootBundle.loadString("assets/copying.md"));
+
+class CopyingPage extends ConsumerWidget {
     const CopyingPage({super.key});
 
     @override
-    Widget build(BuildContext context) {
+    Widget build(BuildContext context, WidgetRef ref) {
         return Scaffold(
             appBar: AppBar(
-                title: OverflowedText(text: 'GNU General Public License 3', shortText: 'GNU GPLv3', style: Theme.of(context).textTheme.headlineSmall),
+                title: OverflowedText(
+                    text: 'GNU General Public License 3',
+                    shortText: 'GNU GPLv3',
+                    style: Theme.of(context).textTheme.titleLarge ?? TextStyle() // TODO
+                ),
             ),
-            body: FutureBuilder(
-                future: rootBundle.loadString("assets/copying.md"),
-                builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-                    if (snapshot.hasError) {
-                        return Center(
-                            child: Text(
+
+            body: ref.watch(copyingProvider).when(
+                data: (content) => Markdown(
+                    data: content,
+                    onTapLink: (text, href, title) {
+                        if (href != null) {
+                            launchLink(context, href);
+                        }
+                    },
+                    shrinkWrap: true,
+                ),
+
+                error: (error, stack) => Center(
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                            Text(
                                 'Не удалось загрузить текст лицензии',
                                 textAlign: TextAlign.center,
                                 style: Theme.of(context).textTheme.headlineMedium
-                            )
-                        );
-                    }
+                            ),
+                            Linkify(
+                                text: 'Вы можете ознакомиться с текстом лицензии по ссылке: https://www.gnu.org/licenses/gpl-3.0-standalone.html',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.titleMedium,
+                                onOpen: (link) => launchLink(context, link.url),
+                            ),
+                        ]
+                    )
+                ),
 
-                    if (snapshot.hasData) {
-                        // Workaround a bug. When using just Markdown(...), then scrolling works bad.
-                        // Maybe soon it will be fixed in flutter_markdown.
-                        return SingleChildScrollView(
-                            child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: MarkdownBody(
-                                    data: snapshot.data!,
-                                    onTapLink: (text, href, title) {
-                                        if (href != null) {
-                                            launchLink(context, href);
-                                        }
-                                    },
-                                    shrinkWrap: true,
-                                )
-                            )
-                        );
-                    }
-
-                    return Center(
-                        child: const CircularProgressIndicator(),
-                    );
-                }
+                loading: () => const Center(child: CircularProgressIndicator()),
             ),
         );
     }
 }
 
-class AboutPage extends StatelessWidget {
+class AboutPage extends ConsumerWidget {
     const AboutPage({super.key});
 
     @override
-    Widget build(BuildContext context) {
+    Widget build(BuildContext context, WidgetRef ref) {
         return Scaffold(
             appBar: AppBar(
                 title: const Text('О UniSchedule'),
@@ -122,21 +126,14 @@ class AboutPage extends StatelessWidget {
 
                     const Divider(),
 
-                    FutureBuilder(
-                        future: PackageInfo.fromPlatform(),
-                        builder: (context, snapshot) {
-                            if (!snapshot.hasData || snapshot.data == null) {
-                                return const SizedBox.shrink();
-                            }
-
-                            final packageInfo = snapshot.data!;
-
-                            //TODO Copy on long press?
-                            return ListTile(
-                                title: const Text(textAlign: TextAlign.center, 'Версия приложения'),
-                                subtitle: Text(textAlign: TextAlign.center, 'Версия: ${packageInfo.version} (${packageInfo.buildNumber})'),
-                            );
-                        },
+                    ref.watch(packageInfoProvider).when(
+                        //TODO Copy on long press?
+                        data: (packageInfo) => ListTile(
+                            title: const Text(textAlign: TextAlign.center, 'Версия приложения'),
+                            subtitle: Text(textAlign: TextAlign.center, 'Версия: ${packageInfo.version} (${packageInfo.buildNumber})'),
+                        ),
+                        error: (error, stack) => const SizedBox.shrink(),
+                        loading: () => const SizedBox.shrink(),
                     ),
 
                     ListTile(
@@ -145,11 +142,16 @@ class AboutPage extends StatelessWidget {
                         ? Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: <Widget>[
-                                const Text('По всем вопросам писать на почту:'),
+                                const Text(
+                                    'По всем вопросам писать на почту:',
+                                    textAlign: TextAlign.center
+                                ),
                                 Linkify(
-                                    onOpen: (link) => launchLink(context, link.url),
+                                    onOpen: (link) async => await launchLink(context, link.url),
                                     text: UniScheduleConfiguration.authorEmailAddress!,
-                                    style: Theme.of(context).textTheme.bodyMedium,
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        fontSize: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14.0),
+                                    ),
                                 ),
                             ],
                         )
@@ -162,43 +164,45 @@ class AboutPage extends StatelessWidget {
                         subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: UniScheduleConfiguration.supportedBy.map(
-                                (e) => Text('${e.name}' + (e.amount != 0 ? ' — ${e.amount} ₽' : ''))
+                                (e) => Text(
+                                    '${e.name}' + (e.amount != 0 ? ' — ${e.amount} ₽' : ''),
+                                    textAlign: TextAlign.center,
+                                )
                             )
                             .toList()
                         ),
                     ),
 
                     if (UniScheduleConfiguration.channelLink != null)
-                    ListTile(
-                        title: Wrap(
-                            alignment: WrapAlignment.center,
-                            direction: Axis.horizontal,
-                            children: <Widget>[
-                                Text(
-                                    'Канал в Telegram: ',
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context).textTheme.bodyLarge,
+                    Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                            Text(
+                                'Канал в Telegram: ',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                            Linkify(
+                                onOpen: (link) async => await launchLink(context, link.url),
+                                text: UniScheduleConfiguration.channelLink!,
+                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    fontSize: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.bodyMedium?.fontSize ?? 16.0),
                                 ),
-                                Linkify(
-                                    onOpen: (link) async => launchLink(context, link.url),
-                                    text: UniScheduleConfiguration.channelLink!,
-                                    style: Theme.of(context).textTheme.bodyLarge,
-                                ),
-                            ],
-                        ),
+                            ),
+                        ],
                     ),
 
                     ListTile(
                         title: Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
                             child: SizedBox(
-                                height: 60,
-                                width: 60,
+                                height: min(80, min(MediaQuery.of(context).size.height, MediaQuery.of(context).size.width)),
+                                width: min(80, min(MediaQuery.of(context).size.height, MediaQuery.of(context).size.width)),
                                 child: SvgPicture(AssetBytesLoader('assets/images/services/GPLv3Logo.svg.vec')),
                             )
                         ),
-                        subtitle: const Text(textAlign: TextAlign.center, 'Лицензия'),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CopyingPage())),
+                        subtitle: const Text(textAlign: TextAlign.center, 'Лицензия приложения'),
+                        onTap: () async => await Navigator.push(context, MaterialPageRoute(builder: (context) => const CopyingPage())),
                     ),
                 ],
             ),

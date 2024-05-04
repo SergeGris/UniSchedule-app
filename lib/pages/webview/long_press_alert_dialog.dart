@@ -52,7 +52,6 @@ class LongPressAlertDialog extends StatefulWidget {
 }
 
 class _LongPressAlertDialogState extends State<LongPressAlertDialog> {
-    var _isLinkPreviewReady = false;
     static const _borderRadius = 8.0;
 
     @override
@@ -324,7 +323,7 @@ class _LongPressAlertDialogState extends State<LongPressAlertDialog> {
             ),
 
             title: FutureBuilder<String?>(
-                future: widget.webViewController.getTitle() ?? Future.value(''),
+                future: widget.webViewController.getTitle(),
                 builder: (context, snapshot) {
                     final title = snapshot.hasData ? snapshot.data! : '';
                     return title != ''

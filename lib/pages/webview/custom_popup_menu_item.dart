@@ -61,9 +61,11 @@ class CustomPopupMenuItemState<T, W extends CustomPopupMenuItem<T>> extends Stat
     Widget build(BuildContext context) {
         final ThemeData theme = Theme.of(context);
         final PopupMenuThemeData popupMenuTheme = PopupMenuTheme.of(context);
-        TextStyle style = (widget.textStyle ?? popupMenuTheme.textStyle ?? theme.textTheme.titleMedium ?? TextStyle())!;
+        TextStyle style = widget.textStyle ?? popupMenuTheme.textStyle ?? theme.textTheme.titleMedium ?? TextStyle();
 
-        if (!widget.enabled) style = style.copyWith(color: theme.disabledColor);
+        if (!widget.enabled) {
+            style = style.copyWith(color: theme.disabledColor);
+        }
 
         Widget item = AnimatedDefaultTextStyle(
             style: style,

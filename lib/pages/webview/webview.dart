@@ -157,7 +157,7 @@ class _CustomInAppBrowserState extends State<WebView> {
         }
 
         if (hasStoragePermission) {
-            final taskId = await FlutterDownloader.enqueue(
+            await FlutterDownloader.enqueue(
                 url: url,
                 headers: {},
                 // optional: header send with url (auth token etc)
@@ -566,7 +566,7 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                                             : null,
                                             icon: Icon(
                                                 Icons.add,
-                                                color: textSize < kTextSizeMax ? Theme.of(context).colorScheme.primary : Colors.grey,
+                                                color: textSize < kTextSizeMax ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
                                             ),
                                         ),
                                         IconButton(
@@ -578,7 +578,7 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                                             : null,
                                             icon: Icon(
                                                 Icons.remove,
-                                                color: textSize > kTextSizeMin ? Theme.of(context).colorScheme.primary : Colors.grey,
+                                                color: textSize > kTextSizeMin ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
                                             ),
                                         ),
                                         TextButton(
@@ -591,7 +591,7 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                                             child: Text(
                                                 '100%',
                                                 style: TextStyle(
-                                                    color: textSize != kInitialTextSize ? Theme.of(context).colorScheme.primary : Colors.grey,
+                                                    color: textSize != kInitialTextSize ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
                                                 ),
                                             ),
                                         ),

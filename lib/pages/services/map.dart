@@ -35,7 +35,7 @@ class MapSvgViewer extends StatelessWidget {
             color: Colors.white, // For white background for all image
             child: Center(
                 child: InteractiveViewer(
-                    minScale: 1,
+                    minScale: 1.0,
                     maxScale: 10.0,
                     child: SvgPicture(svg),
                 ),
@@ -54,9 +54,9 @@ class MapRoute extends StatelessWidget {
                 title: const Text('План этажей'),
                 shadowColor: Theme.of(context).shadowColor,
                 bottom: Tab(
-                    height: 30 * getScale(context, 16.0) + 8.0,
-                    child: Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
+                    height: MediaQuery.textScalerOf(context).scale(30) + 8.0,
+                    child: const Padding(
+                        padding: EdgeInsets.only(bottom: 8.0),
                         child: FloorMapSelectorButton(),
                     )
                 ),
@@ -99,11 +99,11 @@ class _MapPageState extends ConsumerState<MapPage> with TickerProviderStateMixin
                     borderRadius: BorderRadius.circular(16.0),
                     child: Container(
                         padding: const EdgeInsets.all(16),
-                        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
+                        color: primaryContainerColor(context),
                         child: Text(
-                            'Выберете корпус',
-                            style: TextStyle(
-                                fontSize: Theme.of(context).textTheme.displayMedium?.fontSize,
+                            'Выберите корпус',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 color: Theme.of(context).colorScheme.onPrimaryContainer
                             ),
                         ),
@@ -138,9 +138,7 @@ class _MapPageState extends ConsumerState<MapPage> with TickerProviderStateMixin
                         (number) => Tab(
                             child: Text(
                                 '$number',
-                                style: TextStyle(
-                                    fontSize: Theme.of(context).textTheme.titleMedium?.fontSize
-                                )
+                                style: TextStyle(fontSize: Theme.of(context).textTheme.titleMedium?.fontSize)
                             )
                         )
                     )

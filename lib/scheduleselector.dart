@@ -16,19 +16,17 @@
 // along with UniSchedule.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'dart:convert';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import './configuration.dart';
 import './globalkeys.dart';
 import './provider.dart';
 import './utils.dart';
 import '../widgets/filledbutton.dart';
-
-part 'scheduleselector.g.dart';
 
 class ScheduleSelectorRoute extends ConsumerWidget {
     const ScheduleSelectorRoute({super.key});
@@ -122,21 +120,22 @@ Future<ManifestData> getManifest({required WidgetRef ref, String? university = n
     );
 }
 
-@riverpod
-Future<ManifestData> manifest(ManifestRef ref, Menu which) async {
-    if (which.manifest == null) {
-        final m = which.getManifest();
+final manifestProvider = FutureProvider.family<ManifestData, Menu>(
+    (ref, Menu which) {
+        if (which.manifest == null) {
+            final m = which.getManifest();
 
-        if (m == null) {
-            return manifestDataEmpty();
+            if (m == null) {
+                return manifestDataEmpty();
+            }
+
+            which.manifest = m;
+            return m;
         }
 
-        which.manifest = m;
-        return m;
+        return which.manifest!;
     }
-
-    return which.manifest!;
-}
+);
 
 class ScheduleSelector extends ConsumerStatefulWidget {
     const ScheduleSelector({required this.firstRun, super.key});
@@ -150,7 +149,7 @@ class ScheduleSelector extends ConsumerStatefulWidget {
 class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
     _ScheduleSelectorState();
 
-    SharedPreferences? prefs;
+    late var prefs;
 
     // Do initialization in build to avoid troubles because of setState() and sequences tree rebuilding.
     bool initialized = false;
@@ -168,17 +167,17 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
     Widget build(BuildContext context) {
         if (!initialized) {
             initialized = true;
-            prefs = ref.watch(settingsProvider).value;
+            prefs = ref.watch(settingsProvider).value!;
 
-            final universityId = prefs?.getString('universityId');
-            final facultyId    = prefs?.getString('facultyId');
-            final yearId       = prefs?.getString('yearId');
-            final groupId      = prefs?.getString('groupId');
+            final universityId = prefs.getString('universityId');
+            final facultyId    = prefs.getString('facultyId');
+            final yearId       = prefs.getString('yearId');
+            final groupId      = prefs.getString('groupId');
 
-            final universityName = prefs?.getString('universityName');
-            final facultyName    = prefs?.getString('facultyName');
-            final yearName       = prefs?.getString('yearName');
-            final groupName      = prefs?.getString('groupName');
+            final universityName = prefs.getString('universityName');
+            final facultyName    = prefs.getString('facultyName');
+            final yearName       = prefs.getString('yearName');
+            final groupName      = prefs.getString('groupName');
 
             university = Menu(enabled: true,                 id: universityId, name: universityName, getManifest: () => getManifest(ref: ref));
             faculty    = Menu(enabled: universityId != null, id: facultyId,    name: facultyName,    getManifest: () => university.id != null ? getManifest(ref: ref, university: university.id) : null);
@@ -190,7 +189,6 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
             String name,
             Menu menu,
             void Function(String name, String label, List<DropdownMenuEntry> manifestData) callback) {
-            //const size = 64.0;
             final size = min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) / 7;
 
             return manifest.when(
@@ -245,9 +243,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                             leadingIcon: const Icon(Icons.search),
                             width: MediaQuery.of(context).size.width * Constants.goldenRatio,
                             menuHeight: MediaQuery.of(context).size.height * 0.4, // Take no more than 40% of available height
-                            inputDecorationTheme: const InputDecorationTheme(
-                                border: null,
-                            ),
+                            inputDecorationTheme: const InputDecorationTheme(border: null),
                             dropdownMenuEntries: menu.entries ?? entries,
                             onSelected: (value) => setState(
                                 () => callback(
@@ -335,7 +331,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                             TextButton(
                                                 child: const Text('Загрузить расписание'),
                                                 style: TextButton.styleFrom(
-                                                    textStyle: const TextStyle(fontSize: 20.0),
+                                                    textStyle: Theme.of(context).textTheme.titleLarge,
                                                     padding: const EdgeInsets.all(20.0),
                                                 ),
                                                 onPressed: !allDone()

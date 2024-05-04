@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with UniSchedule.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'dart:math'; // For max().
+
 import 'package:flutter/material.dart';
 
 import '../models/schedule.dart';
@@ -67,16 +69,18 @@ class ClassCardTile extends StatelessWidget {
             ];
 
             return Container(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 1,
-                    horizontal: 4
+                padding: EdgeInsets.symmetric(
+                    vertical: MediaQuery.textScalerOf(context).scale(1.0),
+                    horizontal: MediaQuery.textScalerOf(context).scale(6.0)
                 ),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                     color: Theme.of(context).colorScheme.tertiary.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8.0),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                    ),
                 ),
                 child: Text(
-                    number < strings.length ? strings[number - 1] + ' пара' : '$number пара',
+                    '${number < strings.length ? strings[number - 1] : number} пара',
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall
                 ),
@@ -92,25 +96,60 @@ class ClassCardTile extends StatelessWidget {
             )
         );
 
-        List<Widget> classTeachersAndRooms(List<TeacherAndRoom?> teachersAndRooms) {
+        Widget classTeachersAndRooms(List<TeacherAndRoom?> teachersAndRooms) {
             final tr = teachersAndRooms.nonNulls.where((e) => (e.room != null || e.teacher != null));
 
-            return tr.map(
-                (tr) => Text(
-                    [ tr.room, tr.teacher ].nonNulls.join(' — '),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.secondary,
-                    ),
+            return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: tr.map(
+                    (tr) => Text(
+                        [ tr.room, tr.teacher ].nonNulls.join(' — '),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.secondary,
+                        ),
+                    )
                 )
-            )
-            .cast<Widget>()
-            .toList();
+                .cast<Widget>()
+                .toList()
+            );
         }
 
         Widget classNote(String note) => Text(
             note,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.primary,
+            )
+        );
+
+        Widget classType(ClassType type) => Row(
+            children: <Widget>[
+                Padding(
+                    padding: EdgeInsets.symmetric(horizontal: MediaQuery.textScalerOf(context).scale(4.0)),
+                    child: Icon(
+                        Icons.circle,
+                        color: type.color,
+                        size: MediaQuery.textScalerOf(context).scale(
+                            Theme.of(context).textTheme.bodySmall?.fontSize ?? 14.0,
+                        ),
+                    ),
+                ),
+
+                Text(
+                    type.name,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.secondary,
+                    )
+                ),
+            ],
+        );
+
+        Widget classBuilding(String building) => Text(
+            building,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.secondary,
             )
         );
 
@@ -125,130 +164,83 @@ class ClassCardTile extends StatelessWidget {
             return textPainter.width;
         }
 
-        // TODO Remove
-        double max(double a, double b) {
-            return a >= b ? a : b;
-        }
-
-        double getTimeWidth() => textWidth(
-            const TimeOfDay(hour: 0, minute: 0).format(context),
-            TextStyle(
-                fontSize: Theme.of(context).textTheme.titleMedium?.fontSize ?? 16.0,
-                color: Theme.of(context).colorScheme.primary,
-            )
-        ) * max(1.0, getScale(context, Theme.of(context).textTheme.titleMedium?.fontSize ?? 16.0)) + 8; // FUCK TODO fucking magic constant. Pay attention to <https://stackoverflow.com/a/62536187>
+        double getTimeWidth() => (MediaQuery.textScalerOf(context).scale(
+                textWidth(
+                    const TimeOfDay(hour: 0, minute: 0).format24hour(),
+                    TextStyle(
+                        fontSize: Theme.of(context).textTheme.titleMedium?.fontSize ?? 16.0,
+                        color: Theme.of(context).colorScheme.primary,
+                    )
+                )
+        ) ~/ 8 + 1) * 8.0; // FUCK TODO fucking magic constant. Pay attention to <https://stackoverflow.com/a/62536187>
 
         return Card(
             color: color,
             elevation: 0, // We do many magic with colors and theirs opacity, so set elevation to zero to get more control on color.
             margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(borderRadius)),
-            child: Row(
-                children: <Widget>[
-                    const SizedBox(width: 12),
-
-                    Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                            const SizedBox(height: 12),
-
-                            Container(
-                                alignment: Alignment.center,
-                                width: getTimeWidth(),
-                                child: Text(
-                                    begin,
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                        color: Theme.of(context).colorScheme.primary,
+            child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                    children: <Widget>[
+                        SizedBox(
+                            width: getTimeWidth(),
+                            child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                    Text(
+                                        begin,
+                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                            color: Theme.of(context).colorScheme.primary,
+                                        ),
                                     ),
-                                ),
-                            ),
-
-                            Container(
-                                alignment: Alignment.center,
-                                width: getTimeWidth(),
-                                child: Text(
-                                    end,
-                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        color: Theme.of(context).colorScheme.secondary,
+                                    Text(
+                                        end,
+                                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                            color: Theme.of(context).colorScheme.secondary,
+                                        ),
                                     ),
-                                ),
+                                ],
                             ),
-
-                            const SizedBox(height: 12),
-                        ],
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    Expanded( // Need for Spacer() in Row() widget.
-                        child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: !haveClass
-                            ? <Widget>[
-                                classNumber(number),
-                                className('Окно'),
-                            ]
-                            : <Widget>[
-                                const SizedBox(height: 8),
-
-                                Row(
-                                    children: <Widget>[
-                                        classNumber(number),
-
-                                        if (type != null)
-                                        ...[
-                                            const Spacer(),
-
-                                            Icon(
-                                                Icons.circle,
-                                                color: type!.color,
-                                                size: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.bodySmall?.fontSize ?? 14.0)
-                                            ),
-
-                                            const SizedBox(width: 3),
-
-                                            Text(
-                                                type!.name,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                    color: Theme.of(context).colorScheme.secondary,
-                                                )
-                                            ),
-                                        ],
-                                    ],
-                                ),
-
-                                className(name!),
-
-                                if (teachersAndRooms.nonNulls.isNotEmpty)
-                                Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: classTeachersAndRooms(teachersAndRooms),
-                                ),
-
-                                if (building != null)
-                                Text(
-                                    building!,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: Theme.of(context).colorScheme.secondary,
-                                    )
-                                ),
-
-                                if (note != null)
-                                classNote(note!),
-
-                                const SizedBox(height: 8),
-                            ],
                         ),
-                    ),
 
-                    const SizedBox(width: 12),
-                ],
+                        SizedBox(width: MediaQuery.textScalerOf(context).scale(8)),
+
+                        Expanded( // Need for Spacer() in Row() widget.
+                            child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: !haveClass
+                                ? <Widget>[
+                                    classNumber(number),
+                                    className('Окно'),
+                                ]
+                                : <Widget>[
+                                    Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                            classNumber(number),
+                                            if (type != null)
+                                            classType(type!),
+                                        ],
+                                    ),
+
+                                    className(name!),
+
+                                    if (teachersAndRooms.nonNulls.isNotEmpty)
+                                    classTeachersAndRooms(teachersAndRooms),
+
+                                    if (building != null)
+                                    classBuilding(building!),
+
+                                    if (note != null)
+                                    classNote(note!),
+                                ],
+                            ),
+                        ),
+                    ],
+                ),
             ),
         );
     }
@@ -259,13 +251,11 @@ class ClassCard extends StatelessWidget {
                      required this.classes,
                      required this.index,
                      required this.showProgress,
-                     required this.number,
                      required this.horizontalMargin,
                      required this.borderRadius});
 
     final List<Class> classes;
     final int index;
-    final int number;
     final bool showProgress;
     final double horizontalMargin;
     final double borderRadius;
@@ -273,15 +263,15 @@ class ClassCard extends StatelessWidget {
     @override
     Widget build(BuildContext context) {
         final class0 = classes[index];
-        final bool haveClass = class0.name != null;
-        final begin = haveClass ? class0.start.format(context) : (index > 0                  ? classes[index - 1].end.format(context)   : null);
-        final end   = haveClass ? class0.end.format(context)   : (index + 1 < classes.length ? classes[index + 1].start.format(context) : null);
+        final haveClass = class0.name != null;
+        final begin = haveClass ? class0.start.format24hour() : (index > 0                  ? classes[index - 1].end.format24hour()   : null);
+        final end   = haveClass ? class0.end.format24hour()   : (index + 1 < classes.length ? classes[index + 1].start.format24hour() : null);
         final cardColor = primaryContainerColor(context);
 
         final card = ClassCardTile(
             haveClass: haveClass,
             color: showProgress ? Colors.transparent : cardColor,
-            number: number,
+            number: class0.number,
             begin: begin ?? '--:--',
             end: end ?? '--:--',
             name: class0.name,

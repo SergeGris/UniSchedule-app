@@ -37,14 +37,13 @@ class SettingsPage extends ConsumerWidget {
                     ListTile(
                         title: Text(
                             'Тема приложения:',
-                            style: TextStyle(
-                                fontSize: Theme.of(context).textTheme.titleMedium?.fontSize,
-                                color: usingSystemTheme ? Colors.grey : null
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: usingSystemTheme ? Theme.of(context).disabledColor : null
                             )
                         ),
 
                         trailing: UniScheduleDropDownButton(
-                            hint: 'Выберете тему',
+                            hint: 'Выберите тему',
                             initialSelection: initialSelection,
                             items: uniScheduleThemes.toList(
                                 (e) => DropdownMenuItem<String>(
@@ -73,15 +72,13 @@ class SettingsPage extends ConsumerWidget {
                     Text(
                         'Настройки персональной темы приложения',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: Theme.of(context).textTheme.titleMedium?.fontSize
-                        )
+                        style: Theme.of(context).textTheme.bodyLarge,
                     ),
 
                     if (theme == 'custom')
                     SwitchListTile(
                         title: const Text('Тёмная тема'),
-                        value: (prefs?.getString('custom.theme.mode') ?? prefs?.getString('theme')) == 'dark',
+                        value: (prefs?.getString('custom.theme.mode') ?? (isDarkMode(context) ? 'dark' : 'light')) == 'dark',
                         onChanged: (bool value) async {
                             await prefs?.setString('custom.theme.mode', value ? 'dark' : 'light');
                             uniScheduleThemeCustom.themeMode = value ? ThemeMode.dark : ThemeMode.light;
@@ -96,8 +93,7 @@ class SettingsPage extends ConsumerWidget {
                         trailing: ElevatedButton(
                             child: Text(
                                 customColor.toPrettyString(),
-                                style: TextStyle(
-                                    fontSize: Theme.of(context).textTheme.bodyMedium?.fontSize,
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: uniScheduleThemeCustom.colorSchemeSeed,
                                 ),

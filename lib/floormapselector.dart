@@ -43,7 +43,7 @@ class FloorMapSelectorButton extends ConsumerWidget {
         final prefs = ref.watch(settingsProvider).value!;
 
         return UniScheduleDropDownButton(
-            hint: 'Выберете корпус',
+            hint: 'Выберите корпус',
             alignment: Alignment.center,
 
             items: buildingsNames.toList(

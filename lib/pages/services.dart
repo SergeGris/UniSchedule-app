@@ -23,22 +23,19 @@ import 'package:vector_graphics/vector_graphics.dart';
 
 import './services/about.dart';
 import './services/map.dart';
-import './services/license.dart';
 import './services/settings.dart';
 
 import '../configuration.dart';
-import '../globalkeys.dart';
 import '../provider.dart';
 import '../utils.dart';
 import './webview/webview.dart';
 
 class ServiceButton extends StatelessWidget {
-    const ServiceButton({
-            super.key,
-            required this.assetPath,
-            required this.subtitle,
-            this.fullname,
-            required this.onPressed});
+    const ServiceButton({super.key,
+                         required this.assetPath,
+                         required this.subtitle,
+                         this.fullname,
+                         required this.onPressed});
 
     final String assetPath;
     final String subtitle;
@@ -47,7 +44,7 @@ class ServiceButton extends StatelessWidget {
 
     @override
     Widget build(BuildContext context) {
-        final GlobalKey<TooltipState> tooltipkey = GlobalKey<TooltipState>();
+        final tooltipkey = GlobalKey<TooltipState>();
 
         return Tooltip(
             // Provide a global key with the "TooltipState" type to show
@@ -61,7 +58,10 @@ class ServiceButton extends StatelessWidget {
                 color: Theme.of(context).colorScheme.primaryContainer,
             ),
 
-            textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.onPrimaryContainer),
+            textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
+
             padding: const EdgeInsets.all(8.0),
             preferBelow: true,
             verticalOffset: MediaQuery.of(context).size.width * 0.2,
@@ -93,7 +93,9 @@ class ServiceButton extends StatelessWidget {
                                 overflow: TextOverflow.fade,
                                 maxLines: 2,
                                 softWrap: true,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary),
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: Theme.of(context).colorScheme.primary
+                                ),
                             ),
                         ),
                     ],
@@ -153,7 +155,35 @@ class ServiceSubtitle extends StatelessWidget {
         return Center(
             child: Text(
                 text,
-                style: Theme.of(context).textTheme.titleMedium
+                style: Theme.of(context).textTheme.titleMedium,
+            )
+        );
+    }
+}
+
+class GamesPage extends StatelessWidget {
+    const GamesPage({super.key});
+
+    @override
+    Widget build(BuildContext context) {
+        final children = <Widget>[
+            ServiceButton(
+                assetPath: 'assets/images/services/trex.svg.vec',
+                subtitle: 'Динозаврик',
+                onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const WebViewDino())
+                ),
+            ),
+        ];
+
+        return Scaffold(
+            appBar: AppBar(
+                title: const Text('Игры')
+            ),
+
+            body: ServiceGrid(
+                children: children,
             )
         );
     }
@@ -204,10 +234,10 @@ class ServicesPage extends ConsumerWidget {
 
             ServiceButton(
                 assetPath: 'assets/images/services/trex.svg.vec',
-                subtitle: 'Динозаврик!',
+                subtitle: 'Игры!',
                 onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const WebViewDino())
+                    MaterialPageRoute(builder: (context) => const GamesPage())
                 ),
             ),
 
@@ -235,7 +265,8 @@ class ServicesPage extends ConsumerWidget {
                                 child: Text(e.label),
                                 onPressed: () => launchLink(context, e.link)
                             )
-                        ).toList()
+                        )
+                        .toList()
                     )
                 )
             ),
@@ -275,8 +306,7 @@ class ServicesPage extends ConsumerWidget {
                             ),
                             title: Text(
                                 'Настройки',
-                                style: TextStyle(
-                                    fontSize: Theme.of(context).textTheme.titleLarge?.fontSize,
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     color: Theme.of(context).colorScheme.primary
                                 )
                             ),

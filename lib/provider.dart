@@ -254,7 +254,7 @@ Future<void> uniScheduleConfiguration(UniScheduleConfigurationRef ref) async {
         final manifestDataJson = await http.get(uri).timeout(
             const Duration(seconds: 5),
             onTimeout: () {
-                throw Exception('пизда');
+                throw Exception('Запрос выполнялся слишком долго');
                 // Time has run out, do what you wanted to do.
                 return http.Response('Error', 408); // Request Timeout response status code
             }

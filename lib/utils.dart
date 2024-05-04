@@ -61,7 +61,7 @@ RefreshIndicator getLoadingIndicator(RefreshCallback onRefresh) {
 Widget getErrorContainer(String message) {
     return LayoutBuilder(
         builder: (final context, final constraints) => ListView(
-            children: [
+            children: <Widget>[
                 const Center(
                     child: Icon(
                         Icons.error_outline,
@@ -93,9 +93,7 @@ int? getWeekIndex(DateTime date, Schedule schedule) {
     return date.weekOfYear - schedule.studiesBegin!.weekOfYear;
 }
 
-int getWeekParity(DateTime date, Schedule schedule, {bool showNextWeek = false}) {
-    return ((getWeekIndex(date, schedule) ?? 0) + (showNextWeek ? 1 : 0)) % schedule.weeks.length;
-}
+int getWeekParity(DateTime date, Schedule schedule, {bool showNextWeek = false}) => ((getWeekIndex(date, schedule) ?? 0) + (showNextWeek ? 1 : 0)) % schedule.weeks.length;
 
 String numberToWords(int n) {
     // Just a number. As is.
@@ -142,7 +140,7 @@ String numberToWords(int n) {
 
     if (n < 10) {
         return a[n];
-    } else if (10 < n && n < 20) {
+    } else if (11 <= n && n <= 19) {
         return c[n - 11];
     } else if (n % 10 == 0) {
         return b[n ~/ 10 - 1];
@@ -185,11 +183,40 @@ class Version {
 }
 
 extension TimeOfDayExtension on TimeOfDay {
-    int differenceInMinutes(final TimeOfDay other) => (hour - other.hour) * 60 + (minute - other.minute);
-    bool isAfterThan(final TimeOfDay other)        => differenceInMinutes(other) > 0;
-    bool isBeforeThan(final TimeOfDay other)       => differenceInMinutes(other) < 0;
-    bool isNotAfterThan(final TimeOfDay other)     => !isAfterThan(other);
-    bool isNotBeforeThan(final TimeOfDay other)    => !isBeforeThan(other);
+    String format24hour() {
+        String twoDigits(int n) => n >= 10 ? '$n' : '0$n';
+        return twoDigits(hour) + ':' + twoDigits(minute);
+    }
+    int  differenceInMinutes(final TimeOfDay other) => (hour - other.hour) * 60 + (minute - other.minute);
+    bool isAfterThan(final TimeOfDay other)         => differenceInMinutes(other) > 0;
+    bool isBeforeThan(final TimeOfDay other)        => differenceInMinutes(other) < 0;
+    bool isNotAfterThan(final TimeOfDay other)      => !isAfterThan(other);
+    bool isNotBeforeThan(final TimeOfDay other)     => !isBeforeThan(other);
+}
+
+String plural(int n, List<String> variants) {
+    final i = n % 10 == 1 && n % 100 != 11
+        ? 0
+        : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)
+            ? 1
+            : 2;
+
+    return variants[i];
+}
+
+String timeToPrettyView(int hours, int minutes) {
+    final ph = plural(hours,   ['час',    'часа',   'часов']);
+    final pm = plural(minutes, ['минута', 'минуты', 'минут']);
+
+    if (hours > 0 && minutes > 0) {
+        return '$hours $ph $minutes $pm';
+    } else if (hours > 0) {
+        return '$hours $ph';
+    } else if (minutes > 0) {
+        return '$minutes $pm';
+    } else {
+        return '';
+    }
 }
 
 Future<bool> launchLink(BuildContext context, String link) async {
@@ -207,9 +234,9 @@ Future<bool> launchLink(BuildContext context, String link) async {
                     TextButton(
                         onPressed: () => Navigator.pop(context), // TODO pop context?..
                         child: const Text('Понятно'),
-                    )
-                ]
-            )
+                    ),
+                ],
+            ),
         );
 
         return Future.value(false);
@@ -220,14 +247,7 @@ Future<bool> launchLink(BuildContext context, String link) async {
 
 bool isDarkMode(final BuildContext context) => Theme.of(context).brightness == Brightness.dark;
 
-Color primaryContainerColor(final BuildContext context) =>
-    Theme.of(context).colorScheme.primaryContainer.withOpacity(isDarkMode(context) ? 0.2 : 1.0);
-
-double getScale(final context, final fontSize) {
-    return MediaQuery.textScalerOf(context).scale(fontSize) / fontSize;
-}
-
-double min(double a, double b) => a <= b ? a : b;
+Color primaryContainerColor(final BuildContext context) => Theme.of(context).colorScheme.primaryContainer.withOpacity(isDarkMode(context) ? 0.2 : 1.0);
 
 class Constants {
     static const double goldenRatio = 0.618033988751;
@@ -254,26 +274,13 @@ final uniScheduleThemes = {
     'custom': () => uniScheduleThemeCustom,
 };
 
-//TODO need?
-// extension ColorExtension on String {
-//   toColor() {
-//       var hexColor = this.replaceAll("#", "");
-//       if (hexColor.length == 6) {
-//           hexColor = "FF" + hexColor;
-//       }
-//       if (hexColor.length == 8) {
-//           return Color(int.parse("0x$hexColor"));
-//       }
-//   }
-// }
-
 extension StringExtension on Color {
     String toPrettyString({bool showAlpha = false}) {
-        String twoDigits(int n) => (n >= 0x10 ? '' : '0') + n.toRadixString(16).toUpperCase();
+        String twoHexDigits(int n) => (n >= 0x10 ? '' : '0') + n.toRadixString(16).toUpperCase();
         return '#'
-        + twoDigits(red)
-        + twoDigits(green)
-        + twoDigits(blue)
-        + (showAlpha ? twoDigits(alpha) : '');
+            + twoHexDigits(red)
+            + twoHexDigits(green)
+            + twoHexDigits(blue)
+            + (showAlpha ? twoHexDigits(alpha) : '');
     }
 }
