@@ -137,6 +137,8 @@ class _CustomInAppBrowserState extends State<WebView> {
 
             await webViewController?.reload();
         }
+
+        return Future.value();
     }
 
     Future<bool> _goBack(BuildContext context) async {

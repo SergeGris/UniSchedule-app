@@ -45,12 +45,13 @@ class OverflowedText extends StatelessWidget {
                     style: style
                 );
 
-                // Use a textpainter to determine if it will exceed max lines.
+                // Use a TextPainter to determine if it will exceed max lines.
                 final tp = TextPainter(
                     maxLines: maxLines,
                     textAlign: textAlign,
                     textDirection: textDirection,
                     text: span,
+                    textScaler: MediaQuery.textScalerOf(context) // Pay attention to text scaler.
                 );
 
                 // Trigger it to layout.

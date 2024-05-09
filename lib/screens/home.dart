@@ -185,6 +185,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         return Scaffold(
             appBar: AppBar(
+                // Align title to left in iOS.
+                centerTitle: false,
+
                 title: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
@@ -193,17 +196,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ],
                 ),
 
+                // Make it enough sized to contain to lines of title.
+                toolbarHeight: MediaQuery.textScalerOf(context).scale(48.0),
                 shadowColor: Theme.of(context).shadowColor,
 
-                bottom: const Tab( // TODO: Something else, not tab?
-                    child: ScheduleSelectorButton()
-                )
+                // TODO: Something else, not tab?
+                bottom: const Tab(child: ScheduleSelectorButton())
             ),
 
             bottomNavigationBar: NavigationBar(
                 destinations: pagesNavigation.values.toList(),
                 selectedIndex: _selPage,
-                onDestinationSelected: (index) => setState(() => _selPage = index)
+                onDestinationSelected: (index) => setState(() => _selPage = index),
             ),
 
             body: {

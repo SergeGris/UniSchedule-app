@@ -134,7 +134,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         }
 
         return ListView.separated(
-            padding: const EdgeInsets.only(top: 8.0),
             itemCount: pendingClasses.length + 1,
             itemBuilder: (context, index) => index == 0
             ? ListTile(

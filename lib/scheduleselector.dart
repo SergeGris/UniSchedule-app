@@ -47,13 +47,11 @@ class ScheduleSelectorButton extends ConsumerWidget {
         final year       = prefs.getString('yearName')       ?? prefs.getString('yearId')!;
         final group      = prefs.getString('groupName')      ?? prefs.getString('groupId')!;
 
-        return UniScheduleFilledButton(
-            child: Text('$group группа $year курса $faculty $university'),
+        return TextButton(
+            child: Text('$group группа $year курса, $faculty $university'),
             onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (context) => const ScheduleSelectorRoute()
-                )
+                MaterialPageRoute(builder: (context) => const ScheduleSelectorRoute())
             )
             .then((_) => refreshSchedule(ref))
         );
@@ -83,19 +81,13 @@ class Manifest {
   final ManifestData data;
 }
 
-Future<ManifestData> downloadManifest(WidgetRef ref, String path) async {
-    return http.get(Uri.https(UniScheduleConfiguration.serverIp, path))
-        .then((value)   => Manifest.fromJson(jsonDecode(value.body)).data)
-        .catchError((e) => Future<ManifestData>.error('Не удалось загрузить список'));
-}
-
 class Menu {
     Menu({required this.enabled, this.id, this.name, this.manifest, required this.getManifest, this.entries});
     bool enabled;
     String? id;
     String? name;
     Future<ManifestData>? manifest;
-    List<DropdownMenuEntry>? entries;
+    List<DropdownMenuEntry<String>>? entries;
     Future<ManifestData>? Function() getManifest;
 }
 
@@ -114,14 +106,14 @@ Future<ManifestData> getManifest({required WidgetRef ref, String? university = n
         }
     }
 
-    return downloadManifest(
-        ref,
-        UniScheduleConfiguration.schedulePathPrefix + path + '/manifest.json'
-    );
+    return http.get(Uri.https(UniScheduleConfiguration.serverIp,
+                    UniScheduleConfiguration.schedulePathPrefix + path + '/manifest.json'))
+            .then((value)   => Manifest.fromJson(jsonDecode(value.body)).data)
+            .catchError((e) => Future<ManifestData>.error('Не удалось загрузить список'));
 }
 
 final manifestProvider = FutureProvider.family<ManifestData, Menu>(
-    (ref, Menu which) {
+    (ref, Menu which) async { // MUST BE ASYNC.
         if (which.manifest == null) {
             final m = which.getManifest();
 
@@ -167,7 +159,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
     Widget build(BuildContext context) {
         if (!initialized) {
             initialized = true;
-            prefs = ref.watch(settingsProvider).value!;
+            prefs = ref.watch(settingsProvider).value;
 
             final universityId = prefs.getString('universityId');
             final facultyId    = prefs.getString('facultyId');
@@ -186,9 +178,9 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
         }
 
         Widget getMenu(AsyncValue<ManifestData> manifest,
-            String name,
-            Menu menu,
-            void Function(String name, String label, List<DropdownMenuEntry> manifestData) callback) {
+                       String name,
+                       Menu menu,
+                       void Function(String name, String label, List<DropdownMenuEntry<String>> manifestData) callback) {
             final size = min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) / 7;
 
             return manifest.when(
@@ -227,7 +219,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                 data: (manifestData) {
                     canLoadSchedule = true;
 
-                    final entries = manifestData.map((e) => DropdownMenuEntry(value: e.name, label: e.label)).toList();
+                    final entries = menu.entries ?? manifestData.map((e) => DropdownMenuEntry<String>(value: e.name, label: e.label)).toList();
 
                     return SizedBox(
                         height: size,
@@ -243,8 +235,11 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                             leadingIcon: const Icon(Icons.search),
                             width: MediaQuery.of(context).size.width * Constants.goldenRatio,
                             menuHeight: MediaQuery.of(context).size.height * 0.4, // Take no more than 40% of available height
-                            inputDecorationTheme: const InputDecorationTheme(border: null),
-                            dropdownMenuEntries: menu.entries ?? entries,
+                            inputDecorationTheme: const InputDecorationTheme(
+                                border: null,
+                                contentPadding: EdgeInsets.symmetric(vertical: 8.0),
+                            ),
+                            dropdownMenuEntries: entries,
                             onSelected: (value) => setState(
                                 () => callback(
                                     value!,
@@ -259,9 +254,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
         }
 
         return Scaffold(
-            appBar: AppBar(
-                title: const Text('Поиск расписания'),
-            ),
+            appBar: AppBar(title: const Text('Поиск расписания')),
 
             body: RefreshIndicator(
                 onRefresh: () {
@@ -274,14 +267,11 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                     builder: (context, final constraints) => ListView(
                         children: <Widget>[
                             Container(
-                                constraints: BoxConstraints(
-                                    minHeight: constraints.maxHeight,
-                                ),
-                                child: Center(
-                                    child: Wrap(
-                                        crossAxisAlignment: WrapCrossAlignment.center,
-                                        direction: Axis.vertical,
-                                        spacing: 24,
+                                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                                child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 24),
+                                    child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                                         children: <Widget>[
                                             getMenu(
                                                 ref.watch(manifestProvider(university)),
@@ -329,10 +319,10 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                             ),
 
                                             TextButton(
-                                                child: const Text('Загрузить расписание'),
+                                                child: const Text('Загрузить расписание', textAlign: TextAlign.center),
                                                 style: TextButton.styleFrom(
                                                     textStyle: Theme.of(context).textTheme.titleLarge,
-                                                    padding: const EdgeInsets.all(20.0),
+                                                    padding: const EdgeInsets.all(16.0),
                                                 ),
                                                 onPressed: !allDone()
                                                 ? null
@@ -368,14 +358,14 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                                     }
                                                 },
                                             ),
-                                        ]
-                                    )
-                                )
-                            )
-                        ]
-                    )
-                )
-            )
+                                        ],
+                                    ),
+                                ),
+                            ),
+                        ],
+                    ),
+                ),
+            ),
         );
     }
 }

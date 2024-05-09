@@ -54,7 +54,7 @@ class ServiceButton extends StatelessWidget {
             message: fullname ?? subtitle,
 
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: BorderRadius.circular(MediaQuery.textScalerOf(context).scale(8.0)),
                 color: Theme.of(context).colorScheme.primaryContainer,
             ),
 
@@ -68,15 +68,17 @@ class ServiceButton extends StatelessWidget {
 
             child: TextButton(
                 style: TextButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                            MediaQuery.textScalerOf(context).scale(8.0)
+                        )
+                    ),
                     padding: const EdgeInsets.all(8.0),
-                    backgroundColor: primaryContainerColor(context),
+                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                 ),
                 onPressed: onPressed,
-                onLongPress: () {
-                    // Show Tooltip programmatically on button tap.
-                    tooltipkey.currentState?.ensureTooltipVisible();
-                },
+                // Show Tooltip programmatically on button tap.
+                onLongPress: () => tooltipkey.currentState?.ensureTooltipVisible(),
                 child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
@@ -90,7 +92,7 @@ class ServiceButton extends StatelessWidget {
                             child: Text(
                                 subtitle,
                                 textAlign: TextAlign.center,
-                                overflow: TextOverflow.fade,
+                                overflow: TextOverflow.ellipsis,
                                 maxLines: 2,
                                 softWrap: true,
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -124,7 +126,7 @@ class ServiceGrid extends StatelessWidget {
             itemCount: children.length,
             shrinkWrap: true,
             primary: true,
-            padding: const EdgeInsets.all(8.0),
+            padding: EdgeInsets.all(MediaQuery.textScalerOf(context).scale(8.0)),
         );
     }
 }
@@ -170,7 +172,7 @@ class GamesPage extends StatelessWidget {
             ServiceButton(
                 assetPath: 'assets/images/services/trex.svg.vec',
                 subtitle: 'Динозаврик',
-                onPressed: () => Navigator.push(
+                onPressed: () async => Navigator.push<void>(
                     context,
                     MaterialPageRoute(builder: (context) => const WebViewDino())
                 ),
@@ -178,13 +180,8 @@ class GamesPage extends StatelessWidget {
         ];
 
         return Scaffold(
-            appBar: AppBar(
-                title: const Text('Игры')
-            ),
-
-            body: ServiceGrid(
-                children: children,
-            )
+            appBar: AppBar(title: const Text('Игры')),
+            body: ServiceGrid(children: children)
         );
     }
 }
@@ -195,7 +192,7 @@ class ServicesPage extends ConsumerWidget {
     @override
     Widget build(BuildContext context, WidgetRef ref) {
         Future openLinkInWebView(final BuildContext context, final url) async {
-            await Navigator.push(
+            await Navigator.push<void>(
                 context,
                 MaterialPageRoute(builder: (context) => WebView(url: url))
             );
@@ -226,7 +223,7 @@ class ServicesPage extends ConsumerWidget {
             ServiceButton(
                 assetPath: 'assets/images/services/map.svg.vec',
                 subtitle: 'Планы этажей',
-                onPressed: () => Navigator.push(
+                onPressed: () async => Navigator.push<void>(
                     context,
                     MaterialPageRoute(builder: (context) => const MapRoute())
                 ),
@@ -235,7 +232,7 @@ class ServicesPage extends ConsumerWidget {
             ServiceButton(
                 assetPath: 'assets/images/services/trex.svg.vec',
                 subtitle: 'Игры!',
-                onPressed: () => Navigator.push(
+                onPressed: () async => Navigator.push<void>(
                     context,
                     MaterialPageRoute(builder: (context) => const GamesPage())
                 ),
@@ -255,7 +252,7 @@ class ServicesPage extends ConsumerWidget {
             ServiceButton(
                 assetPath: 'assets/images/services/money.svg.vec',
                 subtitle: 'Поддержать проект',
-                onPressed: () => showDialog(
+                onPressed: () async => showDialog<void>(
                     context: context,
                     builder: (final context) => AlertDialog(
                         title: const Text('Поддержать проект'),
@@ -281,7 +278,7 @@ class ServicesPage extends ConsumerWidget {
             ServiceButton(
                 assetPath: 'assets/images/services/info.svg.vec',
                 subtitle: 'О UniSchedule',
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutPage())),
+                onPressed: () async => Navigator.push<void>(context, MaterialPageRoute(builder: (context) => const AboutPage())),
             ),
         ];
 
@@ -301,7 +298,9 @@ class ServicesPage extends ConsumerWidget {
                         ListTile(
                             leading: Icon(
                                 Icons.settings,
-                                size: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.titleLarge?.fontSize ?? 16.0),
+                                size: MediaQuery.textScalerOf(context).scale(
+                                    Theme.of(context).textTheme.titleLarge?.fontSize ?? 16.0
+                                ),
                                 color: Theme.of(context).colorScheme.primary
                             ),
                             title: Text(
@@ -310,13 +309,14 @@ class ServicesPage extends ConsumerWidget {
                                     color: Theme.of(context).colorScheme.primary
                                 )
                             ),
-                            onTap: () => Navigator.push(
-                                context, MaterialPageRoute(builder: (context) => const SettingsPage())
+                            onTap: () async => Navigator.push<void>(
+                                context,
+                                MaterialPageRoute(builder: (context) => const SettingsPage())
                             ),
                         ),
-                    ]
+                    ],
                 ),
-            )
+            ),
         );
     }
 }

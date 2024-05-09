@@ -1,7 +1,7 @@
 name: UniSchedule
 description: UniSchedule - application to view an university schedule.
 publish_to: 'none'
-version: 0.2.2+20
+version: 0.2.3+21
 
 environment:
   sdk: '>=3.1.2 <4.0.0'
@@ -14,9 +14,9 @@ dependencies:
   flutter_riverpod: ^2.4.9
   flutter_svg: ^2.0.9
   http: ^1.2.0
-  meta: ^1.10.0
+  meta: ^1.11.0
   package_info_plus: ^8.0.0
-  path_provider: ^2.1.2 # wanted by inappwebview
+  path_provider: ^2.1.2
   riverpod_annotation: ^2.3.3
   shared_preferences: ^2.2.2
   url_launcher: ^6.2.4

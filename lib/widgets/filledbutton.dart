@@ -17,8 +17,6 @@
 
 import 'package:flutter/material.dart';
 
-import '../utils.dart';
-
 class UniScheduleFilledButton extends StatelessWidget {
     const UniScheduleFilledButton({super.key, this.child, required this.onPressed, this.onLongPress});
 
@@ -30,7 +28,7 @@ class UniScheduleFilledButton extends StatelessWidget {
     Widget build(BuildContext context) {
         return TextButton(
             style: TextButton.styleFrom(
-                backgroundColor: primaryContainerColor(context),
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
             ),
             child: child,
             onPressed: onPressed,

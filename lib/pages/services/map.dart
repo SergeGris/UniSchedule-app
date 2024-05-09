@@ -25,9 +25,9 @@ import '../../provider.dart';
 import '../../utils.dart';
 
 class MapSvgViewer extends StatelessWidget {
-    MapSvgViewer(this.svg, {super.key});
+    const MapSvgViewer(this.svg, {super.key});
 
-    final AssetBytesLoader svg;
+    final svg;
 
     @override
     Widget build(BuildContext context) {
@@ -49,12 +49,12 @@ class MapRoute extends StatelessWidget {
 
     @override
     Widget build(BuildContext context) {
-        return  Scaffold(
+        return Scaffold(
             appBar: AppBar(
                 title: const Text('План этажей'),
                 shadowColor: Theme.of(context).shadowColor,
                 bottom: Tab(
-                    height: MediaQuery.textScalerOf(context).scale(30) + 8.0,
+                    height: MediaQuery.textScalerOf(context).scale(30.0) + 8.0,
                     child: const Padding(
                         padding: EdgeInsets.only(bottom: 8.0),
                         child: FloorMapSelectorButton(),
@@ -95,17 +95,21 @@ class _MapPageState extends ConsumerState<MapPage> with TickerProviderStateMixin
             || universityId == null
             || buildingId == null) {
             return Center(
-                child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16.0),
-                    child: Container(
-                        padding: const EdgeInsets.all(16),
-                        color: primaryContainerColor(context),
-                        child: Text(
-                            'Выберите корпус',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onPrimaryContainer
+                child: Container(
+                    decoration: ShapeDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                                MediaQuery.textScalerOf(context).scale(16.0)
                             ),
+                        )
+                    ),
+                    padding: EdgeInsets.all(MediaQuery.textScalerOf(context).scale(16.0)),
+                    child: Text(
+                        'Выберите корпус',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onPrimaryContainer
                         ),
                     ),
                 ),

@@ -24,7 +24,7 @@ DateTime? studiesDateFromJson(Map<String, dynamic>? json) {
         return null;
     }
 
-    return DateTime(json['y'], json['m'], json['d']);
+    return DateTime(json['y'] as int, json['m'] as int, json['d'] as int);
 }
 
 class Schedule {
@@ -42,7 +42,7 @@ class Schedule {
 
 class Week {
     Week.fromJson(final List json)
-        : days = [...json.map((e) => Day.fromJson(json.indexOf(e) + 1, e))]; // TODO USE MAPINDEXED
+        : days = [...json.mapIndexed((e, i) => Day.fromJson(i + 1, e)).cast<Day>()]; // TODO USE MAPINDEXED
 
     final List<Day> days;
 }
@@ -51,7 +51,7 @@ class Day {
     Day(this.dayNum, this.classes);
 
     Day.fromJson(this.dayNum, final List json)
-        : classes = [...json.mapIndexed((e, i) => Class.fromJson(e, i + 1))];
+        : classes = [...json.mapIndexed((e, i) => Class.fromJson(e, i + 1)).cast<Class>()];
 
     final int dayNum;
     final List<Class> classes;
@@ -127,7 +127,7 @@ class Class {
             required this.number,
     });
 
-    Class.fromJson(final Map<String, dynamic> json, final int number)
+    Class.fromJson(final Map<String, dynamic> json, this.number)
         : start = TimeOfDay(
             hour:   int.parse(json['begin'].toString().split(':')[0]),
             minute: int.parse(json['begin'].toString().split(':')[1])
@@ -156,8 +156,7 @@ class Class {
         ],
         building = json['building'],
         type     = json['type'] != null ? classTypeFromString(json['type']) : null,
-        note     = json['note'],
-        number   = number;
+        note     = json['note'];
 
     final TimeOfDay start;
     final TimeOfDay end;
