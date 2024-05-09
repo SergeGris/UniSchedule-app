@@ -71,31 +71,39 @@ class UniScheduleApp extends ConsumerWidget {
             ? (themeMode == 'light' ? ThemeMode.light : ThemeMode.dark)
             : theme.themeMode;
 
-        ThemeData getThemeData(final Brightness brightness) => ThemeData(
-            useMaterial3: true,
-            brightness: brightness,
-            colorSchemeSeed: theme.colorSchemeSeed,
+        ThemeData getThemeData(final Brightness brightness) {
+            final colorScheme = ColorScheme.fromSeed(
+                seedColor: theme.colorSchemeSeed,
+                brightness: brightness,
+            );
 
-            tabBarTheme: Theme.of(context).tabBarTheme.copyWith(
-                indicatorSize: TabBarIndicatorSize.tab
-            ),
+            return ThemeData(
+                useMaterial3: true,
+                //brightness: brightness,
+                //colorSchemeSeed: theme.colorSchemeSeed,
+                colorScheme: brightness != Brightness.dark
+                ? colorScheme
+                : colorScheme.copyWith(primaryContainer: Color.lerp(colorScheme.primaryContainer, Colors.black, 0.5)),
 
-            dropdownMenuTheme: DropdownMenuThemeData(
-				inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
-                    isDense: true,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                    contentPadding: const EdgeInsets.all(8.0),
-                ),
+                tabBarTheme: Theme.of(context).tabBarTheme.copyWith(indicatorSize: TabBarIndicatorSize.tab),
 
-                menuStyle: MenuStyle(
-                    shape: MaterialStatePropertyAll(
-                        RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0)
-                        )
+                dropdownMenuTheme: DropdownMenuThemeData(
+				    inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
+                        isDense: true,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                        contentPadding: const EdgeInsets.all(8.0),
+                    ),
+
+                    menuStyle: MenuStyle(
+                        shape: MaterialStatePropertyAll(
+                            RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0)
+                            )
+                        ),
                     ),
                 ),
-            ),
-        );
+            );
+        }
 
         //TODO
         ref.read(scheduleProvider);//TODO.init();

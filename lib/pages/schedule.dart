@@ -17,10 +17,11 @@
 
 import 'dart:math';
 
-import 'package:UniSchedule/widgets/class_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:UniSchedule/models/schedule.dart';
+
+import '../widgets/class_card.dart';
+import '../models/schedule.dart';
 
 import '../utils.dart';
 
@@ -60,17 +61,6 @@ class SchedulePage extends ConsumerWidget {
             (day, index) {
                 final dayDate = getScheduleDay(index); // Дата конкретного дня недели.
 
-                // Use it to make all columns with time same width
-                double textWidth(String text, TextStyle? style) {
-                    final TextPainter textPainter = TextPainter(
-                        text: TextSpan(text: text, style: style),
-                        maxLines: 1,
-                        textDirection: TextDirection.ltr
-                    )
-                    ..layout(minWidth: 0, maxWidth: double.infinity);
-                    return textPainter.width;
-                }
-
                 final tabText = <Widget>[
                     // Каждая вкладка имеет следующий вид:
                     //  Пн
@@ -109,10 +99,11 @@ class SchedulePage extends ConsumerWidget {
                     // FUCK TODO fucking magic constant. Pay attention to <https://stackoverflow.com/a/62536187>
                     height: MediaQuery.textScalerOf(context).scale(60.0),
                     child: SizedBox(
-                        width: max(MediaQuery.of(context).size.width / 7 - textWidth('Ср', Theme.of(context).textTheme.titleMedium), MediaQuery.textScalerOf(context).scale(30)),
-                        child: Column(
-                            children: tabText
-                        )
+                        width: max(
+                            MediaQuery.of(context).size.width / week.days.length,
+                            MediaQuery.textScalerOf(context).scale(48.0)
+                        ),
+                        child: Column(children: tabText)
                     ),
                 );
             }
@@ -126,13 +117,15 @@ class SchedulePage extends ConsumerWidget {
             initialIndex: currentWeekDay % week.days.length,
             length: week.days.length,
             child: Scaffold(
-                appBar: AppBar(
-                    toolbarHeight: 0,
-                    bottom: TabBar(
-                        tabs: weekdayTabs,
-                        isScrollable: true,
-                        tabAlignment: TabAlignment.center,
-                    ),
+                appBar: TabBar(
+                    tabs: weekdayTabs,
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.center,
+
+                    // Used for adaptivity.
+                    padding: EdgeInsets.zero,
+                    indicatorPadding: EdgeInsets.zero,
+                    labelPadding: EdgeInsets.zero,
                 ),
 
                 body: TabBarView(

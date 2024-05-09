@@ -18,8 +18,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 
-import '../utils.dart';
-
 class UniScheduleDropDownButton extends StatelessWidget {
     const UniScheduleDropDownButton({
             required this.hint,
@@ -67,7 +65,7 @@ class UniScheduleDropDownButton extends StatelessWidget {
                     // padding: const EdgeInsets.only(left: 8, right: 8),
                     decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16.0),
-                        color: primaryContainerColor(context),
+                        color: Theme.of(context).colorScheme.primaryContainer,
                     ),
                     elevation: 0,
                 ),

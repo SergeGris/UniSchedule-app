@@ -15,8 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with UniSchedule.  If not, see <https://www.gnu.org/licenses/>.
 
-import 'dart:math'; // For max().
-
 import 'package:flutter/material.dart';
 
 import '../models/schedule.dart';
@@ -71,12 +69,12 @@ class ClassCardTile extends StatelessWidget {
             return Container(
                 padding: EdgeInsets.symmetric(
                     vertical: MediaQuery.textScalerOf(context).scale(1.0),
-                    horizontal: MediaQuery.textScalerOf(context).scale(6.0)
+                    horizontal: MediaQuery.textScalerOf(context).scale(4.0)
                 ),
                 decoration: ShapeDecoration(
                     color: Theme.of(context).colorScheme.tertiary.withOpacity(0.15),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.0),
+                        borderRadius: BorderRadius.circular(MediaQuery.textScalerOf(context).scale(16.0)),
                     ),
                 ),
                 child: Text(
@@ -153,34 +151,19 @@ class ClassCardTile extends StatelessWidget {
             )
         );
 
-        // Use it to make all columns with time same width
-        double textWidth(String text, TextStyle style) {
-            final TextPainter textPainter = TextPainter(
-                text: TextSpan(text: text, style: style),
-                maxLines: 1,
-                textDirection: TextDirection.ltr
-            )
-            ..layout(minWidth: 0, maxWidth: double.infinity);
-            return textPainter.width;
-        }
-
-        double getTimeWidth() => (MediaQuery.textScalerOf(context).scale(
-                textWidth(
-                    const TimeOfDay(hour: 0, minute: 0).format24hour(),
-                    TextStyle(
-                        fontSize: Theme.of(context).textTheme.titleMedium?.fontSize ?? 16.0,
-                        color: Theme.of(context).colorScheme.primary,
-                    )
-                )
-        ) ~/ 8 + 1) * 8.0; // FUCK TODO fucking magic constant. Pay attention to <https://stackoverflow.com/a/62536187>
+        double getTimeWidth() => textWidth(
+            context,
+            const TimeOfDay(hour: 0, minute: 0).format24hour(),
+            Theme.of(context).textTheme.titleMedium ?? const TextStyle(fontSize: 16.0)
+        );
 
         return Card(
             color: color,
             elevation: 0, // We do many magic with colors and theirs opacity, so set elevation to zero to get more control on color.
-            margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(borderRadius)),
+            margin: EdgeInsets.symmetric(horizontal: MediaQuery.textScalerOf(context).scale(horizontalMargin)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MediaQuery.textScalerOf(context).scale(borderRadius))),
             child: Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: EdgeInsets.all(MediaQuery.textScalerOf(context).scale(8.0)),
                 child: Row(
                     children: <Widget>[
                         SizedBox(
@@ -204,7 +187,7 @@ class ClassCardTile extends StatelessWidget {
                             ),
                         ),
 
-                        SizedBox(width: MediaQuery.textScalerOf(context).scale(8)),
+                        SizedBox(width: MediaQuery.textScalerOf(context).scale(8.0)),
 
                         Expanded( // Need for Spacer() in Row() widget.
                             child: Column(
@@ -266,7 +249,7 @@ class ClassCard extends StatelessWidget {
         final haveClass = class0.name != null;
         final begin = haveClass ? class0.start.format24hour() : (index > 0                  ? classes[index - 1].end.format24hour()   : null);
         final end   = haveClass ? class0.end.format24hour()   : (index + 1 < classes.length ? classes[index + 1].start.format24hour() : null);
-        final cardColor = primaryContainerColor(context);
+        final cardColor = Theme.of(context).colorScheme.primaryContainer;
 
         final card = ClassCardTile(
             haveClass: haveClass,
@@ -291,12 +274,12 @@ class ClassCard extends StatelessWidget {
                 children: <Widget>[
                     Positioned.fill(
                         child: Container(
-                            margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
+                            margin: EdgeInsets.symmetric(horizontal: MediaQuery.textScalerOf(context).scale(horizontalMargin)),
                             child: LinearProgressIndicator(
                                 backgroundColor: cardColor,
                                 color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.15),
                                 value: TimeOfDay.now().differenceInMinutes(class0.start) / class0.end.differenceInMinutes(class0.start),
-                                borderRadius: BorderRadius.circular(borderRadius),
+                                borderRadius: BorderRadius.circular(MediaQuery.textScalerOf(context).scale(borderRadius)),
                             )
                         )
                     ),

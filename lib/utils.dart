@@ -205,18 +205,11 @@ String plural(int n, List<String> variants) {
 }
 
 String timeToPrettyView(int hours, int minutes) {
-    final ph = plural(hours,   ['час',    'часа',   'часов']);
-    final pm = plural(minutes, ['минута', 'минуты', 'минут']);
+    // Используем именительный падеж.
+    final h = hours > 0   ? '$hours '   + plural(hours,   ['час',    'часа',   'часов']) : null;
+    final m = minutes > 0 ? '$minutes ' + plural(minutes, ['минута', 'минуты', 'минут']) : null;
 
-    if (hours > 0 && minutes > 0) {
-        return '$hours $ph $minutes $pm';
-    } else if (hours > 0) {
-        return '$hours $ph';
-    } else if (minutes > 0) {
-        return '$minutes $pm';
-    } else {
-        return '';
-    }
+    return [ h, m ].nonNulls.join(' ');
 }
 
 Future<bool> launchLink(BuildContext context, String link) async {
@@ -247,7 +240,16 @@ Future<bool> launchLink(BuildContext context, String link) async {
 
 bool isDarkMode(final BuildContext context) => Theme.of(context).brightness == Brightness.dark;
 
-Color primaryContainerColor(final BuildContext context) => Theme.of(context).colorScheme.primaryContainer.withOpacity(isDarkMode(context) ? 0.2 : 1.0);
+double textWidth(BuildContext context, String text, TextStyle style) {
+    final textPainter = TextPainter(
+        text: TextSpan(text: text, style: style),
+        maxLines: 1,
+        textDirection: TextDirection.ltr,
+        textScaler: MediaQuery.textScalerOf(context)
+    )
+    ..layout(minWidth: 0, maxWidth: double.infinity);
+    return textPainter.width;
+}
 
 class Constants {
     static const double goldenRatio = 0.618033988751;

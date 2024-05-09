@@ -25,7 +25,7 @@ import '../../provider.dart';
 import '../../utils.dart';
 
 class MapSvgViewer extends StatelessWidget {
-    MapSvgViewer(this.svg, {super.key});
+    const MapSvgViewer(this.svg, {super.key});
 
     final AssetBytesLoader svg;
 
@@ -49,7 +49,7 @@ class MapRoute extends StatelessWidget {
 
     @override
     Widget build(BuildContext context) {
-        return  Scaffold(
+        return Scaffold(
             appBar: AppBar(
                 title: const Text('План этажей'),
                 shadowColor: Theme.of(context).shadowColor,
@@ -99,7 +99,7 @@ class _MapPageState extends ConsumerState<MapPage> with TickerProviderStateMixin
                     borderRadius: BorderRadius.circular(16.0),
                     child: Container(
                         padding: const EdgeInsets.all(16),
-                        color: primaryContainerColor(context),
+                        color: Theme.of(context).colorScheme.primaryContainer,
                         child: Text(
                             'Выберите корпус',
                             textAlign: TextAlign.center,

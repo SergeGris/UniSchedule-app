@@ -11,11 +11,11 @@ class SettingsPage extends ConsumerWidget {
 
     @override
     Widget build(BuildContext context, WidgetRef ref) {
-        final prefs = ref.watch(settingsProvider).value;
-        final theme = prefs?.getString('theme') ?? 'system';
+        final prefs = ref.watch(settingsProvider).value!;
+        final theme = prefs.getString('theme') ?? 'system';
         final usingSystemTheme = theme == 'system';
         final initialSelection = usingSystemTheme ? (isDarkMode(context) ? 'dark' : 'light') : theme;
-        final customColor = Color(prefs?.getInt('custom.color.scheme.seed') ?? uniScheduleThemes[theme]!().colorSchemeSeed.value);
+        final customColor = Color(prefs.getInt('custom.color.scheme.seed') ?? uniScheduleThemes[theme]!().colorSchemeSeed.value);
 
         return Scaffold(
             appBar: AppBar(
@@ -29,7 +29,7 @@ class SettingsPage extends ConsumerWidget {
                         title: const Text('Использовать системную тему'),
                         value: usingSystemTheme,
                         onChanged: (bool value) async {
-                            await prefs?.setString('theme', value ? 'system' : initialSelection);
+                            await prefs.setString('theme', value ? 'system' : initialSelection);
                             ref.invalidate(settingsProvider);
                         },
                     ),
@@ -58,7 +58,7 @@ class SettingsPage extends ConsumerWidget {
                             .toList(),
                             onSelected: !usingSystemTheme
                             ? (String? value) async {
-                                await prefs?.setString('theme', value!);
+                                await prefs.setString('theme', value!);
                                 ref.invalidate(settingsProvider);
                             }
                             : null,
@@ -78,9 +78,9 @@ class SettingsPage extends ConsumerWidget {
                     if (theme == 'custom')
                     SwitchListTile(
                         title: const Text('Тёмная тема'),
-                        value: (prefs?.getString('custom.theme.mode') ?? (isDarkMode(context) ? 'dark' : 'light')) == 'dark',
+                        value: (prefs.getString('custom.theme.mode') ?? (isDarkMode(context) ? 'dark' : 'light')) == 'dark',
                         onChanged: (bool value) async {
-                            await prefs?.setString('custom.theme.mode', value ? 'dark' : 'light');
+                            await prefs.setString('custom.theme.mode', value ? 'dark' : 'light');
                             uniScheduleThemeCustom.themeMode = value ? ThemeMode.dark : ThemeMode.light;
                             ref.invalidate(settingsProvider);
                         },
@@ -99,7 +99,7 @@ class SettingsPage extends ConsumerWidget {
                                 ),
                             ),
                             onPressed: () {
-                                showDialog(
+                                showDialog<void>(
                                     context: context,
                                     builder: (context) {
                                         return AlertDialog(
@@ -108,7 +108,7 @@ class SettingsPage extends ConsumerWidget {
                                                     pickerColor: uniScheduleThemeCustom.colorSchemeSeed,
                                                     onColorChanged: (Color color) async {
                                                         uniScheduleThemeCustom.colorSchemeSeed = color;
-                                                        await prefs?.setInt('custom.color.scheme.seed', color.value);
+                                                        await prefs.setInt('custom.color.scheme.seed', color.value);
                                                         ref.invalidate(settingsProvider);
                                                     },
                                                     hexInputBar: true,
@@ -163,8 +163,8 @@ class SettingsPage extends ConsumerWidget {
                     //         } else {
                     //             message = 'Настройки темы импортированы';
                     //             final (brightness, color) = (t[0], t[1]);
-                    //             await prefs?.setString('custom.theme.mode', brightness);
-                    //             await prefs?.setInt('custom.color.scheme.seed', int.parse(color));
+                    //             await prefs.setString('custom.theme.mode', brightness);
+                    //             await prefs.setInt('custom.color.scheme.seed', int.parse(color));
                     //             ref.invalidate(settingsProvider);
                     //         }
 

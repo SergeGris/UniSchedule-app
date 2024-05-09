@@ -147,7 +147,7 @@ class AboutPage extends ConsumerWidget {
                                     textAlign: TextAlign.center
                                 ),
                                 Linkify(
-                                    onOpen: (link) async => await launchLink(context, link.url),
+                                    onOpen: (link) async => launchLink(context, link.url),
                                     text: UniScheduleConfiguration.authorEmailAddress!,
                                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                         fontSize: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14.0),
@@ -165,7 +165,7 @@ class AboutPage extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: UniScheduleConfiguration.supportedBy.map(
                                 (e) => Text(
-                                    '${e.name}' + (e.amount != 0 ? ' — ${e.amount} ₽' : ''),
+                                    e.name + (e.amount != 0 ? ' — ${e.amount} ₽' : ''),
                                     textAlign: TextAlign.center,
                                 )
                             )
@@ -183,7 +183,7 @@ class AboutPage extends ConsumerWidget {
                                 style: Theme.of(context).textTheme.bodyLarge,
                             ),
                             Linkify(
-                                onOpen: (link) async => await launchLink(context, link.url),
+                                onOpen: (link) async => launchLink(context, link.url),
                                 text: UniScheduleConfiguration.channelLink!,
                                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                     fontSize: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.bodyMedium?.fontSize ?? 16.0),
@@ -198,11 +198,11 @@ class AboutPage extends ConsumerWidget {
                             child: SizedBox(
                                 height: min(80, min(MediaQuery.of(context).size.height, MediaQuery.of(context).size.width)),
                                 width: min(80, min(MediaQuery.of(context).size.height, MediaQuery.of(context).size.width)),
-                                child: SvgPicture(AssetBytesLoader('assets/images/services/GPLv3Logo.svg.vec')),
+                                child: const SvgPicture(AssetBytesLoader('assets/images/services/GPLv3Logo.svg.vec')),
                             )
                         ),
                         subtitle: const Text(textAlign: TextAlign.center, 'Лицензия приложения'),
-                        onTap: () async => await Navigator.push(context, MaterialPageRoute(builder: (context) => const CopyingPage())),
+                        onTap: () async => Navigator.push(context, MaterialPageRoute(builder: (context) => const CopyingPage())),
                     ),
                 ],
             ),
