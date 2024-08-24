@@ -1,11 +1,11 @@
 {
-    "name": "unischedule",
-    "short_name": "unischedule",
+    "name": "UniSchedule",
+    "short_name": "UniSchedule",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "UniSchedule — приложение для просмотра расписания.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
