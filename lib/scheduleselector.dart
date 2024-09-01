@@ -16,7 +16,6 @@
 // along with UniSchedule.  If not, see <https://www.gnu.org/licenses/>.
 
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,7 +25,6 @@ import './configuration.dart';
 import './globalkeys.dart';
 import './provider.dart';
 import './utils.dart';
-import '../widgets/filledbutton.dart';
 
 class ScheduleSelectorRoute extends ConsumerWidget {
     const ScheduleSelectorRoute({super.key});
@@ -49,9 +47,9 @@ class ScheduleSelectorButton extends ConsumerWidget {
 
         return TextButton(
             child: Text('$group группа $year курса, $faculty $university'),
-            onPressed: () => Navigator.push(
+            onPressed: () async => AnimatedNavigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ScheduleSelectorRoute())
+                (context) => const ScheduleSelectorRoute(),
             )
             .then((_) => refreshSchedule(ref))
         );
@@ -70,15 +68,15 @@ typedef ManifestData = List<ManifestEntry>;
 ManifestData manifestDataEmpty() => [ManifestEntry(name: '', label: '')];
 
 class Manifest {
-  Manifest({required this.data});
+    Manifest({required this.data});
 
-  factory Manifest.fromJson(Map<String, dynamic> json) => Manifest(
-      data: json.entries.map(
-          (e) => ManifestEntry(name: e.key, label: e.value.toString())
-      ).toList()
-  );
+    factory Manifest.fromJson(Map<String, dynamic> json) => Manifest(
+        data: json.entries.map(
+            (e) => ManifestEntry(name: e.key, label: e.value.toString())
+        ).toList()
+    );
 
-  final ManifestData data;
+    final ManifestData data;
 }
 
 class Menu {
@@ -91,7 +89,7 @@ class Menu {
     Future<ManifestData>? Function() getManifest;
 }
 
-Future<ManifestData> getManifest({required WidgetRef ref, String? university = null, String? faculty = null, String? year = null}) async {
+Future<ManifestData> getManifest({required WidgetRef ref, String? university, String? faculty, String? year}) async {
     String path = '/${UniScheduleConfiguration.scheduleFormatVersion}';
 
     if (university != null) {
@@ -106,10 +104,14 @@ Future<ManifestData> getManifest({required WidgetRef ref, String? university = n
         }
     }
 
-    return http.get(Uri.https(UniScheduleConfiguration.serverIp,
-                    UniScheduleConfiguration.schedulePathPrefix + path + '/manifest.json'))
-            .then((value)   => Manifest.fromJson(jsonDecode(value.body)).data)
-            .catchError((e) => Future<ManifestData>.error('Не удалось загрузить список'));
+    return http.get(
+        Uri.https(
+            UniScheduleConfiguration.serverIp,
+            UniScheduleConfiguration.schedulePathPrefix + path + '/manifest.json',
+        ),
+    )
+    .then((value)   => Manifest.fromJson(jsonDecode(value.body)).data)
+    .catchError((e) => Future<ManifestData>.error('Не удалось загрузить список'));
 }
 
 final manifestProvider = FutureProvider.family<ManifestData, Menu>(
@@ -159,7 +161,7 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
     Widget build(BuildContext context) {
         if (!initialized) {
             initialized = true;
-            prefs = ref.watch(settingsProvider).value;
+            prefs = ref.watch(settingsProvider).value!;
 
             final universityId = prefs.getString('universityId');
             final facultyId    = prefs.getString('facultyId');
@@ -171,25 +173,24 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
             final yearName       = prefs.getString('yearName');
             final groupName      = prefs.getString('groupName');
 
-            university = Menu(enabled: true,                 id: universityId, name: universityName, getManifest: () => getManifest(ref: ref));
-            faculty    = Menu(enabled: universityId != null, id: facultyId,    name: facultyName,    getManifest: () => university.id != null ? getManifest(ref: ref, university: university.id) : null);
-            year       = Menu(enabled: facultyId    != null, id: yearId,       name: yearName,       getManifest: () => faculty.id    != null ? getManifest(ref: ref, university: university.id, faculty: faculty.id) : null);
-            group      = Menu(enabled: yearId       != null, id: groupId,      name: groupName,      getManifest: () => year.id       != null ? getManifest(ref: ref, university: university.id, faculty: faculty.id, year: year.id) : null);
+            university = Menu(enabled: true,                 id: universityId, name: universityName, getManifest: () async => getManifest(ref: ref));
+            faculty    = Menu(enabled: universityId != null, id: facultyId,    name: facultyName,    getManifest: () async => university.id != null ? getManifest(ref: ref, university: university.id) : Future.value(manifestDataEmpty()));
+            year       = Menu(enabled: facultyId    != null, id: yearId,       name: yearName,       getManifest: () async => faculty.id    != null ? getManifest(ref: ref, university: university.id, faculty: faculty.id) : Future.value(manifestDataEmpty()));
+            group      = Menu(enabled: yearId       != null, id: groupId,      name: groupName,      getManifest: () async => year.id       != null ? getManifest(ref: ref, university: university.id, faculty: faculty.id, year: year.id) : Future.value(manifestDataEmpty()));
         }
 
         Widget getMenu(AsyncValue<ManifestData> manifest,
                        String name,
                        Menu menu,
                        void Function(String name, String label, List<DropdownMenuEntry<String>> manifestData) callback) {
-            final size = min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) / 7;
+            final size = MediaQuery.of(context).size.shortestSide / 7;
 
             return manifest.when(
                 loading: () {
                     canLoadSchedule = false;
 
-                    return SizedBox(
-                        width: size,
-                        height: size,
+                    return SizedBox.square(
+                        dimension: size,
                         child: const CircularProgressIndicator(),
                     );
                 },
@@ -205,14 +206,14 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                                     child: Icon(
                                         Icons.error_outline,
                                         color: Colors.red,
-                                    )
+                                    ),
                                 ),
                                 Padding(
                                     padding: const EdgeInsets.only(top: 16),
                                     child: Text('${manifest.error}'),
                                 ),
-                            ]
-                        )
+                            ],
+                        ),
                     );
                 },
 
@@ -221,37 +222,154 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
 
                     final entries = menu.entries ?? manifestData.map((e) => DropdownMenuEntry<String>(value: e.name, label: e.label)).toList();
 
-                    return SizedBox(
-                        height: size,
-                        width: MediaQuery.of(context).size.width * Constants.goldenRatio,
-                        // Width is specified in DropdownMenu().
+                    // If there is only one value in manifest and dropdown menu is not selected, then
+                    // select this the only value.
+                    if (entries.length == 1 && menu.id == null) {
+                        final value = entries[0].value;
 
-                        // TODO align entries to center
-                        child: DropdownMenu(
-                            enabled: menu.enabled,
-                            requestFocusOnTap: entries.length > 5,
-                            initialSelection: menu.enabled ? menu.id : null, // TODO preselect only value
-                            label: Text(name),
-                            leadingIcon: const Icon(Icons.search),
-                            width: MediaQuery.of(context).size.width * Constants.goldenRatio,
-                            menuHeight: MediaQuery.of(context).size.height * 0.4, // Take no more than 40% of available height
-                            inputDecorationTheme: const InputDecorationTheme(
-                                border: null,
-                                contentPadding: EdgeInsets.symmetric(vertical: 8.0),
-                            ),
-                            dropdownMenuEntries: entries,
-                            onSelected: (value) => setState(
-                                () => callback(
-                                    value!,
-                                    manifestData.firstWhere((element) => element.name == value).label,
-                                    entries
-                                )
+                        callback(
+                            value,
+                            manifestData.firstWhere((element) => element.name == value).label,
+                            entries
+                        );
+                    }
+
+                    final searchEnabled = entries.length > 5;
+
+                    return DropdownMenu(
+                        enabled: menu.enabled && entries.length != 1,
+                        requestFocusOnTap: searchEnabled,
+                        initialSelection: menu.enabled ? menu.id : null, // TODO preselect only value
+                        label: Text(name),
+                        width: MediaQuery.of(context).size.width * Constants.goldenRatio,
+                        menuHeight: MediaQuery.of(context).size.height * 0.4, // Take no more than 40% of available height
+                        leadingIcon: searchEnabled ? const Icon(Icons.search) : null,
+                        // inputDecorationTheme: const InputDecorationTheme(
+                        //     border: null,
+                        //     contentPadding: EdgeInsets.symmetric(vertical: 8.0),
+                        // ),
+                        dropdownMenuEntries: entries,
+                        onSelected: (value) => setState(
+                            () => callback(
+                                value!,
+                                manifestData.firstWhere((element) => element.name == value).label,
+                                entries
                             )
                         )
+                    );
+
+                    return DropdownMenu(
+                        enabled: menu.enabled,
+                        requestFocusOnTap: entries.length > 5,
+                        initialSelection: menu.enabled ? menu.id : null, // TODO preselect only value
+                        label: Text(name),
+                        leadingIcon: const Icon(Icons.search),
+                        width: MediaQuery.of(context).size.width * Constants.goldenRatio,
+                        menuHeight: MediaQuery.of(context).size.height * 0.4, // Take no more than 40% of available height
+                        // inputDecorationTheme: const InputDecorationTheme(
+                        //     border: null,
+                        //     contentPadding: EdgeInsets.symmetric(vertical: 8.0),
+                        // ),
+                        dropdownMenuEntries: entries,
+                        onSelected: (value) => setState(
+                            () => callback(
+                                value!,
+                                manifestData.firstWhere((element) => element.name == value).label,
+                                entries
+                            ),
+                        ),
                     );
                 }
             );
         }
+
+        final children = <Widget>[
+            const SizedBox.shrink(),
+
+            getMenu(
+                ref.watch(manifestProvider(university)),
+                'Университет',
+                university,
+                (value, label, entries) {
+                    university = Menu(enabled: true, id: value, name: label, manifest: university.manifest, getManifest: university.getManifest, entries: entries);
+                    faculty    = Menu(enabled: true,                                                        getManifest: faculty.getManifest);
+                    year       = Menu(enabled: false,                                                       getManifest: year.getManifest);
+                    group      = Menu(enabled: false,                                                       getManifest: group.getManifest);
+                    ref.invalidate(manifestProvider(faculty));
+                },
+            ),
+
+            getMenu(
+                ref.watch(manifestProvider(faculty)),
+                'Факультет',
+                faculty,
+                (value, label, entries) {
+                    faculty = Menu(enabled: true, id: value, name: label, manifest: faculty.manifest, getManifest: faculty.getManifest, entries: entries);
+                    year    = Menu(enabled: true,                                                     getManifest: year.getManifest);
+                    group   = Menu(enabled: false,                                                    getManifest: group.getManifest);
+                    ref.invalidate(manifestProvider(year));
+                },
+            ),
+
+            getMenu(
+                ref.watch(manifestProvider(year)),
+                'Курс',
+                year,
+                (value, label, entries) {
+                    year  = Menu(enabled: true, id: value, name: label, manifest: year.manifest, getManifest: year.getManifest, entries: entries);
+                    group = Menu(enabled: true,                                                  getManifest: group.getManifest);
+                    ref.invalidate(manifestProvider(group));
+                },
+            ),
+
+            getMenu(
+                ref.watch(manifestProvider(group)),
+                'Группа',
+                group,
+                (value, label, entries) {
+                    group = Menu(enabled: true, id: value, name: label, manifest: group.manifest, getManifest: group.getManifest, entries: entries);
+                },
+            ),
+
+            FilledButton(
+                child: const Text('Загрузить расписание'),
+                style: TextButton.styleFrom(
+                    textStyle: Theme.of(context).textTheme.titleMedium,
+                    padding: const EdgeInsets.all(16.0),
+                ),
+                onPressed: !allDone()
+                ? null
+                : () async {
+                    final prefs = ref.watch(settingsProvider).value!;
+
+                    await prefs.setString('initialized', '1');
+
+                    final m = [
+                        ('university', university),
+                        ('faculty',    faculty),
+                        ('year',       year),
+                        ('group',      group),
+                    ];
+
+                    for (final (k, v) in m) {
+                        await prefs.setString('${k}Id', v.id!);
+
+                        if (v.name != null) {
+                            await prefs.setString('${k}Name', v.name!);
+                        } else {
+                            await prefs.remove('${k}Name');
+                        }
+                    }
+
+                    await prefs.remove('fallbackSchedule');
+                    ref.invalidate(settingsProvider);
+
+                    if (!widget.firstRun) {
+                        Navigator.pop(context);
+                    }
+                },
+            ),
+        ];
 
         return Scaffold(
             appBar: AppBar(title: const Text('Поиск расписания')),
@@ -263,106 +381,11 @@ class _ScheduleSelectorState extends ConsumerState<ScheduleSelector> {
                     return Future<void>.value();
                 },
 
-                child: LayoutBuilder(
-                    builder: (context, final constraints) => ListView(
-                        children: <Widget>[
-                            Container(
-                                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                                child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 24),
-                                    child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                        children: <Widget>[
-                                            getMenu(
-                                                ref.watch(manifestProvider(university)),
-                                                'Университет',
-                                                university,
-                                                (value, label, entries) {
-                                                    university = Menu(enabled: true, id: value, name: label, manifest: university.manifest, getManifest: university.getManifest, entries: entries);
-                                                    faculty    = Menu(enabled: true,                                                        getManifest: faculty.getManifest);
-                                                    year       = Menu(enabled: false,                                                       getManifest: year.getManifest);
-                                                    group      = Menu(enabled: false,                                                       getManifest: group.getManifest);
-                                                    ref.invalidate(manifestProvider(faculty));
-                                                }
-                                            ),
-
-                                            getMenu(
-                                                ref.watch(manifestProvider(faculty)),
-                                                'Факультет',
-                                                faculty,
-                                                (value, label, entries) {
-                                                    faculty = Menu(enabled: true, id: value, name: label, manifest: faculty.manifest, getManifest: faculty.getManifest, entries: entries);
-                                                    year    = Menu(enabled: true,                                                     getManifest: year.getManifest);
-                                                    group   = Menu(enabled: false,                                                    getManifest: group.getManifest);
-                                                    ref.invalidate(manifestProvider(year));
-                                                }
-                                            ),
-
-                                            getMenu(
-                                                ref.watch(manifestProvider(year)),
-                                                'Курс',
-                                                year,
-                                                (value, label, entries) {
-                                                    year  = Menu(enabled: true, id: value, name: label, manifest: year.manifest, getManifest: year.getManifest, entries: entries);
-                                                    group = Menu(enabled: true,                                                  getManifest: group.getManifest);
-                                                    ref.invalidate(manifestProvider(group));
-                                                }
-                                            ),
-
-                                            getMenu(
-                                                ref.watch(manifestProvider(group)),
-                                                'Группа',
-                                                group,
-                                                (value, label, entries) {
-                                                    group = Menu(enabled: true, id: value, name: label, manifest: group.manifest, getManifest: group.getManifest, entries: entries);
-                                                }
-                                            ),
-
-                                            TextButton(
-                                                child: const Text('Загрузить расписание', textAlign: TextAlign.center),
-                                                style: TextButton.styleFrom(
-                                                    textStyle: Theme.of(context).textTheme.titleLarge,
-                                                    padding: const EdgeInsets.all(16.0),
-                                                ),
-                                                onPressed: !allDone()
-                                                ? null
-                                                : () {
-                                                    final prefs = ref.watch(settingsProvider).value!;
-
-                                                    prefs.setString('initialized', '1');
-
-                                                    final m = {
-                                                        'university': university,
-                                                        'faculty':    faculty,
-                                                        'year':       year,
-                                                        'group':      group,
-                                                    };
-
-                                                    m.forEach(
-                                                        (k, v) {
-                                                            prefs.setString('${k}Id', v.id!);
-
-                                                            if (v.name != null) {
-                                                                prefs.setString('${k}Name', v.name!);
-                                                            } else {
-                                                                prefs.remove('${k}Name');
-                                                            }
-                                                        }
-                                                    );
-
-                                                    prefs.remove('fallbackSchedule');
-                                                    ref.invalidate(settingsProvider);
-
-                                                    if (!widget.firstRun) {
-                                                        Navigator.pop(context);
-                                                    }
-                                                },
-                                            ),
-                                        ],
-                                    ),
-                                ),
-                            ),
-                        ],
+                child: ListView.separated(
+                    itemCount: children.length,
+                    itemBuilder: (context, index) => Center(child: children[index]),
+                    separatorBuilder: (_, __) => SizedBox(
+                        height: MediaQuery.of(context).size.height / 12,
                     ),
                 ),
             ),

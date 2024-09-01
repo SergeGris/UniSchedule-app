@@ -23,18 +23,18 @@ import './models/schedule.dart';
 import './utils.dart';
 
 class ScheduleLoader extends ConsumerWidget {
-    const ScheduleLoader(this.child, {super.key});
+    const ScheduleLoader(this.builder, {super.key});
 
-    final Widget Function(Schedule) child;
+    final Widget Function(Schedule) builder;
 
     @override
     Widget build(BuildContext context, WidgetRef ref) {
         return RefreshIndicator(
-            onRefresh: () => refreshSchedule(ref),
+            onRefresh: () async => refreshSchedule(ref),
             child: ref.watch(scheduleProvider).when(
-                loading: ()           => getLoadingIndicator(() => refreshSchedule(ref)),
+                loading: ()           => getLoadingIndicator(() async => refreshSchedule(ref)),
                 error: (error, stack) => getErrorContainer('Не удалось отобразить расписание'),
-                data: (value)         => child(value),
+                data: builder,
             )
         );
     }

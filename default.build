@@ -3,6 +3,22 @@ rule dart_builder {
      >dart run build_runner build
 }
 
+rule web {
+     >flutter pub remove flutter_inappwebview && flutter clean && flutter build web --no-tree-shake-icons --release --pub --base-href='/UniSchedule-app/' --dart2js-optimization=O4 --pwa-strategy=offline-first --web-renderer=canvaskit && flutter pub add flutter_inappwebview
+}
+
+rule remove-package {
+     >flutter pub remove @in
+}
+
+rule add-package {
+     >flutter pub add @in
+}
+
+rule flutter-clean {
+     >flutter clean
+}
+
 rule apk-arm64 {
      >flutter build apk --target-platform=android-arm64 --obfuscate --split-debug-info=./debug-info --release
 }
@@ -33,6 +49,10 @@ target 'release-apk' {
 
 target 'release-aab' {
        aab-release
+}
+
+target 'web' {
+       web
 }
 
 target 'run' {

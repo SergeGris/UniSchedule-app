@@ -1,4 +1,3 @@
-
 // Copyright (C) 2024 Sergey Sushilin <sushilinsergey@yandex.ru>.
 // This file is part of UniSchedule.
 
@@ -15,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with UniSchedule.  If not, see <https://www.gnu.org/licenses/>.
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -81,12 +82,14 @@ Widget getErrorContainer(String message) {
 }
 
 void showSnackBar(BuildContext context, Widget content) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: content));
+    if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: content));
+    }
 }
 
 int? getWeekIndex(DateTime date, Schedule schedule) {
     if (schedule.studiesBegin == null || date.isBefore(schedule.studiesBegin!)
-     || (schedule.studiesEnd  != null && date.isAfter(schedule.studiesEnd!))) {
+        || (schedule.studiesEnd != null && date.isAfter(schedule.studiesEnd!))) {
         return null;
     }
 
@@ -163,6 +166,37 @@ extension ListFromMap<Key, Element> on Map<Key, Element> {
     List<T> toList<T>(T Function(MapEntry<Key, Element> entry) getElement) => entries.map(getElement).toList();
 }
 
+const kAnimationDuration = Duration(milliseconds: 200);
+
+// TODO: Implement as extension
+class AnimatedNavigator {
+    @optionalTypeArgs
+    static Future<T?> push<T extends Object?>(BuildContext context, Widget Function(BuildContext context) builder) async => Navigator.push<T?>(
+        context,
+        PageRouteBuilder(
+            transitionDuration: kAnimationDuration,
+            reverseTransitionDuration: kAnimationDuration,
+            pageBuilder: (context, animation, secondaryAnimation) {
+                return FadeTransition(
+                    opacity: animation,
+                    child: builder(context),
+                );
+
+                return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                        position: Tween<Offset>(
+                            begin: const Offset(0, 1),
+                            end: Offset.zero,
+                        ).animate(animation),
+                        child: builder(context),
+                    ),
+                );
+            },
+        )
+    );
+}
+
 class Version {
     Version.fromString(String string) {
         final s = string.split('.');
@@ -176,8 +210,7 @@ class Version {
         (major > other.major
             || (major == other.major
                 && (minor > other.minor
-                    || (minor == other.minor
-                        && (patch > other.patch)))));
+                    || (minor == other.minor && (patch > other.patch)))));
 
     int major = 0;
     int minor = 0;
@@ -189,11 +222,12 @@ extension TimeOfDayExtension on TimeOfDay {
         String twoDigits(int n) => n >= 10 ? '$n' : '0$n';
         return twoDigits(hour) + ':' + twoDigits(minute);
     }
-    int  differenceInMinutes(final TimeOfDay other) => (hour - other.hour) * 60 + (minute - other.minute);
-    bool isAfterThan(final TimeOfDay other)         => differenceInMinutes(other) > 0;
-    bool isBeforeThan(final TimeOfDay other)        => differenceInMinutes(other) < 0;
-    bool isNotAfterThan(final TimeOfDay other)      => !isAfterThan(other);
-    bool isNotBeforeThan(final TimeOfDay other)     => !isBeforeThan(other);
+
+    int differenceInMinutes(final TimeOfDay other) => (hour - other.hour) * 60 + (minute - other.minute);
+    bool isAfterThan(final TimeOfDay other) => differenceInMinutes(other) > 0;
+    bool isBeforeThan(final TimeOfDay other) => differenceInMinutes(other) < 0;
+    bool isNotAfterThan(final TimeOfDay other) => !isAfterThan(other);
+    bool isNotBeforeThan(final TimeOfDay other) => !isBeforeThan(other);
 }
 
 String plural(int n, List<String> variants) {
@@ -206,28 +240,28 @@ String plural(int n, List<String> variants) {
     return variants[i];
 }
 
-String timeToPrettyView(int hours, int minutes) {
+String timeToPrettyView(final int hours, final int minutes) {
     // Используем именительный падеж.
-    final h = hours > 0   ? '$hours '   + plural(hours,   ['час',    'часа',   'часов']) : null;
-    final m = minutes > 0 ? '$minutes ' + plural(minutes, ['минута', 'минуты', 'минут']) : null;
+    final h = hours > 0   ? '$hours '   + plural(hours,   [ 'час', 'часа', 'часов' ])      : null;
+    final m = minutes > 0 ? '$minutes ' + plural(minutes, [ 'минута', 'минуты', 'минут' ]) : null;
 
     return [ h, m ].nonNulls.join(' ');
 }
 
-Future<bool> launchLink(BuildContext context, String link) async {
+Future<bool> launchLink(final BuildContext context, final String link) async {
     final url = Uri.parse(link);
 
     // TODO add can launch url check which won't work on some phones
     // TODO fails on web version, but launchs link
     if (!await launchUrl(url)) {
-        await showDialog(
+        await showDialog<void>(
             context: context,
             builder: (final context) => AlertDialog(
                 title: const Text('Ошибка!'),
                 content: Text('Не удалось открыть $url'),
                 actions: <Widget>[
                     TextButton(
-                        onPressed: () => Navigator.pop(context), // TODO pop context?..
+                        onPressed: () => Navigator.pop(context),
                         child: const Text('Понятно'),
                     ),
                 ],
@@ -242,49 +276,162 @@ Future<bool> launchLink(BuildContext context, String link) async {
 
 bool isDarkMode(final BuildContext context) => Theme.of(context).brightness == Brightness.dark;
 
-double textWidth(BuildContext context, String text, TextStyle style) {
+double textWidth(final BuildContext context, final String text, final TextStyle style) {
     final textPainter = TextPainter(
         text: TextSpan(text: text, style: style),
         maxLines: 1,
         textDirection: TextDirection.ltr,
-        textScaler: MediaQuery.textScalerOf(context)
-    )
-    ..layout(minWidth: 0, maxWidth: double.infinity);
+        textScaler: MediaQuery.textScalerOf(context),
+    )..layout(minWidth: 0, maxWidth: double.infinity);
     return textPainter.width;
 }
 
-class Constants {
+abstract final class Constants {
     static const double goldenRatio = 0.618033988751;
 }
 
-class UniScheduleTheme {
-     UniScheduleTheme({required this.themeMode,
-                       required this.colorSchemeSeed,
-                       required this.label});
-    ThemeMode themeMode;
-    Color colorSchemeSeed;
+// FUCK TODO fucking magic constant. Pay attention to <https://stackoverflow.com/a/62536187>
+double getScheduleTabHeight(final BuildContext context) => MediaQuery.textScalerOf(context).scale(60.0);
+
+enum ColorTheme {
+    system(ThemeMode.system, 'Системная'),
+    light(ThemeMode.light, 'Светлая'),
+    dark(ThemeMode.dark, 'Тёмная'),
+    custom(null, 'Персональная');
+
+    const ColorTheme(this._themeMode, this.label);
+
+    ThemeMode get themeMode => this == custom ? CustomColorTheme.themeMode : _themeMode!;
+    Color get colorSchemeSeed => this == custom ? CustomColorTheme.colorSchemeSeed : _colorSchemeSeed;
+
+    final ThemeMode? _themeMode;
+    final Color _colorSchemeSeed = Colors.indigoAccent;
     final String label;
+
+    static ColorTheme fromString(String? name) => values.firstWhere((t) => t.name == name, orElse: () => system);
 }
 
-final uniScheduleThemeSystem = UniScheduleTheme(themeMode: ThemeMode.system, colorSchemeSeed: Colors.indigoAccent, label: 'Системная');
-final uniScheduleThemeLight  = UniScheduleTheme(themeMode: ThemeMode.light,  colorSchemeSeed: Colors.indigoAccent, label: 'Светлая');
-final uniScheduleThemeDark   = UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.indigoAccent, label: 'Тёмная');
-var   uniScheduleThemeCustom = UniScheduleTheme(themeMode: ThemeMode.dark,   colorSchemeSeed: Colors.indigoAccent, label: 'Персональная');
-
-final uniScheduleThemes = {
-    'system': () => uniScheduleThemeSystem,
-    'light':  () => uniScheduleThemeLight,
-    'dark':   () => uniScheduleThemeDark,
-    'custom': () => uniScheduleThemeCustom,
-};
+final class CustomColorTheme {
+    static ThemeMode themeMode = ThemeMode.system;
+    static Color colorSchemeSeed = Colors.indigoAccent;
+}
 
 extension StringExtension on Color {
     String toPrettyString({bool showAlpha = false}) {
         String twoHexDigits(int n) => (n >= 0x10 ? '' : '0') + n.toRadixString(16).toUpperCase();
+
         return '#'
             + twoHexDigits(red)
             + twoHexDigits(green)
             + twoHexDigits(blue)
             + (showAlpha ? twoHexDigits(alpha) : '');
     }
+}
+
+class ColoredElevatedCircle extends StatelessWidget {
+    const ColoredElevatedCircle({super.key, required this.color, required this.size, this.elevation = 1});
+
+    final Color color;
+    final double elevation;
+    final double size;
+
+    @override
+    Widget build(BuildContext context) => Material(
+        elevation: elevation,
+        type: MaterialType.circle,
+        color: Colors.transparent,
+        child: Icon(Icons.circle, color: color, size: size),
+    );
+}
+
+class LinkSpan extends TextSpan {
+    LinkSpan({
+            required this.text,
+            this.link,
+            required this.onTap,
+    }) : super(
+        recognizer: TapGestureRecognizer()..onTap = () async => onTap(link ?? text),
+        style: _textStyle,
+    );
+
+    static const _color = Color(0xFF3366CC);
+    static const _textStyle = TextStyle(
+        color: _color,
+        decoration: TextDecoration.underline,
+        decorationColor: _color,
+    );
+    final String text;
+    final String? link;
+    final void Function(String link) onTap;
+}
+
+class Link extends StatelessWidget {
+    Link({super.key, required this.text, this.link});
+
+    final String text;
+    final String? link;
+    bool _isHover = false;
+    static const _color = Color(0xFF3366CC);
+
+    @override
+    Widget build(BuildContext context) {
+        final DefaultTextStyle defaultTextStyle = DefaultTextStyle.of(context);
+        TextStyle? effectiveTextStyle = defaultTextStyle.style;
+
+        if (MediaQuery.boldTextOf(context)) {
+            effectiveTextStyle = effectiveTextStyle!.merge(
+                const TextStyle(fontWeight: FontWeight.bold)
+            );
+        }
+
+        return StatefulBuilder(
+            builder: (context, setState) => MouseRegion(
+                onEnter: (_) => setState(() => _isHover = true),
+                onExit: (_) => setState(() => _isHover = false),
+                cursor: SystemMouseCursors.click, // Change cursor to pointer
+                child: GestureDetector(
+                    onTap: () async => launchLink(context, link ?? text),
+                    child: Text(
+                        text,
+                        style: effectiveTextStyle
+                        ?.copyWith(
+                            color: _color,
+                            decoration: _isHover ? TextDecoration.underline : null,
+                            decorationColor: _color,
+                        ),
+                        // style: TextStyle(
+                        //     color: _color,
+                        //     decoration: _isHover ? TextDecoration.underline : null,
+                        //     decorationColor: _color,
+                        // ),
+                    ),
+                ),
+            )
+        );
+    }
+
+    // @override
+    // Widget build(BuildContext context) => StatefulBuilder(
+    //     builder: (context, setState) => Text.rich(
+    //         TextSpan(
+    //             text: text,
+    //             onEnter: (_) => setState(() => _isHover = true),
+    //             onExit: (_) => setState(() => _isHover = false),
+    //             recognizer: TapGestureRecognizer()..onTap = () async => launchLink(context, link ?? text),
+    //             style: TextStyle(
+    //                 color: _color,
+    //                 decoration: _isHover ? TextDecoration.underline : TextDecoration.none,
+    //                 decorationColor: _color,
+    //             ),
+    //         ),
+    //     ),
+    // );
+}
+
+abstract final class OS {
+    static bool get isAndroid => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+    static bool get isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    static bool get isWeb => kIsWeb;
+    static bool get isWebAndroid => kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+    static bool get isWebIOS => kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 }

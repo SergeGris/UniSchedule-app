@@ -36,42 +36,40 @@ class OverflowedText extends StatelessWidget {
     final int maxLines;
 
     @override
-    Widget build(BuildContext context) {
-        return LayoutBuilder(
-            builder: (context, size) {
-                // Build the TextSpan().
-                final span = TextSpan(
-                    text: text,
-                    style: style
-                );
+    Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, size) {
+            // Build the TextSpan().
+            final span = TextSpan(
+                text: text,
+                style: style
+            );
 
-                // Use a TextPainter to determine if it will exceed max lines.
-                final tp = TextPainter(
-                    maxLines: maxLines,
-                    textAlign: textAlign,
-                    textDirection: textDirection,
-                    text: span,
-                    textScaler: MediaQuery.textScalerOf(context) // Pay attention to text scaler.
-                );
+            // Use a TextPainter to determine if it will exceed max lines.
+            final tp = TextPainter(
+                maxLines: maxLines,
+                textAlign: textAlign,
+                textDirection: textDirection,
+                text: span,
+                textScaler: MediaQuery.textScalerOf(context) // Pay attention to text scaler.
+            );
 
-                // Trigger it to layout.
-                tp.layout(maxWidth: size.maxWidth);
+            // Trigger it to layout.
+            tp.layout(maxWidth: size.maxWidth);
 
-                // Whether the text overflowed or not.
-                final exceeded = tp.didExceedMaxLines;
+            // Whether the text overflowed or not.
+            final exceeded = tp.didExceedMaxLines;
 
-                if (exceeded && shortText == null) {
-                    return const SizedBox.shrink();
-                }
-
-                return Text(
-                    exceeded ? shortText! : text,
-                    maxLines: maxLines,
-                    textAlign: textAlign,
-                    textDirection: textDirection,
-                    style: style
-                );
+            if (exceeded && shortText == null) {
+                return const SizedBox.shrink();
             }
-        );
-    }
+
+            return Text(
+                exceeded ? shortText! : text,
+                maxLines: maxLines,
+                textAlign: textAlign,
+                textDirection: textDirection,
+                style: style
+            );
+        }
+    );
 }

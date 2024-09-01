@@ -20,9 +20,207 @@ import 'package:flutter/material.dart';
 import '../models/schedule.dart';
 import '../utils.dart';
 
+class _ClassNumber extends StatelessWidget {
+    const _ClassNumber({required this.number});
+
+    final int number;
+
+    @override
+    Widget build(BuildContext context) {
+        const strings = [
+            'Первая',
+            'Вторая',
+            'Третья',
+            'Четвёртая',
+            'Пятая',
+            'Шестая',
+            'Седьмая',
+            'Восьмая',
+            'Девятая',
+            'Десятая',
+            'Одиннадцатая',
+            'Двенадцатая',
+        ];
+
+        return Card(
+            color: Theme.of(context).colorScheme.secondaryContainer,
+            margin: EdgeInsets.zero,
+            child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 1.0, horizontal: 6.0),
+                child: Text(
+                    '${number <= strings.length ? strings[number - 1] : number} пара',
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    ),
+                ),
+            ),
+        );
+
+        return Container(
+            padding: EdgeInsets.symmetric(
+                vertical: MediaQuery.textScalerOf(context).scale(1.0),
+                horizontal: MediaQuery.textScalerOf(context).scale(6.0),
+            ),
+            decoration: ShapeDecoration(
+                color: Theme.of(context).colorScheme.tertiary.withOpacity(0.15),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(MediaQuery.textScalerOf(context).scale(16.0)),
+                ),
+            ),
+            child: Text(
+                '${number <= strings.length ? strings[number - 1] : number} пара',
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall
+            ),
+        );
+    }
+}
+
+class _ClassName extends StatelessWidget {
+    const _ClassName({required this.name});
+
+    final String name;
+
+    @override
+    Widget build(BuildContext context) => Text(
+        name,
+        maxLines: 2,
+        softWrap: true,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Theme.of(context).colorScheme.primary,
+        ),
+    );
+}
+
+class _ClassTeachersAndRooms extends StatelessWidget {
+    const _ClassTeachersAndRooms({required this.teachersAndRooms});
+
+    final List<TeacherAndRoom> teachersAndRooms;
+
+    @override
+    Widget build(BuildContext context) => Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: teachersAndRooms.where((e) => e.room != null || e.teacher != null).map(
+            (tr) => Text(
+                [ tr.room, tr.teacher ].nonNulls.join(' — '),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.secondary,
+                ),
+            ),
+        )
+        .cast<Widget>()
+        .toList()
+    );
+}
+
+class _ClassNote extends StatelessWidget {
+    const _ClassNote({required this.note});
+
+    final String note;
+
+    @override
+    Widget build(BuildContext context) => Text(
+        note,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).colorScheme.primary,
+        ),
+    );
+}
+
+class _ClassBuilding extends StatelessWidget {
+    const _ClassBuilding({required this.building});
+
+    final String building;
+
+    @override
+    Widget build(BuildContext context) => Text(
+        building,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.secondary,
+        ),
+    );
+}
+
+class _ClassTime extends StatelessWidget {
+    const _ClassTime({required this.begin, required this.end});
+
+    final String begin;
+    final String end;
+
+    // double getTimeWidth() => textWidth(
+    //     context,
+    //     const TimeOfDay(hour: 0, minute: 0).format24hour(),
+    //     Theme.of(context).textTheme.titleMedium ?? const TextStyle(fontSize: 16.0),
+    // );
+
+    @override
+    Widget build(BuildContext context) => SizedBox(
+        //TODO: width: getTimeWidth() + MediaQuery.textScalerOf(context).scale(8.0),
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+                // TODO: Add TextOverflow.
+                Text(
+                    begin,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                    ),
+                ),
+                Text(
+                    end,
+                    overflow: TextOverflow.fade,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.secondary,
+                    ),
+                ),
+            ],
+        ),
+    );
+}
+
+class _ClassType extends StatelessWidget {
+    const _ClassType({required this.type});
+
+    final ClassType type;
+
+    @override
+    Widget build(BuildContext context) => Row(
+        children: <Widget>[
+            Padding(
+                padding: EdgeInsets.symmetric(
+                    horizontal: MediaQuery.textScalerOf(context).scale(4.0)
+                ),
+                child: Material(
+                    type: MaterialType.circle,
+                    color: Colors.transparent,
+                    elevation: 1,
+                    child: ColoredElevatedCircle(
+                        color: type.color,
+                        size: MediaQuery.textScalerOf(context).scale(
+                            Theme.of(context).textTheme.bodySmall?.fontSize ?? 14.0,
+                        ),
+                    ),
+                ),
+            ),
+
+            Text(
+                type.label,
+                softWrap: false,
+                overflow: TextOverflow.fade,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.secondary,
+                ),
+            ),
+        ],
+    );
+}
+
 class ClassCardTile extends StatelessWidget {
-    ClassCardTile({required this.haveClass,
-                   required this.color,
+    ClassCardTile({super.key,
+                   required this.haveClass,
                    required this.number,
                    required this.begin,
                    required this.end,
@@ -32,11 +230,9 @@ class ClassCardTile extends StatelessWidget {
                    required this.type,
                    required this.note,
                    required this.borderRadius,
-                   required this.horizontalMargin,
-                   super.key});
+                   required this.horizontalMargin});
 
     final bool haveClass;
-    final Color color;
     final int number;
     final String begin;
     final String end;
@@ -50,176 +246,49 @@ class ClassCardTile extends StatelessWidget {
 
     @override
     Widget build(BuildContext context) {
-        Widget classNumber(int number) {
-            const strings = [
-                'Первая',
-                'Вторая',
-                'Третья',
-                'Четвёртая',
-                'Пятая',
-                'Шестая',
-                'Седьмая',
-                'Восьмая',
-                'Девятая',
-                'Десятая',
-                'Одиннадцатая',
-                'Двенадцатая',
-            ];
+        final content = !haveClass || name == null
+        ? () => <Widget>[
+            _ClassNumber(number: number),
+            const _ClassName(name: 'Окно'),
+        ]
+        : () => <Widget>[
+            Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                    _ClassNumber(number: number),
 
-            return Container(
-                padding: EdgeInsets.symmetric(
-                    vertical: MediaQuery.textScalerOf(context).scale(1.0),
-                    horizontal: MediaQuery.textScalerOf(context).scale(4.0)
-                ),
-                decoration: ShapeDecoration(
-                    color: Theme.of(context).colorScheme.tertiary.withOpacity(0.15),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(MediaQuery.textScalerOf(context).scale(16.0)),
-                    ),
-                ),
-                child: Text(
-                    '${number < strings.length ? strings[number - 1] : number} пара',
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall
-                ),
-            );
-        }
+                    if (type != null)
+                    _ClassType(type: type!),
+                ],
+            ),
 
-        Widget className(String name) => Text(
-            name,
-            maxLines: 2,
-            softWrap: true,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-            )
-        );
+            _ClassName(name: name!),
 
-        Widget classTeachersAndRooms(List<TeacherAndRoom?> teachersAndRooms) {
-            final tr = teachersAndRooms.nonNulls.where((e) => (e.room != null || e.teacher != null));
+            if (teachersAndRooms.nonNulls.isNotEmpty)
+            _ClassTeachersAndRooms(teachersAndRooms: teachersAndRooms.nonNulls.toList()),
 
-            return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: tr.map(
-                    (tr) => Text(
-                        [ tr.room, tr.teacher ].nonNulls.join(' — '),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.secondary,
-                        ),
-                    )
-                )
-                .cast<Widget>()
-                .toList()
-            );
-        }
+            if (building != null)
+            _ClassBuilding(building: building!),
 
-        Widget classNote(String note) => Text(
-            note,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-            )
-        );
+            if (note != null)
+            _ClassNote(note: note!),
+        ];
 
-        Widget classType(ClassType type) => Row(
-            children: <Widget>[
-                Padding(
-                    padding: EdgeInsets.symmetric(horizontal: MediaQuery.textScalerOf(context).scale(4.0)),
-                    child: Icon(
-                        Icons.circle,
-                        color: type.color,
-                        size: MediaQuery.textScalerOf(context).scale(
-                            Theme.of(context).textTheme.bodySmall?.fontSize ?? 14.0,
-                        ),
-                    ),
-                ),
-
-                Text(
-                    type.name,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.secondary,
-                    )
-                ),
-            ],
-        );
-
-        Widget classBuilding(String building) => Text(
-            building,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.secondary,
-            )
-        );
-
-        double getTimeWidth() => textWidth(
-            context,
-            const TimeOfDay(hour: 0, minute: 0).format24hour(),
-            Theme.of(context).textTheme.titleMedium ?? const TextStyle(fontSize: 16.0)
-        );
-
-        return Card(
-            color: color,
-            elevation: 0, // We do many magic with colors and theirs opacity, so set elevation to zero to get more control on color.
-            margin: EdgeInsets.symmetric(horizontal: MediaQuery.textScalerOf(context).scale(horizontalMargin)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MediaQuery.textScalerOf(context).scale(borderRadius))),
-            child: Padding(
-                padding: EdgeInsets.all(MediaQuery.textScalerOf(context).scale(8.0)),
+        return Padding(
+            padding: EdgeInsets.all(MediaQuery.textScalerOf(context).scale(8.0)),
+            child: IntrinsicHeight( // TODO: Solve other way, probably very slow. Required for VerticalDivider().
                 child: Row(
                     children: <Widget>[
-                        SizedBox(
-                            width: getTimeWidth(),
-                            child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                    Text(
-                                        begin,
-                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                            color: Theme.of(context).colorScheme.primary,
-                                        ),
-                                    ),
-                                    Text(
-                                        end,
-                                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                            color: Theme.of(context).colorScheme.secondary,
-                                        ),
-                                    ),
-                                ],
-                            ),
-                        ),
+                        _ClassTime(begin: begin, end: end),
 
-                        SizedBox(width: MediaQuery.textScalerOf(context).scale(8.0)),
+                        const VerticalDivider(),
 
-                        Expanded( // Need for Spacer() in Row() widget.
+                        Expanded( // Need for spaces between in Row() widget.
                             child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: !haveClass
-                                ? <Widget>[
-                                    classNumber(number),
-                                    className('Окно'),
-                                ]
-                                : <Widget>[
-                                    Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: <Widget>[
-                                            classNumber(number),
-                                            if (type != null)
-                                            classType(type!),
-                                        ],
-                                    ),
-
-                                    className(name!),
-
-                                    if (teachersAndRooms.nonNulls.isNotEmpty)
-                                    classTeachersAndRooms(teachersAndRooms),
-
-                                    if (building != null)
-                                    classBuilding(building!),
-
-                                    if (note != null)
-                                    classNote(note!),
-                                ],
+                                children: content()
                             ),
                         ),
                     ],
@@ -229,31 +298,39 @@ class ClassCardTile extends StatelessWidget {
     }
 }
 
+const kClassCardHorizontalMargin = 8.0;
+const kClassCardBorderRadius = 8.0;
+
 class ClassCard extends StatelessWidget {
     const ClassCard({super.key,
+                     this.haveClass = true,
                      required this.classes,
                      required this.index,
-                     required this.showProgress,
-                     required this.horizontalMargin,
-                     required this.borderRadius});
+                     this.showProgress = false,
+                     this.horizontalMargin = 0.0,
+                     this.borderRadius = 0.0,
+                     this.onTap});
 
     final List<Class> classes;
     final int index;
     final bool showProgress;
     final double horizontalMargin;
     final double borderRadius;
+    final bool haveClass;
+    final VoidCallback? onTap;
 
     @override
     Widget build(BuildContext context) {
         final class0 = classes[index];
-        final haveClass = class0.name != null;
-        final begin = haveClass ? class0.start.format24hour() : (index > 0                  ? classes[index - 1].end.format24hour()   : null);
-        final end   = haveClass ? class0.end.format24hour()   : (index + 1 < classes.length ? classes[index + 1].start.format24hour() : null);
+        final have = haveClass || class0.name != null;
+        final begin = have ? class0.start.format24hour() : (index > 0                  ? classes[index - 1].end.format24hour()   : null);
+        final end   = have ? class0.end.format24hour()   : (index + 1 < classes.length ? classes[index + 1].start.format24hour() : null);
         final cardColor = Theme.of(context).colorScheme.primaryContainer;
+        final borderRadius = MediaQuery.textScalerOf(context).scale(this.borderRadius);
+        final horizontalMargin = MediaQuery.textScalerOf(context).scale(this.horizontalMargin);
 
-        final card = ClassCardTile(
-            haveClass: haveClass,
-            color: showProgress ? Colors.transparent : cardColor,
+        final cardTile = ClassCardTile(
+            haveClass: have,
             number: class0.number,
             begin: begin ?? '--:--',
             end: end ?? '--:--',
@@ -266,26 +343,65 @@ class ClassCard extends StatelessWidget {
             horizontalMargin: horizontalMargin,
         );
 
-        // If not showing progress, then do not build stack with extra unused stuff.
-        if (!showProgress) {
-            return card;
-        } else {
-            return Stack(
-                children: <Widget>[
-                    Positioned.fill(
-                        child: Container(
-                            margin: EdgeInsets.symmetric(horizontal: MediaQuery.textScalerOf(context).scale(horizontalMargin)),
-                            child: LinearProgressIndicator(
-                                backgroundColor: cardColor,
-                                color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.15),
-                                value: TimeOfDay.now().differenceInMinutes(class0.start) / class0.end.differenceInMinutes(class0.start),
-                                borderRadius: BorderRadius.circular(MediaQuery.textScalerOf(context).scale(borderRadius)),
-                            )
-                        )
+        final cardContent = !showProgress
+        ? cardTile // If not showing progress, then do not build stack with extra unused stuff.
+        : Stack(
+            children: <Widget>[
+                Positioned.fill(
+                    child: LinearProgressIndicator(
+                        backgroundColor: Colors.transparent,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(1 / 8),
+                        value: TimeOfDay.now().differenceInMinutes(class0.start) / class0.end.differenceInMinutes(class0.start),
+                        borderRadius: BorderRadius.circular(borderRadius),
                     ),
-                    card,
-                ],
-            );
-        }
+                ),
+                cardTile,
+            ],
+        );
+
+        return Card(
+            color: cardColor,
+            margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(borderRadius)),
+            child: onTap == null
+            ? cardContent
+            : InkWell(
+                borderRadius: BorderRadius.circular(borderRadius),
+                onTap: onTap,
+                child: cardContent,
+            ),
+        );
+
+        // return card;
+
+        // return Card(
+        //     color: cardColor,
+        //     margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
+        //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(borderRadius)),
+        //     child: ClipRRect(
+        //         borderRadius: BorderRadius.circular(borderRadius),
+        //         child: Material(
+        //             color: Colors.transparent,
+        //             child: InkWell(
+        //                 onTap: onTap,
+        //                 child: !showProgress
+        //                 ? card // If not showing progress, then do not build stack with extra unused stuff.
+        //                 : Stack(
+        //                     children: <Widget>[
+        //                         Positioned.fill(
+        //                             child: LinearProgressIndicator(
+        //                                 backgroundColor: Colors.transparent,
+        //                                 color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.15),
+        //                                 value: TimeOfDay.now().differenceInMinutes(class0.start) / class0.end.differenceInMinutes(class0.start),
+        //                                 borderRadius: BorderRadius.circular(borderRadius),
+        //                             ),
+        //                         ),
+        //                         card,
+        //                     ],
+        //                 ),
+        //             ),
+        //         ),
+        //     ),
+        // );
     }
 }

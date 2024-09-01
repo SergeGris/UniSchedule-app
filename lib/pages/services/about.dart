@@ -1,4 +1,3 @@
-
 // Copyright (C) 2024 Sergey Sushilin <sushilinsergey@yandex.ru>.
 // This file is part of UniSchedule.
 
@@ -20,7 +19,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -29,9 +27,32 @@ import 'package:vector_graphics/vector_graphics.dart';
 import '../../configuration.dart';
 import '../../widgets/overflowed_text.dart';
 import '../../utils.dart';
+import './animated_logo.dart';
 
 final packageInfoProvider = FutureProvider<PackageInfo>((ref) => PackageInfo.fromPlatform());
-final copyingProvider = FutureProvider<String>((ref) => rootBundle.loadString("assets/copying.md"));
+final copyingProvider = FutureProvider<String>((ref) => rootBundle.loadString('assets/copying.md'));
+
+class VersionTile extends ConsumerWidget {
+    const VersionTile({super.key});
+
+    @override
+    Widget build(BuildContext context, WidgetRef ref) {
+        return ref.watch(packageInfoProvider).when(
+            data: (packageInfo) => ListTile(
+                title: const Text(
+                    'Версия приложения:',
+                    textAlign: TextAlign.center,
+                ),
+                subtitle: Text(
+                    '${packageInfo.version} (${packageInfo.buildNumber})',
+                    textAlign: TextAlign.center,
+                ),
+            ),
+            error: (error, stack) => const SizedBox.shrink(),
+            loading: () => const SizedBox.shrink(),
+        );
+    }
+}
 
 class CopyingPage extends ConsumerWidget {
     const CopyingPage({super.key});
@@ -43,19 +64,22 @@ class CopyingPage extends ConsumerWidget {
                 title: OverflowedText(
                     text: 'GNU General Public License 3',
                     shortText: 'GNU GPLv3',
-                    style: Theme.of(context).textTheme.titleLarge ?? TextStyle() // TODO
+                    style: Theme.of(context).textTheme.titleLarge ?? const TextStyle()
                 ),
             ),
 
             body: ref.watch(copyingProvider).when(
-                data: (content) => Markdown(
-                    data: content,
-                    onTapLink: (text, href, title) {
-                        if (href != null) {
-                            launchLink(context, href);
-                        }
-                    },
-                    shrinkWrap: true,
+                data: (content) => SelectionArea(
+                    child: Markdown(
+                        selectable: false,
+                        data: content,
+                        onTapLink: (text, href, title) async {
+                            if (href != null) {
+                                await launchLink(context, href);
+                            }
+                        },
+                        shrinkWrap: true,
+                    ),
                 ),
 
                 error: (error, stack) => Center(
@@ -67,11 +91,15 @@ class CopyingPage extends ConsumerWidget {
                                 textAlign: TextAlign.center,
                                 style: Theme.of(context).textTheme.headlineMedium
                             ),
-                            Linkify(
-                                text: 'Вы можете ознакомиться с текстом лицензии по ссылке: https://www.gnu.org/licenses/gpl-3.0-standalone.html',
+
+                            Text(
+                                'Вы можете ознакомиться с текстом лицензии по ссылке:',
                                 textAlign: TextAlign.center,
                                 style: Theme.of(context).textTheme.titleMedium,
-                                onOpen: (link) => launchLink(context, link.url),
+                            ),
+
+                            Link(
+                                text: 'https://www.gnu.org/licenses/gpl-3.0-standalone.html',
                             ),
                         ]
                     )
@@ -89,18 +117,12 @@ class AboutPage extends ConsumerWidget {
     @override
     Widget build(BuildContext context, WidgetRef ref) {
         return Scaffold(
-            appBar: AppBar(
-                title: const Text('О UniSchedule'),
-                shadowColor: Theme.of(context).shadowColor,
-            ),
+            appBar: AppBar(title: const Text('О UniSchedule')),
             body: ListView(
                 children: <Widget>[
-                    Center(
-                        child: SizedBox(
-                            height: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) * 0.5,
-                            width: min(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height) * 0.5 ,
-                            child: Image.asset('assets/images/icon.png'),
-                        )
+                    AnimatedLogo(
+                        'assets/images/icon.png',
+                        size: MediaQuery.of(context).size.shortestSide * 0.5
                     ),
 
                     Text(
@@ -115,94 +137,118 @@ class AboutPage extends ConsumerWidget {
                         textAlign: TextAlign.center,
                     ),
 
-                    Container(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
+                    ListTile(
+                        title: Text(
                             style: Theme.of(context).textTheme.titleMedium,
                             textAlign: TextAlign.center,
-                            'UniSchedule — это бесплатное приложение для студентов, в котором можно найти множество полезных сервисов. Здесь уже доступен просмотр расписания, схемы этажей факультета, а также полезные ссылки. В скором времени планируется добавить много нового функционала!'
+                            'UniSchedule — это бесплатное приложение для студентов, в котором можно найти множество полезных сервисов. Здесь уже доступен просмотр расписания, схемы этажей факультета, а также полезные ссылки!'
+                        ),
+                    ),
+
+                    ListTile(
+                        title: Text.rich(
+                            textAlign: TextAlign.center,
+                            TextSpan(
+                                children: <InlineSpan>[
+                                    const TextSpan(
+                                        text: 'Нравится приложение? Поставьте '
+                                    ),
+
+                                    WidgetSpan(
+                                        alignment: PlaceholderAlignment.middle,
+                                        child: Icon(
+                                            Icons.star,
+                                            color: Color(0xFFFFCC00),
+                                        ),
+                                    ),
+
+                                    const TextSpan(
+                                        text: ' на ',
+                                    ),
+
+                                    LinkSpan(
+                                        text: 'GitHub',
+                                        link: 'https://github.com/SergeGris/UniSchedule-app',
+                                        onTap: (link) async => launchLink(context, link),
+                                    ),
+
+                                    const TextSpan(
+                                        text: '!',
+                                    ),
+                                ],
+                            ),
+                        ),
+
+                        subtitle: Text(
+                            textAlign: TextAlign.center,
+                            'Приложение распростроняется со свободным и открытым исходным кодом, вы всегда можете внести свой вклад в его развитие.'
                         ),
                     ),
 
                     const Divider(),
 
-                    ref.watch(packageInfoProvider).when(
-                        //TODO Copy on long press?
-                        data: (packageInfo) => ListTile(
-                            title: const Text(textAlign: TextAlign.center, 'Версия приложения'),
-                            subtitle: Text(textAlign: TextAlign.center, 'Версия: ${packageInfo.version} (${packageInfo.buildNumber})'),
-                        ),
-                        error: (error, stack) => const SizedBox.shrink(),
-                        loading: () => const SizedBox.shrink(),
+                    const VersionTile(),
+
+                    const ListTile(
+                        title: Text(textAlign: TextAlign.center, 'Автор: Сергей Сушилин, ВМК МГУ'),
+                        // subtitle: UniScheduleConfiguration.authorEmailAddress == null
+                        // ? null
+                        // : Column(
+                        //     crossAxisAlignment: CrossAxisAlignment.center,
+                        //     children: <Widget>[
+                        //         const Text(
+                        //             'По всем вопросам писать на почту:',
+                        //             textAlign: TextAlign.center
+                        //         ),
+
+                        //         Link(
+                        //             text: UniScheduleConfiguration.authorEmailAddress!,
+                        //         ),
+                        //     ],
+                        // ),
                     ),
+
+                    // if (UniScheduleConfiguration.supportedBy.isNotEmpty)
+                    // ListTile(
+                    //     title: const Text(textAlign: TextAlign.center, 'Проект поддержали:'),
+                    //     subtitle: Column(
+                    //         crossAxisAlignment: CrossAxisAlignment.center,
+                    //         children: UniScheduleConfiguration.supportedBy.map(
+                    //             (e) => Text(
+                    //                 e.name + (e.amount != 0 ? ' — ${e.amount} ₽' : ''),
+                    //                 textAlign: TextAlign.center,
+                    //             )
+                    //         )
+                    //         .toList()
+                    //     ),
+                    // ),
+
+                    // if (UniScheduleConfiguration.channelLink != null)
+                    // Column(
+                    //     crossAxisAlignment: CrossAxisAlignment.center,
+                    //     children: <Widget>[
+                    //         Text(
+                    //             'Канал в Telegram:',
+                    //             textAlign: TextAlign.center,
+                    //             style: Theme.of(context).textTheme.bodyLarge,
+                    //         ),
+
+                    //         Link(text: UniScheduleConfiguration.channelLink!),
+                    //     ],
+                    // ),
 
                     ListTile(
-                        title: const Text(textAlign: TextAlign.center, 'Автор: Сергей Сушилин, ВМК МГУ'),
-                        subtitle: UniScheduleConfiguration.authorEmailAddress != null
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: <Widget>[
-                                const Text(
-                                    'По всем вопросам писать на почту:',
-                                    textAlign: TextAlign.center
-                                ),
-                                Linkify(
-                                    onOpen: (link) async => launchLink(context, link.url),
-                                    text: UniScheduleConfiguration.authorEmailAddress!,
-                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        fontSize: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14.0),
-                                    ),
-                                ),
-                            ],
-                        )
-                        : null,
-                    ),
-
-                    if (UniScheduleConfiguration.supportedBy.isNotEmpty)
-                    ListTile(
-                        title: const Text(textAlign: TextAlign.center, 'Проект поддержали:'),
-                        subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: UniScheduleConfiguration.supportedBy.map(
-                                (e) => Text(
-                                    e.name + (e.amount != 0 ? ' — ${e.amount} ₽' : ''),
-                                    textAlign: TextAlign.center,
-                                )
-                            )
-                            .toList()
-                        ),
-                    ),
-
-                    if (UniScheduleConfiguration.channelLink != null)
-                    Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                            Text(
-                                'Канал в Telegram: ',
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.bodyLarge,
+                        title: SizedBox.square(
+                            dimension: min(80, MediaQuery.of(context).size.shortestSide),
+                            child: const SvgPicture(
+                                AssetBytesLoader('assets/images/services/GPLv3Logo.svg.vec'),
                             ),
-                            Linkify(
-                                onOpen: (link) async => launchLink(context, link.url),
-                                text: UniScheduleConfiguration.channelLink!,
-                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontSize: MediaQuery.textScalerOf(context).scale(Theme.of(context).textTheme.bodyMedium?.fontSize ?? 16.0),
-                                ),
-                            ),
-                        ],
-                    ),
-
-                    ListTile(
-                        title: Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
-                            child: SizedBox(
-                                height: min(80, min(MediaQuery.of(context).size.height, MediaQuery.of(context).size.width)),
-                                width: min(80, min(MediaQuery.of(context).size.height, MediaQuery.of(context).size.width)),
-                                child: const SvgPicture(AssetBytesLoader('assets/images/services/GPLv3Logo.svg.vec')),
-                            )
                         ),
                         subtitle: const Text(textAlign: TextAlign.center, 'Лицензия приложения'),
-                        onTap: () async => Navigator.push(context, MaterialPageRoute(builder: (context) => const CopyingPage())),
+                        onTap: () async => AnimatedNavigator.push(
+                            context,
+                            (context) => const CopyingPage(),
+                        ),
                     ),
                 ],
             ),

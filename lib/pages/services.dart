@@ -24,23 +24,24 @@ import 'package:vector_graphics/vector_graphics.dart';
 import './services/about.dart';
 import './services/map.dart';
 import './services/settings.dart';
+import './services/install.dart';
 
 import '../configuration.dart';
 import '../provider.dart';
 import '../utils.dart';
-import './webview/webview.dart';
+
+// Conditional imports based on the platform
+import 'common.dart' if (dart.library.html) 'web.dart';
 
 class ServiceButton extends StatelessWidget {
     const ServiceButton({super.key,
                          required this.assetPath,
-                         required this.subtitle,
-                         this.fullname,
+                         required this.name,
                          required this.onPressed});
 
     final String assetPath;
-    final String subtitle;
-    final String? fullname;
-    final void Function() onPressed;
+    final String name;
+    final VoidCallback onPressed;
 
     @override
     Widget build(BuildContext context) {
@@ -51,58 +52,108 @@ class ServiceButton extends StatelessWidget {
             // the tooltip manually when trigger mode is set to manual.
             key: tooltipkey,
             triggerMode: TooltipTriggerMode.manual,
-            message: fullname ?? subtitle,
+            message: name,
 
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(MediaQuery.textScalerOf(context).scale(8.0)),
-                color: Theme.of(context).colorScheme.primaryContainer,
+                color: Theme.of(context).colorScheme.secondaryContainer,
             ),
 
             textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                color: Theme.of(context).colorScheme.onSecondaryContainer,
             ),
 
             padding: const EdgeInsets.all(8.0),
             preferBelow: true,
-            verticalOffset: MediaQuery.of(context).size.width * 0.2,
+            verticalOffset: MediaQuery.of(context).size.width * 0.17, // TODO: IDK why 0.17
 
-            child: TextButton(
-                style: TextButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                            MediaQuery.textScalerOf(context).scale(8.0)
-                        )
-                    ),
-                    padding: const EdgeInsets.all(8.0),
-                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                ),
+            child: ElevatedButton(
                 onPressed: onPressed,
                 // Show Tooltip programmatically on button tap.
                 onLongPress: () => tooltipkey.currentState?.ensureTooltipVisible(),
-                child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                        SizedBox(
-                            height: MediaQuery.of(context).size.width * 0.25,
-                            width: MediaQuery.of(context).size.width * 0.25,
-                            child: SvgPicture(AssetBytesLoader(assetPath))
-                        ),
-
-                        Flexible(
-                            child: Text(
-                                subtitle,
-                                textAlign: TextAlign.center,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 2,
-                                softWrap: true,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: Theme.of(context).colorScheme.primary
-                                ),
+                style: ButtonStyle(
+                    shape: MaterialStatePropertyAll(
+                        RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                                MediaQuery.textScalerOf(context).scale(8.0)
                             ),
-                        ),
-                    ],
+                        )
+                    ),
+
+                    padding: const MaterialStatePropertyAll(
+                        EdgeInsets.zero,
+                    ),
+
+                    backgroundColor: MaterialStatePropertyAll(
+                        Theme.of(context).colorScheme.primaryContainer,
+                    ),
                 ),
+                child: Padding(
+                    padding: EdgeInsets.all(MediaQuery.textScalerOf(context).scale(8.0)),
+                    child: SizedBox.square(
+                        dimension: MediaQuery.of(context).size.width / 3,
+                        child: SvgPicture(AssetBytesLoader(assetPath))
+                    ),
+                ),
+
+                // child: Center(
+                //     child: SizedBox(
+                //     height: MediaQuery.of(context).size.width * 0.25,
+                //     width: MediaQuery.of(context).size.width * 0.25,
+                //     child: SvgPicture(AssetBytesLoader(assetPath))
+                //     )
+                // ),
+                // footer: GridTileBar(
+                //     subtitle: Text(
+                //         subtitle,
+                //         textAlign: TextAlign.center,
+                //         overflow: TextOverflow.ellipsis,
+                //         maxLines: 1,
+                //         softWrap: true,
+                //         style: Theme.of(context).textTheme.subtitleMedium?.copyWith(
+                //             color: Theme.of(context).colorScheme.primary
+                //         ),
+                //     ),
+                // ),
             ),
+
+            // TextButton(
+            //     style: TextButton.styleFrom(
+            //         shape: RoundedRectangleBorder(
+            //             borderRadius: BorderRadius.circular(
+            //                 MediaQuery.textScalerOf(context).scale(8.0)
+            //             )
+            //         ),
+            //         padding: const EdgeInsets.all(8.0),
+            //         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            //     ),
+            //     onPressed: onPressed,
+            //     // Show Tooltip programmatically on button tap.
+            //     onLongPress: () => tooltipkey.currentState?.ensureTooltipVisible(),
+            //     child: Column(
+            //         mainAxisSize: MainAxisSize.min,
+            //         children: <Widget>[
+            //             SizedBox(
+            //                 height: MediaQuery.of(context).size.width * 0.25,
+            //                 width: MediaQuery.of(context).size.width * 0.25,
+            //                 child: SvgPicture(AssetBytesLoader(assetPath))
+            //             ),
+
+            //             Flexible(
+            //                 child: Text(
+            //                     subtitle,
+            //                     textAlign: TextAlign.center,
+            //                     overflow: TextOverflow.ellipsis,
+            //                     maxLines: 2,
+            //                     softWrap: true,
+            //                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            //                         color: Theme.of(context).colorScheme.primary
+            //                     ),
+            //                 ),
+            //             ),
+            //         ],
+            //     ),
+            // ),
         );
     }
 }
@@ -112,23 +163,21 @@ class ServiceGrid extends StatelessWidget {
     final List<Widget> children;
 
     @override
-    Widget build(BuildContext context) {
-        return GridView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                // width / height: fixed for *all* items
-                childAspectRatio: 3 / 4,
-            ),
-            itemBuilder: (context, i) => children[i],
-            itemCount: children.length,
-            shrinkWrap: true,
-            primary: true,
-            padding: EdgeInsets.all(MediaQuery.textScalerOf(context).scale(8.0)),
-        );
-    }
+    Widget build(BuildContext context) => GridView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: MediaQuery.textScalerOf(context).scale(8.0),
+            crossAxisSpacing: MediaQuery.textScalerOf(context).scale(8.0),
+            // width / height: fixed for *all* items
+            //childAspectRatio: 3 / 4,
+        ),
+        itemBuilder: (context, i) => children[i],
+        itemCount: children.length,
+        shrinkWrap: true,
+        primary: true,
+        padding: EdgeInsets.all(MediaQuery.textScalerOf(context).scale(8.0)),
+    );
 }
 
 class ServiceTitle extends StatelessWidget {
@@ -136,16 +185,14 @@ class ServiceTitle extends StatelessWidget {
     final String text;
 
     @override
-    Widget build(BuildContext context) {
-        return Center(
-            child: Text(
-                text,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                )
+    Widget build(BuildContext context) => Center(
+        child: Text(
+            text,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
             )
-        );
-    }
+        )
+    );
 }
 
 class ServiceSubtitle extends StatelessWidget {
@@ -153,37 +200,38 @@ class ServiceSubtitle extends StatelessWidget {
     final String text;
 
     @override
-    Widget build(BuildContext context) {
-        return Center(
-            child: Text(
-                text,
-                style: Theme.of(context).textTheme.titleMedium,
-            )
-        );
-    }
+    Widget build(BuildContext context) => Center(
+        child: Text(
+            text,
+            style: Theme.of(context).textTheme.titleMedium,
+        )
+    );
 }
 
-class GamesPage extends StatelessWidget {
-    const GamesPage({super.key});
+class ServiceTile extends StatelessWidget {
+    const ServiceTile({super.key, required this.iconData, required this.text, required this.onTap});
+
+    final IconData iconData;
+    final String text;
+    final VoidCallback onTap;
 
     @override
-    Widget build(BuildContext context) {
-        final children = <Widget>[
-            ServiceButton(
-                assetPath: 'assets/images/services/trex.svg.vec',
-                subtitle: 'Динозаврик',
-                onPressed: () async => Navigator.push<void>(
-                    context,
-                    MaterialPageRoute(builder: (context) => const WebViewDino())
-                ),
+    Widget build(BuildContext context) => ListTile(
+        leading: Icon(
+            iconData,
+            size: MediaQuery.textScalerOf(context).scale(
+                Theme.of(context).textTheme.titleLarge?.fontSize ?? 16.0,
             ),
-        ];
-
-        return Scaffold(
-            appBar: AppBar(title: const Text('Игры')),
-            body: ServiceGrid(children: children)
-        );
-    }
+            color: Theme.of(context).colorScheme.primary,
+        ),
+        title: Text(
+            text,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+            )
+        ),
+        onTap: onTap,
+    );
 }
 
 class ServicesPage extends ConsumerWidget {
@@ -191,59 +239,48 @@ class ServicesPage extends ConsumerWidget {
 
     @override
     Widget build(BuildContext context, WidgetRef ref) {
-        Future openLinkInWebView(final BuildContext context, final url) async {
-            await Navigator.push<void>(
-                context,
-                MaterialPageRoute(builder: (context) => WebView(url: url))
-            );
-        }
-
         final useful = <Widget>[
             ServiceButton(
                 assetPath: 'assets/images/services/courses.svg.vec',
-                subtitle: 'МФК',
-                fullname: 'Межфакультетские курсы',
+                name: 'Межфакультетские курсы',
                 onPressed: () async => openLinkInWebView(context, 'https://lk.msu.ru/course'),
             ),
 
             ServiceButton(
                 assetPath: 'assets/images/services/light-cmc-logo.svg.vec',
-                subtitle: 'Сайт ВМК',
-                fullname: 'Официальный сайт факультета ВМК МГУ',
+                name: 'Официальный сайт факультета ВМК МГУ',
                 onPressed: () async => openLinkInWebView(context, 'https://cs.msu.ru/'),
             ),
 
             ServiceButton(
                 assetPath: 'assets/images/services/join.svg.vec',
-                subtitle: 'Профсоюз',
-                fullname: 'Сайт профсоюза МГУ',
+                name: 'Сайт профсоюза МГУ',
                 onPressed: () async => openLinkInWebView(context, 'https://lk.msuprof.com'),
             ),
 
             ServiceButton(
                 assetPath: 'assets/images/services/map.svg.vec',
-                subtitle: 'Планы этажей',
-                onPressed: () async => Navigator.push<void>(
+                name: 'Планы этажей',
+                onPressed: () async => AnimatedNavigator.push<void>(
                     context,
-                    MaterialPageRoute(builder: (context) => const MapRoute())
+                    (context) => const MapRoute()
                 ),
             ),
 
-            ServiceButton(
-                assetPath: 'assets/images/services/trex.svg.vec',
-                subtitle: 'Игры!',
-                onPressed: () async => Navigator.push<void>(
-                    context,
-                    MaterialPageRoute(builder: (context) => const GamesPage())
-                ),
-            ),
+            // ServiceButton(
+            //     assetPath: 'assets/images/services/trex.svg.vec',
+            //     subtitle: 'Игры!',
+            //     onPressed: () async => AnimatedNavigator.push<void>(
+            //         context,
+            //         (context) => const GamesPage()
+            //     ),
+            // ),
 
             if (UniScheduleConfiguration.studentDiskLink != null)
             ServiceButton(
                 assetPath: 'assets/images/services/yandex_disk.svg.vec',
-                subtitle: 'Студ. диск',
-                fullname: 'Студенческий диск',
-                onPressed: () async => openLinkInWebView(context, UniScheduleConfiguration.studentDiskLink),
+                name: 'Студенческий диск',
+                onPressed: () async => openLinkInWebView(context, UniScheduleConfiguration.studentDiskLink!),
             ),
         ];
 
@@ -251,14 +288,14 @@ class ServicesPage extends ConsumerWidget {
             if (UniScheduleConfiguration.supportVariants.isNotEmpty)
             ServiceButton(
                 assetPath: 'assets/images/services/money.svg.vec',
-                subtitle: 'Поддержать проект',
+                name: 'Поддержать проект',
                 onPressed: () async => showDialog<void>(
                     context: context,
                     builder: (final context) => AlertDialog(
                         title: const Text('Поддержать проект'),
                         content: Text(UniScheduleConfiguration.supportGoals),
                         actions: UniScheduleConfiguration.supportVariants.map(
-                            (e) => ElevatedButton(
+                            (e) => TextButton(
                                 child: Text(e.label),
                                 onPressed: () => launchLink(context, e.link)
                             )
@@ -271,47 +308,51 @@ class ServicesPage extends ConsumerWidget {
             if (UniScheduleConfiguration.feedbackLink != null)
             ServiceButton(
                 assetPath: 'assets/images/services/feedback.svg.vec',
-                subtitle: 'Форма обратной связи',
-                onPressed: () => openLinkInWebView(context, UniScheduleConfiguration.feedbackLink),
+                name: 'Форма обратной связи',
+                onPressed: () async => openLinkInWebView(context, UniScheduleConfiguration.feedbackLink!),
             ),
 
             ServiceButton(
                 assetPath: 'assets/images/services/info.svg.vec',
-                subtitle: 'О UniSchedule',
-                onPressed: () async => Navigator.push<void>(context, MaterialPageRoute(builder: (context) => const AboutPage())),
+                name: 'О UniSchedule',
+                onPressed: () async => AnimatedNavigator.push<void>(
+                    context, (context) => const AboutPage()
+                ),
             ),
         ];
 
         return RefreshIndicator(
-            onRefresh: () => refreshConfiguration(ref),
+            onRefresh: () async => refreshConfiguration(ref),
             child: ref.watch(uniScheduleConfigurationProvider).unwrapPrevious().when(
-                loading: ()           => getLoadingIndicator(() => refreshSchedule(ref)),
+                loading: ()           => getLoadingIndicator(() async => refreshSchedule(ref)),
                 error: (error, stack) => getErrorContainer('Не удалось отобразить расписание'),
                 data: (_)             => ListView(
                     primary: true,
                     children: <Widget>[
                         const ServiceTitle('Полезное'),
                         ServiceGrid(children: useful),
+
                         const ServiceTitle('Приложение'),
                         ServiceGrid(children: application),
 
-                        ListTile(
-                            leading: Icon(
-                                Icons.settings,
-                                size: MediaQuery.textScalerOf(context).scale(
-                                    Theme.of(context).textTheme.titleLarge?.fontSize ?? 16.0
-                                ),
-                                color: Theme.of(context).colorScheme.primary
-                            ),
-                            title: Text(
-                                'Настройки',
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    color: Theme.of(context).colorScheme.primary
-                                )
-                            ),
-                            onTap: () async => Navigator.push<void>(
+                        const Divider(),
+
+                        ServiceTile(
+                            iconData: Icons.settings,
+                            text: 'Настройки',
+                            onTap: () async => AnimatedNavigator.push<void>(
                                 context,
-                                MaterialPageRoute(builder: (context) => const SettingsPage())
+                                (context) => const SettingsPage(),
+                            ),
+                        ),
+
+                        if (OS.isWeb)
+                        ServiceTile(
+                            iconData: Icons.system_update,
+                            text: 'Установить приложение',
+                            onTap: () async => AnimatedNavigator.push<void>(
+                                context,
+                                (context) => const InstallPage(),
                             ),
                         ),
                     ],

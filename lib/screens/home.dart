@@ -29,6 +29,9 @@ import '../scheduleloader.dart';
 import '../scheduleselector.dart';
 import '../utils.dart';
 
+// TODO
+import '../pages/creator.dart';
+
 // Возвращает строку в формате "День-недели, число месяц"
 class DateTitle extends StatelessWidget {
     const DateTitle({super.key});
@@ -68,7 +71,12 @@ class DateTitle extends StatelessWidget {
         final day     = date.day;
         final month   = months[date.month - 1];
 
-        return Text('$weekday, $day $month', style: Theme.of(context).textTheme.titleLarge);
+        return Text(
+            '$weekday, $day $month',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).colorScheme.primary
+            ),
+        );
     }
 }
 
@@ -78,9 +86,9 @@ class WeekNumber extends ConsumerWidget {
     @override
     Widget build(BuildContext context, WidgetRef ref) {
         final weekIndex = ref.watch(scheduleProvider).when<int?>(
-            loading: ()      => null,
-            error:   (e, st) => null,
-            data:    (value) => getWeekIndex(DateTime.now(), value),
+            loading: ()             => null,
+            error:   (error, stack) => null,
+            data:    (value)        => getWeekIndex(DateTime.now(), value),
         );
 
         //if (weekIndex != null)
@@ -94,15 +102,21 @@ class WeekNumber extends ConsumerWidget {
 
         return Text(
             'Идёт ${weekIndex + 1} учебная неделя',
-            style: Theme.of(context).textTheme.titleMedium
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Theme.of(context).colorScheme.secondary
+            ),
         );
     }
 }
 
 enum UniSchedulePages {
-    main,
-    schedule,
-    services,
+    main(Icons.home, 'Главная'),
+    schedule(Icons.schedule, 'Расписание'),
+    services(Icons.more_horiz, 'Сервисы');
+
+    const UniSchedulePages(this.icon, this.label);
+    final IconData icon;
+    final String label;
 }
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -113,6 +127,10 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+    // TODO: does not work properly good (on big scale factors title isn't fit. Returns height of appbar...).
+    GlobalKey _titleKey = GlobalKey();
+    double? _titleHeight;
+
     int  _selPage     = UniSchedulePages.main.index;
     bool showNextWeek = DateTime.now().weekday == DateTime.sunday;
 
@@ -133,7 +151,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 if (UniScheduleConfiguration.updateVariants.isNotEmpty
                  && (UniScheduleConfiguration.latestApplicationVersion?.greaterThan(version) ?? false)) {
-                    await showDialog(
+                    await showDialog<void>(
                         context: context,
                         builder: (final context) => AlertDialog(
                             title: const Text('Доступно обновление!'),
@@ -159,7 +177,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         if (UniScheduleConfiguration.manifestUpdated) {
             Future(
-                () async => showDialog(
+                () async => showDialog<void>(
                     context: context,
                     builder: (context) => AlertDialog(
                         title: const Text('Внимание!'),
@@ -183,42 +201,84 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             showNextWeek = DateTime.now().weekday == DateTime.sunday;
         }
 
+        WidgetsBinding.instance.addPostFrameCallback(
+            (_) {
+                final RenderBox renderBox = _titleKey.currentContext?.findRenderObject() as RenderBox;
+                // Get the height after layout
+                setState(() => _titleHeight = renderBox.size.height);
+            },
+        );
+
         return Scaffold(
             appBar: AppBar(
-                // Align title to left in iOS.
-                centerTitle: false,
-
-                title: const Column(
+                scrolledUnderElevation: 0,
+                title: Column(
+                    key: _titleKey,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                        DateTitle(),
-                        WeekNumber(),
+                        const DateTitle(),
+                        const WeekNumber(),
                     ],
                 ),
 
                 // Make it enough sized to contain to lines of title.
-                toolbarHeight: MediaQuery.textScalerOf(context).scale(48.0),
-                shadowColor: Theme.of(context).shadowColor,
+                toolbarHeight: _titleHeight,
 
                 // TODO: Something else, not tab?
-                bottom: const Tab(child: ScheduleSelectorButton())
+                bottom: const Tab(child: ScheduleSelectorButton()),
+
+                // actions: <Widget>[
+                //     //TODO
+                //     IconButton(
+                //         icon: const Icon(Icons.edit),
+                //         onPressed: () => AnimatedNavigator.push<void>(
+                //             context,
+                //             (context) => ScheduleLoader((schedule) => EditSchedulePage(schedule: schedule))
+                //         ),
+                //     ),
+                // ],
             ),
 
             bottomNavigationBar: NavigationBar(
-                destinations: pagesNavigation.values.toList(),
+                destinations: UniSchedulePages.values.map(
+                    (p) => NavigationDestination(icon: Icon(p.icon), label: p.label)
+                ).toList(),
                 selectedIndex: _selPage,
                 onDestinationSelected: (index) => setState(() => _selPage = index),
             ),
 
-            body: {
-                UniSchedulePages.main:     () => ScheduleLoader((schedule) => HomePage(schedule: schedule)),
-                UniSchedulePages.schedule: () => ScheduleLoader((schedule) => SchedulePage(schedule: schedule, showNextWeek: showNextWeek)),
-                UniSchedulePages.services: () => const ServicesPage(),
-            }[UniSchedulePages.values[_selPage]]!(),
+            body: AnimatedSwitcher(
+                duration: kAnimationDuration,
+                reverseDuration: kAnimationDuration,
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                    // Use a fade transition.
+                    return FadeTransition(
+                        opacity: animation,
+                        child: child
+
+                        // ScaleTransition(
+                        //     scale: animation,
+                        //     child: child,
+                        // ),
+                    );
+                },
+                child: <Widget Function()>[
+                    // Keys needed to allow AnimatedSwitcher() know that widgets are different and enable animation between pages.
+                    () => ScheduleLoader(key: const ValueKey(0), (schedule) => HomePage(schedule: schedule)),
+                    () => ScheduleLoader(key: const ValueKey(1), (schedule) => SchedulePage(schedule: schedule, showNextWeek: showNextWeek)),
+                    () => const ServicesPage(key: ValueKey(2)),
+                ][_selPage](),
+            ),
+
+            // body: {
+            //     UniSchedulePages.main:     () => ScheduleLoader((schedule) => HomePage(schedule: schedule)),
+            //     UniSchedulePages.schedule: () => ScheduleLoader((schedule) => SchedulePage(schedule: schedule, showNextWeek: showNextWeek)),
+            //     UniSchedulePages.services: () => const ServicesPage(),
+            // }[UniSchedulePages.values[_selPage]]!(),
 
             floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
 
-            floatingActionButton: (_selPage != UniSchedulePages.schedule.index)
+            floatingActionButton: _selPage != UniSchedulePages.schedule.index
             ? null
             : ElevatedButton(
                 onPressed: () => setState(() => showNextWeek = !showNextWeek),

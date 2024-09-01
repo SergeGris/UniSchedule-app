@@ -96,8 +96,7 @@ class SchedulePage extends ConsumerWidget {
                 ];
 
                 return Tab(
-                    // FUCK TODO fucking magic constant. Pay attention to <https://stackoverflow.com/a/62536187>
-                    height: MediaQuery.textScalerOf(context).scale(60.0),
+                    height: getScheduleTabHeight(context),
                     child: SizedBox(
                         width: max(
                             MediaQuery.of(context).size.width / week.days.length,
@@ -110,58 +109,64 @@ class SchedulePage extends ConsumerWidget {
         )
         .toList();
 
-        const horizontalMargin = 8.0;
-        const borderRadius = 8.0;
-
         return DefaultTabController(
             initialIndex: currentWeekDay % week.days.length,
             length: week.days.length,
-            child: Scaffold(
-                appBar: TabBar(
-                    tabs: weekdayTabs,
-                    isScrollable: true,
-                    tabAlignment: TabAlignment.center,
+            child: Column(
+                children: <Widget>[
+                    SizedBox(
+                        height: getScheduleTabHeight(context),
+                        child: TabBar(
+                            tabs: weekdayTabs,
+                            isScrollable: true,
+                            tabAlignment: TabAlignment.center,
 
-                    // Used for adaptivity.
-                    padding: EdgeInsets.zero,
-                    indicatorPadding: EdgeInsets.zero,
-                    labelPadding: EdgeInsets.zero,
-                ),
+                            // Used for adaptivity.
+                            padding: EdgeInsets.zero,
+                            indicatorPadding: EdgeInsets.zero,
+                            labelPadding: EdgeInsets.zero,
+                        ),
+                    ),
 
-                body: TabBarView(
-                    children: week.days.mapIndexed(
-                        (day, index) => RefreshIndicator(
-                            onRefresh: () => refreshSchedule(ref),
-                            child: day.classes.isEmpty
-                            || (schedule.studiesBegin?.isAfter(getScheduleDay(index)) ?? false)
-                            || (schedule.studiesEnd?.isBefore(getScheduleDay(index)) ?? false)
-                            ? Center(
-                                child: Text(
-                                    'Свободный день',
-                                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                        color: Theme.of(context).colorScheme.primary,
+                    Expanded(
+                        child: TabBarView(
+                            children: week.days.mapIndexed(
+                                (day, index) => RefreshIndicator(
+                                    onRefresh: () async => refreshSchedule(ref),
+                                    child: day.classes.isEmpty
+                                    || (schedule.studiesBegin?.isAfter(getScheduleDay(index)) ?? false)
+                                    || (schedule.studiesEnd?.isBefore(getScheduleDay(index)) ?? false)
+                                    ? Center(
+                                        child: Text(
+                                            'Свободный день',
+                                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                                color: Theme.of(context).colorScheme.primary,
+                                            ),
+                                        ),
+                                    )
+                                    : ListView.separated(
+                                        padding: const EdgeInsets.only(
+                                            top: 8.0,
+                                            bottom: kFloatingActionButtonMargin + 48.0, /* TODO: compute size of floating button. */
+                                        ),
+                                        itemCount: day.classes.length,
+                                        itemBuilder: (context, index) => ClassCard(
+                                            classes: day.classes,
+                                            index: index,
+                                            horizontalMargin: kClassCardHorizontalMargin,
+                                            borderRadius: kClassCardBorderRadius,
+                                        ),
+                                        separatorBuilder: (context, index) => const Divider(
+                                            indent: kClassCardHorizontalMargin + kClassCardBorderRadius,
+                                            endIndent: kClassCardHorizontalMargin + kClassCardBorderRadius,
+                                        ),
                                     ),
                                 ),
                             )
-                            : ListView.separated(
-                                padding: const EdgeInsets.only(top: 8.0, bottom: kFloatingActionButtonMargin + 48.0 /* TODO compute size of floating button. */),
-                                itemCount: day.classes.length,
-                                itemBuilder: (context, index) => ClassCard(
-                                    classes: day.classes,
-                                    index: index,
-                                    showProgress: false,
-                                    horizontalMargin: horizontalMargin,
-                                    borderRadius: borderRadius,
-                                ),
-                                separatorBuilder: (context, index) => const Divider(
-                                    indent: horizontalMargin + borderRadius,
-                                    endIndent: horizontalMargin + borderRadius,
-                                ),
-                            ),
+                            .toList(),
                         ),
-                    )
-                    .toList(),
-                ),
+                    ),
+                ],
             ),
         );
     }

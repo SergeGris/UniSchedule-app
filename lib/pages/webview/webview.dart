@@ -33,16 +33,30 @@ import 'package:share_plus/share_plus.dart';
 
 import 'long_press_alert_dialog.dart';
 
+import './custom_popup_menu_item.dart';
 import './webview_model.dart';
-import './util.dart';
 import '../../utils.dart';
+
+const defaultDownloaderSendPortName = 'downloader_send_port';
+
+abstract final class Util {
+    static bool urlIsSecure(Uri url) => (url.scheme == 'https') || isLocalizedContent(url);
+
+    static bool isLocalizedContent(Uri url) {
+        return url.scheme == 'file'
+            || url.scheme == 'chrome'
+            || url.scheme == 'data'
+            || url.scheme == 'javascript'
+            || url.scheme == 'about';
+    }
+}
 
 class WebViewDino extends StatelessWidget {
     const WebViewDino({super.key});
 
     @override
     Widget build(BuildContext context) {
-        var initialSettings = InAppWebViewSettings();
+        final initialSettings = InAppWebViewSettings();
         initialSettings.forceDark = isDarkMode(context) ? ForceDark.ON : ForceDark.OFF;
 
         return Scaffold(
@@ -86,56 +100,168 @@ final textSizeUserScript = UserScript(
 //   DownloadTaskStatus? status = DownloadTaskStatus.undefined;
 // }
 
+
+// class BrowserAppBar extends StatefulWidget implements PreferredSizeWidget {
+//   const BrowserAppBar({super.key})
+//       : preferredSize = const Size.fromHeight(kToolbarHeight);
+
+//   @override
+//   State<BrowserAppBar> createState() => _BrowserAppBarState();
+
+//   @override
+//   final Size preferredSize;
+// }
+
+// class _BrowserAppBarState extends State<BrowserAppBar> {
+//   bool _isFindingOnPage = false;
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return _isFindingOnPage
+//         ? FindOnPageAppBar(
+//             hideFindOnPage: () {
+//               setState(() {
+//                 _isFindingOnPage = false;
+//               });
+//             },
+//           )
+//         : WebViewAppBar(
+//           );
+//   }
+// }
+
 class WebView extends StatefulWidget {
     WebView({super.key, required this.url, this.windowId})
         : webViewModel = WebViewModel(url: WebUri(url));
 
     final String url;
     final WebViewModel webViewModel;
-    final windowId;
+    final int? windowId;
 
     @override
     State<WebView> createState() => _CustomInAppBrowserState();
 }
 
 enum MenuEntry {
-    changeTextSize,
-    share,
-    copyLink,
-    openInBrowser,
-    desktopMode,
-    clearCache,
+    changeTextSize(null, null),
+    copyLink(Icons.link, 'Скопировать ссылку'),
+    findOnPage(Icons.search, 'Найти на странице'),
+    openInBrowser(Icons.open_in_browser, 'Открыть в браузере'),
+    desktopMode(null, null),
+    clearCache(Icons.clear_all, 'Очистить кэш');
+
+    const MenuEntry(this.icon, this.text);
+
+    final IconData? icon;
+    final String? text;
+
+                                        // MenuItemButton(
+                                        //     child: const Row(
+                                        //         children: <Widget>[
+                                        //             Icon(Icons.share),
+                                        //             SizedBox(width: 8),
+                                        //             Text('Поделиться'),
+                                        //         ]
+                                        //     ),
+                                        //     onPressed: () async => _activate(MenuEntry.share),
+                                        // ),
+
+                                        // MenuItemButton(
+                                        //     child: const Row(
+                                        //         children: <Widget>[
+                                        //             Icon(Icons.link),
+                                        //             SizedBox(width: 8),
+                                        //             Text('Скопировать ссылку'),
+                                        //         ]
+                                        //     ),
+                                        //     onPressed: () async => _activate(MenuEntry.copyLink),
+                                        // ),
+
+                                        // MenuItemButton(
+                                        //     child: const Row(
+                                        //         children: <Widget>[
+                                        //             Icon(Icons.open_in_browser),
+                                        //             SizedBox(width: 8),
+                                        //             Text('Открыть в браузере'),
+                                        //         ]
+                                        //     ),
+                                        //     onPressed: () async => _activate(MenuEntry.openInBrowser),
+                                        // ),
+
+                                        // MenuItemButton(
+                                        //     child: Row(
+                                        //         children: <Widget>[
+                                        //             Icon(
+                                        //                 isDesktopMode
+                                        //                 ? (OS.isAndroid
+                                        //                     ? Icons.phone_android
+                                        //                     : Icons.phone_iphone)
+                                        //                 : Icons.laptop
+                                        //             ),
+                                        //             const SizedBox(width: 8),
+                                        //             Text(isDesktopMode ? 'Мобильная версия' : 'Версия для ПК'),
+                                        //         ],
+                                        //     ),
+                                        //     onPressed: () async => _activate(MenuEntry.desktopMode),
+                                        // ),
+
+                                        // MenuItemButton(
+                                        //     child: const Row(
+                                        //         children: <Widget>[
+                                        //             Icon(Icons.clear_all),
+                                        //             SizedBox(width: 8),
+                                        //             Text('Очистить данные браузера')
+                                        //         ],
+                                        //     ),
+                                        //     onPressed: () async => _activate(MenuEntry.clearCache),
+                                        // ),
+
 }
 
 class _CustomInAppBrowserState extends State<WebView> {
     final GlobalKey webViewKey = GlobalKey();
+    final GlobalKey menuKey = GlobalKey();
 
     String url = '';
     String title = '';
     double progress = 0.0;
+    bool _isFindingOnPage = false;
     bool? isSecure;
     bool isDesktopMode = false;
     InAppWebViewController? webViewController;
     PullToRefreshController? _pullToRefreshController;
+    FindInteractionController? _findInteractionController;
     int textSize = kInitialTextSize;
     final FocusNode _buttonFocusNode = FocusNode();
-
     final ReceivePort _port = ReceivePort();
 
-    void toggleDesktopMode() async {
+    int? activeMatchOrdinal;
+    int? numberOfMatches;
+    bool? isDoneCounting;
+
+    final TextEditingController _findOnPageController = TextEditingController();
+
+    OutlineInputBorder outlineBorder = const OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.transparent, width: 0.0),
+        // borderRadius: BorderRadius.all(
+        //     Radius.circular(16.0),
+        // ),
+    );
+
+    Future<void> toggleDesktopMode() async {
         if (webViewController != null) {
             setState(() => isDesktopMode = !isDesktopMode);
 
-            var currentSettings = await webViewController?.getSettings();
+            final currentSettings = await webViewController!.getSettings();
 
             if (currentSettings != null) {
                 currentSettings.preferredContentMode = isDesktopMode
                   ? UserPreferredContentMode.DESKTOP
                   : UserPreferredContentMode.RECOMMENDED;
-                await webViewController?.setSettings(settings: currentSettings);
+                await webViewController!.setSettings(settings: currentSettings);
             }
 
-            await webViewController?.reload();
+            await webViewController!.reload();
         }
 
         return Future.value();
@@ -171,8 +297,8 @@ class _CustomInAppBrowserState extends State<WebView> {
     }
 
     Future<void> updateTextSize(int textSize) async {
-        if (Util.isAndroid()) {
-            var currentSettings = await webViewController?.getSettings();
+        if (OS.isAndroid) {
+            final currentSettings = await webViewController?.getSettings();
 
             if (currentSettings != null) {
                 currentSettings.textZoom = textSize;
@@ -198,7 +324,19 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
         url = widget.url;
 
         _bindBackgroundIsolate();
-        FlutterDownloader.registerCallback(downloadCallback, step: 1);
+        FlutterDownloader.registerCallback(downloadCallback, step: 1); //TODO: async, but shall work idk
+        _findInteractionController = FindInteractionController(
+            onFindResultReceived: (PlatformFindInteractionController controller,
+                                   int activeMatchOrdinal, int numberOfMatches, bool isDoneCounting) {
+                setState(
+                    () {
+                        this.activeMatchOrdinal = activeMatchOrdinal;
+                        this.numberOfMatches = numberOfMatches;
+                        this.isDoneCounting = isDoneCounting;
+                    }
+                );
+            },
+        );
     }
 
     @override
@@ -211,19 +349,15 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                 backgroundColor: Theme.of(context).colorScheme.background,
                 color: Theme.of(context).colorScheme.primary,
             ),
-            onRefresh: () async {
-                if (Util.isAndroid()) {
-                    await webViewController?.reload();
-                } else if (Util.isIOS()) {
-                    await webViewController?.loadUrl(urlRequest: URLRequest(url: await webViewController?.getUrl()));
-                }
-            },
+            onRefresh: () async => refresh(),
         );
     }
 
     @override
     void dispose() {
+        _findOnPageController.dispose();
         webViewController = null;
+        _findInteractionController = null;
         _unbindBackgroundIsolate();
         _buttonFocusNode.dispose();
         super.dispose();
@@ -232,7 +366,7 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
     void _bindBackgroundIsolate() {
         final isSuccess = IsolateNameServer.registerPortWithName(
             _port.sendPort,
-            'downloader_send_port',
+            defaultDownloaderSendPortName,
         );
 
         if (!isSuccess) {
@@ -258,12 +392,12 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
     }
 
     void _unbindBackgroundIsolate() {
-        IsolateNameServer.removePortNameMapping('downloader_send_port');
+        IsolateNameServer.removePortNameMapping(defaultDownloaderSendPortName);
     }
 
     @pragma('vm:entry-point')
     static void downloadCallback(String id, int status, int progress) {
-        IsolateNameServer.lookupPortByName('downloader_send_port')?.send([id, status, progress]);
+        IsolateNameServer.lookupPortByName(defaultDownloaderSendPortName)?.send([id, status, progress]);
     }
 
     // Future<void> _requestDownload(TaskInfo task) async {
@@ -342,32 +476,39 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
     //     return (await getApplicationDocumentsDirectory()).absolute.path;
     // }
 
-    void copyLink() {
+    Future<void> copyLink() async {
         if (url != '') {
-            Clipboard.setData(ClipboardData(text: url));
-
+            await Clipboard.setData(ClipboardData(text: url));
             showSnackBar(context, const Text('Ссылка скопирована в буфер обмена'));
         }
     }
 
-    void _activate(MenuEntry selection) async {
+    Future<void> refresh() async {
+        if (OS.isAndroid) {
+            await webViewController?.reload();
+        } else if (OS.isIOS) {
+            await webViewController?.loadUrl(urlRequest: URLRequest(url: await webViewController?.getUrl()));
+        }
+    }
+
+    Future<void> _activate(MenuEntry selection) async {
         switch (selection) {
+        case MenuEntry.findOnPage:
+            setState(() => _isFindingOnPage = true);
+            break;
         case MenuEntry.changeTextSize:
             break;
-        case MenuEntry.share:
-            await Share.share(url, subject: title);
-            break;
         case MenuEntry.copyLink:
-             copyLink();
+             await copyLink();
              break;
         case MenuEntry.openInBrowser:
             await InAppBrowser.openWithSystemBrowser(url: WebUri(url));
             break;
         case MenuEntry.desktopMode:
-            toggleDesktopMode();
+            await toggleDesktopMode();
             break;
         case MenuEntry.clearCache:
-            await showDialog(
+            await showDialog<void>(
                 context: context,
                 builder: (final context) => AlertDialog(
                     title: const Text('Отчистить кэш браузера?'),
@@ -376,7 +517,7 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                         ElevatedButton(
                             onPressed: () async {
                                 await webViewController?.clearCache();
-                                if (Util.isAndroid()) {
+                                if (OS.isAndroid) {
                                     await webViewController?.clearHistory();
                                 }
                                 setState(() {});
@@ -399,7 +540,7 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
     @override
     Widget build(BuildContext context) {
         final GlobalKey<TooltipState> tooltipkey = GlobalKey<TooltipState>();
-        var initialSettings = widget.webViewModel.settings ?? InAppWebViewSettings();
+        final initialSettings = widget.webViewModel.settings ?? InAppWebViewSettings();
 
         initialSettings.iframeAllow = 'camera; microphone';
         initialSettings.iframeAllowFullscreen = true;
@@ -433,237 +574,448 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                     return;
                 }
 
+                if (_isFindingOnPage) {
+                    setState(() => _isFindingOnPage = false);
+                    return;
+                }
+
                 if (await _goBack(context)) {
                     Navigator.pop(context);
                 }
             },
             child: Scaffold(
                 backgroundColor: Theme.of(context).colorScheme.background,
-                appBar: AppBar(
-                    shadowColor: Theme.of(context).shadowColor,
-                    leading: widget.windowId != null ? BackButton(onPressed: () => Navigator.pop(context)) : CloseButton(onPressed: () => Navigator.pop(context)),
+                appBar: _isFindingOnPage
+                ? AppBar(
+                    titleSpacing: 0.0,
+                    leadingWidth: 0.0,
+                    leading: const SizedBox.shrink(),
                     title: Row(
-                        mainAxisSize: MainAxisSize.max,
-                        children: <Widget>[
-                            FutureBuilder<bool>(
-                                future: webViewController?.canGoBack() ?? Future.value(false),
-                                builder: (context, snapshot) {
-                                    final canGoBack = snapshot.hasData ? snapshot.data! : false;
-
-                                    return IconButton(
-                                        icon: const Icon(Icons.arrow_back_ios),
-                                        onPressed: canGoBack ? () => webViewController?.goBack() : null,
-                                    );
-                                },
-                            ),
-
+                        children: [
                             Expanded(
-                                child: InkWell(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    onTap: () => tooltipkey.currentState?.ensureTooltipVisible(),
-                                    onLongPress: () => copyLink(),
-
-                                    child: Tooltip(
-                                        key: tooltipkey,
-                                        triggerMode: TooltipTriggerMode.manual,
-                                        message: title,
-                                        decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(8.0),
-                                            color: Theme.of(context).colorScheme.primary,
-                                        ),
-                                        padding: const EdgeInsets.all(8.0),
-                                        preferBelow: true,
-                                        textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                            color: Theme.of(context).colorScheme.onPrimary
-                                        ),
-                                        textAlign: TextAlign.center,
-
-                                        child: Container(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: <Widget>[
-                                                    if (title != '' && title != url && !title.startsWith('data:'))
-                                                    Text(
-                                                        title,
-                                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                                            color: Theme.of(context).colorScheme.primary
-                                                        ),
-                                                        overflow: TextOverflow.fade,
-                                                    ),
-                                                    if (url != '' && !url.startsWith('data:'))
-                                                    Row(
-                                                        mainAxisSize: MainAxisSize.max,
-                                                        mainAxisAlignment: MainAxisAlignment.center,
-                                                        children: <Widget>[
-                                                            if (isSecure != null)
-                                                            (isSecure!
-                                                                ? Icon(
-                                                                    Icons.lock,
-                                                                    color: Colors.green,
-                                                                    size: Theme.of(context).textTheme.titleSmall?.fontSize ?? 12
-                                                                )
-                                                                : Icon(
-                                                                    Icons.lock_open,
-                                                                    color: Colors.red,
-                                                                    size: Theme.of(context).textTheme.titleSmall?.fontSize ?? 12
-                                                                )
-                                                            ),
-                                                            if (isSecure != null)
-                                                            const SizedBox(width: 4),
-                                                            Flexible(
-                                                                child: Text(
-                                                                    url,
-                                                                    style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.secondary),
-                                                                    overflow: TextOverflow.fade,
-                                                                ),
-                                                            ),
-                                                        ],
-                                                    ),
-                                                ],
-                                            ),
-                                        ),
+                                child: TextField(
+                                    onChanged: (value) async => _findInteractionController?.findAll(find: value),
+                                    autofocus: true,
+                                    controller: _findOnPageController,
+                                    textInputAction: TextInputAction.go,
+                                    decoration: InputDecoration(
+                                        contentPadding: const EdgeInsets.all(8.0),
+                                        filled: false,
+                                        border: outlineBorder,
+                                        focusedBorder: outlineBorder,
+                                        enabledBorder: outlineBorder,
+                                        hintText: 'Найти на странице...',
                                     ),
                                 ),
                             ),
-
-                            FutureBuilder<bool>(
-                                future: webViewController?.canGoForward() ?? Future.value(false),
-                                builder: (context, snapshot) {
-                                    final canGoForward = snapshot.hasData ? snapshot.data! : false;
-                                    return IconButton(
-                                        icon: const Icon(Icons.arrow_forward_ios),
-                                        onPressed: canGoForward
-                                        ? () => webViewController?.goForward()
-                                        : null,
-                                    );
-                                },
+                            if (_findOnPageController.value.text.isNotEmpty && (isDoneCounting ?? false) && activeMatchOrdinal != null && numberOfMatches != null)
+                            Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                    '${numberOfMatches! == 0 ? 0 : activeMatchOrdinal! + 1}/$numberOfMatches',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: numberOfMatches == 0
+                                        ? Colors.red
+                                        : Theme.of(context).colorScheme.primary,
+                                    ),
+                                )
                             ),
-                        ],
+                        ]
+                    ),
+                    actions: <Widget>[
+                        IconButton(
+                            icon: const Icon(Icons.keyboard_arrow_up, size: 32),
+                            onPressed: () async => _findInteractionController?.findNext(forward: false),
+                        ),
+                        IconButton(
+                            icon: const Icon(Icons.keyboard_arrow_down, size: 32),
+                            onPressed: () async => _findInteractionController?.findNext(forward: true),
+                        ),
+                        IconButton(
+                            icon: const Icon(Icons.close, size: 32),
+                            onPressed: () async {
+                                await _findInteractionController?.clearMatches();
+                                _findOnPageController.text = '';
+                                setState(() => _isFindingOnPage = false);
+                            },
+                        ),
+                    ],
+                )
+                : AppBar(
+                    titleSpacing: 0.0,
+                    leading: widget.windowId != null
+                    ? BackButton(onPressed: () => Navigator.pop(context))
+                    : CloseButton(onPressed: () => Navigator.pop(context)),
+
+                    title: InkWell(
+                        onTap: () async => tooltipkey.currentState?.ensureTooltipVisible(),
+                        onLongPress: () async => copyLink(),
+
+                        child: Tooltip(
+                            key: tooltipkey,
+                            triggerMode: TooltipTriggerMode.manual,
+                            message: title,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(MediaQuery.textScalerOf(context).scale(8.0)),
+                                color: Theme.of(context).colorScheme.primary,
+                            ),
+                            preferBelow: true,
+                            textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                            textAlign: TextAlign.center,
+
+                            child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                    children: <Widget>[
+                                        if (title != '' && title != url && !title.startsWith('data:'))
+                                        Text(
+                                            title,
+                                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                                color: Theme.of(context).colorScheme.primary
+                                            ),
+                                            overflow: TextOverflow.fade,
+                                        ),
+                                        if (url != '' && !url.startsWith('data:'))
+                                        Row(
+                                            mainAxisSize: MainAxisSize.max,
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: <Widget>[
+                                                if (isSecure != null)
+                                                (isSecure!
+                                                    ? Icon(
+                                                        Icons.lock,
+                                                        color: Colors.green,
+                                                        size: Theme.of(context).textTheme.titleSmall?.fontSize ?? 12
+                                                    )
+                                                    : Icon(
+                                                        Icons.lock_open,
+                                                        color: Colors.red,
+                                                        size: Theme.of(context).textTheme.titleSmall?.fontSize ?? 12
+                                                    )
+                                                ),
+                                                if (isSecure != null)
+                                                const SizedBox(width: 4),
+                                                Flexible(
+                                                    child: Text(
+                                                        url,
+                                                        style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.secondary),
+                                                        overflow: TextOverflow.fade,
+                                                    ),
+                                                ),
+                                            ],
+                                        ),
+                                    ],
+                                ),
+                            ),
+                        ),
                     ),
 
                     actions: <Widget>[
-                        MenuAnchor(
-                            consumeOutsideTap: true,
+                        IconButton(
+                            key: menuKey,
+                            icon: const Icon(Icons.more_vert),
+                            onPressed: () async {
+                                final RenderBox? box = menuKey.currentContext!.findRenderObject() as RenderBox?;
 
-                            builder: (BuildContext context, MenuController controller, Widget? child) {
-                                return IconButton(
-                                    focusNode: _buttonFocusNode,
-                                    onPressed: () => controller.isOpen ? controller.close() : controller.open(),
-                                    icon: const Icon(Icons.more_vert),
-                                );
-                            },
+                                if (box == null) {
+                                    return;
+                                }
 
-                            menuChildren: <Widget>[
-                                Row(
-                                    mainAxisSize: MainAxisSize.max,
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: <Widget>[
-                                        IconButton(
-                                            onPressed: textSize < kTextSizeMax
-                                            ? () async {
-                                                setState(() => textSize += kTextSizeDelta);
-                                                await updateTextSize(textSize);
-                                            }
-                                            : null,
-                                            icon: Icon(
-                                                Icons.add,
-                                                color: textSize < kTextSizeMax ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
-                                            ),
-                                        ),
-                                        IconButton(
-                                            onPressed: textSize > kTextSizeMin
-                                            ? () async {
-                                                setState(() => textSize -= kTextSizeDelta);
-                                                await updateTextSize(textSize);
-                                            }
-                                            : null,
-                                            icon: Icon(
-                                                Icons.remove,
-                                                color: textSize > kTextSizeMin ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
-                                            ),
-                                        ),
-                                        TextButton(
-                                            onPressed: textSize != kInitialTextSize
-                                            ? () async {
-                                                setState(() => textSize = kInitialTextSize);
-                                                await updateTextSize(textSize);
-                                            }
-                                            : null,
-                                            child: Text(
-                                                '100%',
-                                                style: TextStyle(
-                                                    color: textSize != kInitialTextSize ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
+                                final position = box.localToGlobal(Offset.zero);
+
+                                await showMenu<MenuEntry>(
+                                    popUpAnimationStyle: AnimationStyle(
+                                        duration: const Duration(milliseconds: 200)
+                                    ),
+                                    context: context,
+                                    position: RelativeRect.fromLTRB(
+                                        position.dx,
+                                        position.dy + box.size.height,
+                                        0,
+                                        0
+                                    ),
+                                    items: [
+                                        CustomPopupMenuItem<MenuEntry>(
+                                            isIconButtonRow: true,
+                                            child: StatefulBuilder(
+                                                builder: (context, setState) => Row(
+                                                    mainAxisSize: MainAxisSize.max,
+                                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                    children: <Widget>[
+                                                        FutureBuilder<bool>(
+                                                            future: webViewController?.canGoBack() ?? Future.value(false),
+                                                            builder: (context, snapshot) {
+                                                                final canGoBack = snapshot.hasData && snapshot.data!;
+
+                                                                return IconButton(
+                                                                    icon: const Icon(Icons.arrow_back),
+                                                                    onPressed: canGoBack
+                                                                    ? () {
+                                                                        setState(() => webViewController?.goBack());
+                                                                        Navigator.pop(context);
+                                                                    }
+                                                                    : null,
+                                                                );
+                                                            },
+                                                        ),
+
+                                                        FutureBuilder<bool>(
+                                                            future: webViewController?.canGoForward() ?? Future.value(false),
+                                                            builder: (context, snapshot) {
+                                                                final canGoForward = snapshot.hasData && snapshot.data!;
+                                                                return IconButton(
+                                                                    icon: const Icon(Icons.arrow_forward),
+                                                                    onPressed: canGoForward
+                                                                    ? () {
+                                                                        setState(() => webViewController?.goForward());
+                                                                        Navigator.pop(context);
+                                                                    }
+                                                                    : null,
+                                                                );
+                                                            },
+                                                        ),
+
+                                                        IconButton(
+                                                            icon: const Icon(Icons.share),
+                                                            onPressed: () async {
+                                                                await Share.share(url, subject: title);
+                                                                Navigator.pop(context);
+                                                            }
+                                                        ),
+
+                                                        IconButton(
+                                                            icon: progress < 1.0
+                                                            ? const Icon(Icons.close)
+                                                            : const Icon(Icons.refresh),
+                                                            onPressed: () async {
+                                                                if (progress < 1.0) {
+                                                                    await webViewController?.stopLoading();
+                                                                } else {
+                                                                    await refresh();
+                                                                }
+                                                                Navigator.pop(context);
+                                                            }
+                                                        ),
+                                                    ],
                                                 ),
                                             ),
                                         ),
-                                    ]
-                                ),
 
-                                const Divider(),
+                                        // const PopupMenuDivider(),
 
-                                MenuItemButton(
-                                    child: const Row(
-                                        children: <Widget>[
-                                            Icon(Icons.share),
-                                            SizedBox(width: 8),
-                                            Text('Поделиться'),
-                                        ]
-                                    ),
-                                    onPressed: () async => _activate(MenuEntry.share),
-                                ),
+                                        // CustomPopupMenuItem<MenuEntry>(
+                                        //     isIconButtonRow: true,
+                                        //     child: StatefulBuilder(
+                                        //         builder: (context, setState) => Row(
+                                        //             mainAxisSize: MainAxisSize.max,
+                                        //             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                        //             children: <Widget>[
+                                        //                 IconButton(
+                                        //                     onPressed: textSize < kTextSizeMax
+                                        //                     ? () => setState(() async => await updateTextSize(textSize += kTextSizeDelta))
+                                        //                     : null,
+                                        //                     icon: Icon(
+                                        //                         Icons.add,
+                                        //                         color: textSize < kTextSizeMax
+                                        //                         ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
+                                        //                     ),
+                                        //                 ),
 
-                                MenuItemButton(
-                                    child: const Row(
-                                        children: <Widget>[
-                                            Icon(Icons.link),
-                                            SizedBox(width: 8),
-                                            Text('Скопировать ссылку'),
-                                        ]
-                                    ),
-                                    onPressed: () async => _activate(MenuEntry.copyLink),
-                                ),
+                                        //                 IconButton(
+                                        //                     onPressed: textSize > kTextSizeMin
+                                        //                     ? () => setState(() async => await updateTextSize(textSize -= kTextSizeDelta))
+                                        //                     : null,
+                                        //                     icon: Icon(
+                                        //                         Icons.remove,
+                                        //                         color: textSize > kTextSizeMin
+                                        //                         ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
+                                        //                     ),
+                                        //                 ),
 
-                                MenuItemButton(
-                                    child: const Row(
-                                        children: <Widget>[
-                                            Icon(Icons.open_in_browser),
-                                            SizedBox(width: 8),
-                                            Text('Открыть в браузере'),
-                                        ]
-                                    ),
-                                    onPressed: () async => _activate(MenuEntry.openInBrowser),
-                                ),
+                                        //                 TextButton(
+                                        //                     onPressed: textSize != kInitialTextSize
+                                        //                     ? () => setState(() async => await updateTextSize(textSize = kInitialTextSize))
+                                        //                     : null,
+                                        //                     child: Text(
+                                        //                         '100%',
+                                        //                         style: TextStyle(
+                                        //                             color: textSize != kInitialTextSize
+                                        //                             ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
+                                        //                         ),
+                                        //                     ),
+                                        //                 ),
+                                        //             ],
+                                        //         ),
+                                        //     ),
+                                        // ),
 
-                                MenuItemButton(
-                                    child: Row(
-                                        children: <Widget>[
-                                            Icon(
-                                                isDesktopMode
-                                                ? (Util.isAndroid()
-                                                    ? Icons.phone_android
-                                                    : Icons.phone_iphone)
-                                                : Icons.laptop
+                                        const PopupMenuDivider(),
+
+                                        PopupMenuItem<MenuEntry>(
+                                            child: Row(
+                                                children: <Widget>[
+                                                    Icon(
+                                                        isDesktopMode
+                                                        ? (OS.isAndroid
+                                                            ? Icons.phone_android
+                                                            : Icons.phone_iphone)
+                                                        : Icons.laptop
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Text(isDesktopMode ? 'Мобильная версия' : 'Версия для ПК'),
+                                                ]
                                             ),
-                                            const SizedBox(width: 8),
-                                            Text(isDesktopMode ? 'Мобильная версия' : 'Версия для ПК'),
-                                        ],
-                                    ),
-                                    onPressed: () async => _activate(MenuEntry.desktopMode),
-                                ),
+                                            value: MenuEntry.desktopMode,
+                                        ),
 
-                                MenuItemButton(
-                                    child: const Row(
-                                        children: <Widget>[
-                                            Icon(Icons.clear_all),
-                                            SizedBox(width: 8),
-                                            Text('Очистить данные браузера')
-                                        ],
-                                    ),
-                                    onPressed: () async => _activate(MenuEntry.clearCache),
-                                ),
-                            ]
-                        )
+                                        ...MenuEntry.values.where((e) => e != MenuEntry.desktopMode).map(
+                                            (e) => e.icon == null || e.text == null
+                                            ? null
+                                            : PopupMenuItem<MenuEntry>(
+                                                child: Row(
+                                                    children: <Widget>[
+                                                        Icon(e.icon!),
+                                                        const SizedBox(width: 8),
+                                                        Text(e.text!),
+                                                    ]
+                                                ),
+                                                value: e,
+                                            ),
+                                        ).nonNulls.cast<PopupMenuItem<MenuEntry>>(),
+                                    ]
+                                ).then(
+                                    (MenuEntry? action) async {
+                                        if (action != null) {
+                                            await _activate(action);
+                                        }
+                                    },
+                                );
+                            }
+                        ),
+
+                        // MenuAnchor(
+                        //     consumeOutsideTap: true,
+
+                        //     builder: (BuildContext context, MenuController controller, Widget? child) {
+                        //         return IconButton(
+                        //             focusNode: _buttonFocusNode,
+                        //             onPressed: () => controller.isOpen ? controller.close() : controller.open(),
+                        //             icon: const Icon(Icons.more_vert),
+                        //         );
+                        //     },
+
+                        //     menuChildren: <Widget>[
+                        //         Row(
+                        //             mainAxisSize: MainAxisSize.max,
+                        //             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        //             children: <Widget>[
+                        //                 IconButton(
+                        //                     onPressed: textSize < kTextSizeMax
+                        //                     ? () async {
+                        //                         setState(() => textSize += kTextSizeDelta);
+                        //                         await updateTextSize(textSize);
+                        //                     }
+                        //                     : null,
+                        //                     icon: Icon(
+                        //                         Icons.add,
+                        //                         color: textSize < kTextSizeMax ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
+                        //                     ),
+                        //                 ),
+                        //                 IconButton(
+                        //                     onPressed: textSize > kTextSizeMin
+                        //                     ? () async {
+                        //                         setState(() => textSize -= kTextSizeDelta);
+                        //                         await updateTextSize(textSize);
+                        //                     }
+                        //                     : null,
+                        //                     icon: Icon(
+                        //                         Icons.remove,
+                        //                         color: textSize > kTextSizeMin ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
+                        //                     ),
+                        //                 ),
+                        //                 TextButton(
+                        //                     onPressed: textSize != kInitialTextSize
+                        //                     ? () async {
+                        //                         setState(() => textSize = kInitialTextSize);
+                        //                         await updateTextSize(textSize);
+                        //                     }
+                        //                     : null,
+                        //                     child: Text(
+                        //                         '100%',
+                        //                         style: TextStyle(
+                        //                             color: textSize != kInitialTextSize ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
+                        //                         ),
+                        //                     ),
+                        //                 ),
+                        //             ]
+                        //         ),
+
+                        //         const Divider(),
+
+                        //         MenuItemButton(
+                        //             child: const Row(
+                        //                 children: <Widget>[
+                        //                     Icon(Icons.share),
+                        //                     SizedBox(width: 8),
+                        //                     Text('Поделиться'),
+                        //                 ]
+                        //             ),
+                        //             onPressed: () async => _activate(MenuEntry.share),
+                        //         ),
+
+                        //         MenuItemButton(
+                        //             child: const Row(
+                        //                 children: <Widget>[
+                        //                     Icon(Icons.link),
+                        //                     SizedBox(width: 8),
+                        //                     Text('Скопировать ссылку'),
+                        //                 ]
+                        //             ),
+                        //             onPressed: () async => _activate(MenuEntry.copyLink),
+                        //         ),
+
+                        //         MenuItemButton(
+                        //             child: const Row(
+                        //                 children: <Widget>[
+                        //                     Icon(Icons.open_in_browser),
+                        //                     SizedBox(width: 8),
+                        //                     Text('Открыть в браузере'),
+                        //                 ]
+                        //             ),
+                        //             onPressed: () async => _activate(MenuEntry.openInBrowser),
+                        //         ),
+
+                        //         MenuItemButton(
+                        //             child: Row(
+                        //                 children: <Widget>[
+                        //                     Icon(
+                        //                         isDesktopMode
+                        //                         ? (Util.isAndroid()
+                        //                             ? Icons.phone_android
+                        //                             : Icons.phone_iphone)
+                        //                         : Icons.laptop
+                        //                     ),
+                        //                     const SizedBox(width: 8),
+                        //                     Text(isDesktopMode ? 'Мобильная версия' : 'Версия для ПК'),
+                        //                 ],
+                        //             ),
+                        //             onPressed: () async => _activate(MenuEntry.desktopMode),
+                        //         ),
+
+                        //         MenuItemButton(
+                        //             child: const Row(
+                        //                 children: <Widget>[
+                        //                     Icon(Icons.clear_all),
+                        //                     SizedBox(width: 8),
+                        //                     Text('Очистить данные браузера')
+                        //                 ],
+                        //             ),
+                        //             onPressed: () async => _activate(MenuEntry.clearCache),
+                        //         ),
+                        //     ]
+                        // )
                     ],
                 ),
 
@@ -675,27 +1027,28 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                                     InAppWebView(
                                         key: webViewKey,
                                         pullToRefreshController: _pullToRefreshController,
+                                        findInteractionController: _findInteractionController,
                                         initialUrlRequest: URLRequest(url: WebUri(widget.url)),
                                         initialSettings: initialSettings,
                                         initialUserScripts: UnmodifiableListView(
-                                            Util.isAndroid() ? [] : [textSizeUserScript]
+                                            OS.isAndroid ? [] : [textSizeUserScript]
                                         ),
 
                                         // TODO
-                                        gestureRecognizers: widget.windowId != null ? <Factory<OneSequenceGestureRecognizer>>{Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer())} : null,
+                                        gestureRecognizers: widget.windowId != null ? <Factory<OneSequenceGestureRecognizer>>{ Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer()) } : null,
                                         windowId: widget.windowId,
                                         onCloseWindow: widget.windowId != null ? (controller) => Navigator.pop(context) : null,
 
                                         onWebViewCreated: (controller) async {
                                             webViewController = controller;
 
-                                            if (Util.isAndroid()) {
+                                            if (OS.isAndroid) {
                                                 await controller.startSafeBrowsing();
                                             }
                                         },
 
-                                        onLoadStart: (controller, url) {
-                                            _pullToRefreshController?.endRefreshing();
+                                        onLoadStart: (controller, url) async {
+                                            await _pullToRefreshController?.endRefreshing();
 
                                             if (url != null) {
                                                 setState(
@@ -708,13 +1061,17 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                                         },
 
                                         onLoadStop: (controller, url) async {
-                                            if (url != null) {
-                                                setState(() => this.url = url.toString());
-                                            }
-
                                             final sslCertificate = await controller.getCertificate();
 
-                                            setState(() => isSecure = sslCertificate != null || (url != null && Util.urlIsSecure(url)));
+                                            setState(
+                                                () {
+                                                    if (url != null) {
+                                                        this.url = url.toString();
+                                                    }
+
+                                                    this.isSecure = sslCertificate != null || (url != null && Util.urlIsSecure(url));
+                                                }
+                                            );
                                         },
 
                                         onUpdateVisitedHistory: (controller, url, isReload) {
@@ -729,9 +1086,9 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                                             }
                                         },
 
-                                        onProgressChanged: (controller, progress) {
+                                        onProgressChanged: (controller, progress) async {
                                             if (progress == 100) {
-                                                _pullToRefreshController?.endRefreshing();
+                                                await _pullToRefreshController?.endRefreshing();
                                             }
 
                                             setState(() => this.progress = progress / 100.0);
@@ -739,18 +1096,16 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
 
                                         onLongPressHitTestResult: (controller, hitTestResult) async {
                                             if (LongPressAlertDialog.hitTestResultSupported.contains(hitTestResult.type)) {
-                                                var requestFocusNodeHrefResult = await webViewController?.requestFocusNodeHref();
+                                                final requestFocusNodeHrefResult = await webViewController?.requestFocusNodeHref();
 
                                                 if (requestFocusNodeHrefResult != null) {
-                                                    await showDialog(
+                                                    await showDialog<void>(
                                                         context: context,
-                                                        builder: (context) {
-                                                            return LongPressAlertDialog(
-                                                                webViewController: webViewController!,
-                                                                hitTestResult: hitTestResult,
-                                                                requestFocusNodeHrefResult: requestFocusNodeHrefResult,
-                                                            );
-                                                        },
+                                                        builder: (context) => LongPressAlertDialog(
+                                                            webViewController: webViewController!,
+                                                            hitTestResult: hitTestResult,
+                                                            requestFocusNodeHrefResult: requestFocusNodeHrefResult,
+                                                        ),
                                                     );
                                                 }
                                             }
@@ -763,7 +1118,7 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                                         onCreateWindow: (controller, createWindowRequest) async {
                                             await Navigator.push(
                                                 context,
-                                                MaterialPageRoute(
+                                                MaterialPageRoute<void>(
                                                     builder: (context) => WebView(
                                                         url: '', //TODO
                                                         windowId: createWindowRequest.windowId
@@ -775,7 +1130,7 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                                         },
 
                                         shouldOverrideUrlLoading: (controller, navigationAction) async {
-                                            if (Util.isIOS()) {
+                                            if (OS.isIOS) {
                                                 final shouldPerformDownload = navigationAction.shouldPerformDownload ?? false;
                                                 final url = navigationAction.request.url;
 
@@ -785,7 +1140,7 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                                                 }
                                             }
 
-                                            var url = navigationAction.request.url;
+                                            final url = navigationAction.request.url;
 
                                             if (url != null && !['http', 'https', 'file', 'chrome', 'data', 'javascript', 'about'].contains(url.scheme)) {
                                                 if (await launchLink(context, url.toString())) {
@@ -801,10 +1156,10 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                                         },
 
                                         onReceivedServerTrustAuthRequest: (controller, challenge) async {
-                                            var sslError = challenge.protectionSpace.sslError;
+                                            final sslError = challenge.protectionSpace.sslError;
 
                                             if (sslError != null && (sslError.code != null)) {
-                                                if (Util.isIOS() && sslError.code == SslErrorType.UNSPECIFIED) {
+                                                if (OS.isIOS && sslError.code == SslErrorType.UNSPECIFIED) {
                                                     return ServerTrustAuthResponse(action: ServerTrustAuthResponseAction.PROCEED);
                                                 }
 
@@ -817,7 +1172,7 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
 
                                         onReceivedHttpError: (controller, request, errorResponse) async {
                                             // Handle HTTP errors here
-                                            var isForMainFrame = request.isForMainFrame ?? false;
+                                            final isForMainFrame = request.isForMainFrame ?? false;
 
                                             if (!isForMainFrame) {
                                                 return;
@@ -831,17 +1186,18 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                                             );
                                         },
 
-                                        onReceivedError: (controller, request, error) async {
+                                        //TODO FIXME
+                                        onReceivedError: true ? null : (controller, request, error) async {
                                             await _pullToRefreshController?.endRefreshing();
 
                                             // Handle web page loading errors here
-                                            var isForMainFrame = request.isForMainFrame ?? false;
+                                            final isForMainFrame = request.isForMainFrame ?? false;
 
-                                            if (!isForMainFrame || (Util.isIOS() && error.type == WebResourceErrorType.CANCELLED)) {
+                                            if (!isForMainFrame || (OS.isIOS && error.type == WebResourceErrorType.CANCELLED)) {
                                                 return;
                                             }
 
-                                            var errorUrl = request.url;
+                                            final errorUrl = request.url;
                                             await controller.loadData(
                                                 data: '''
 <!DOCTYPE html>
@@ -882,7 +1238,7 @@ document.body.style.webkitTextSizeAdjust = '$textSize%';
                                         height: 3,
                                         child: LinearProgressIndicator(
                                             value: progress,
-                                            color: Theme.of(context).colorScheme.primary
+                                            color: Theme.of(context).colorScheme.primary,
                                         )
                                     ),
                                 ],

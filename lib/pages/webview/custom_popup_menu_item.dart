@@ -61,7 +61,7 @@ class CustomPopupMenuItemState<T, W extends CustomPopupMenuItem<T>> extends Stat
     Widget build(BuildContext context) {
         final ThemeData theme = Theme.of(context);
         final PopupMenuThemeData popupMenuTheme = PopupMenuTheme.of(context);
-        TextStyle style = widget.textStyle ?? popupMenuTheme.textStyle ?? theme.textTheme.titleMedium ?? TextStyle();
+        TextStyle style = widget.textStyle ?? popupMenuTheme.textStyle ?? theme.textTheme.titleMedium ?? const TextStyle();
 
         if (!widget.enabled) {
             style = style.copyWith(color: theme.disabledColor);
@@ -88,8 +88,8 @@ class CustomPopupMenuItemState<T, W extends CustomPopupMenuItem<T>> extends Stat
 
         if (widget.isIconButtonRow) {
             return Material(
-                color: Colors.white,
-                child: item,
+                color: Colors.transparent,
+                child: buildChild(),
             );
         }
 

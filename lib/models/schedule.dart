@@ -1,4 +1,3 @@
-
 // Copyright (C) 2024 Sergey Sushilin <sushilinsergey@yandex.ru>.
 // This file is part of UniSchedule.
 
@@ -19,6 +18,14 @@ import 'package:flutter/material.dart';
 
 import '../utils.dart';
 
+Map<String, dynamic>? studiesDateToJson(DateTime? date) {
+    if (date == null) {
+        return null;
+    }
+
+    return {'y': date.year, 'm': date.month, 'd': date.day};
+}
+
 DateTime? studiesDateFromJson(Map<String, dynamic>? json) {
     if (json == null || json.toString() == 'null') {
         return null;
@@ -31,18 +38,36 @@ class Schedule {
     Schedule(this.studiesBegin, this.studiesEnd, this.weeks);
 
     Schedule.fromJson(final Map<String, dynamic> json)
-        : studiesBegin = studiesDateFromJson(json['studies.begin']),
-          studiesEnd   = studiesDateFromJson(json['studies.end']),
-          weeks        = json['schedule'].map((e) => Week.fromJson(e)).cast<Week>().toList();
+    : studiesBegin = studiesDateFromJson(json['studies.begin']),
+    studiesEnd = studiesDateFromJson(json['studies.end']),
+    weeks =
+    json['schedule'].map((e) => Week.fromJson(e)).cast<Week>().toList();
 
-    final DateTime? studiesBegin;
-    final DateTime? studiesEnd;
+    Map<String, dynamic> toJson() {
+        return {
+            'studies.begin':
+            studiesBegin != null ? studiesDateToJson(studiesBegin) : null,
+            'studies.end': studiesEnd != null ? studiesDateToJson(studiesEnd) : null,
+            'schedule': [
+                weeks
+                .map((w) => w.days
+                    .map((d) => d.classes.map((c) => c.toJson()).toList())
+                    .toList())
+                .toList(),
+            ],
+        };
+    }
+
+    DateTime? studiesBegin;
+    DateTime? studiesEnd;
     final List<Week> weeks;
 }
 
 class Week {
-    Week.fromJson(final List json)
-        : days = [...json.mapIndexed((e, i) => Day.fromJson(i + 1, e)).cast<Day>()]; // TODO USE MAPINDEXED
+    Week.fromJson(List<dynamic> json)
+    : days = [
+        ...json.mapIndexed((e, i) => Day.fromJson(i + 1, e)).cast<Day>()
+    ];
 
     final List<Day> days;
 }
@@ -51,7 +76,9 @@ class Day {
     Day(this.dayNum, this.classes);
 
     Day.fromJson(this.dayNum, final List json)
-        : classes = [...json.mapIndexed((e, i) => Class.fromJson(e, i + 1)).cast<Class>()];
+    : classes = [
+        ...json.mapIndexed((e, i) => Class.fromJson(e, i + 1)).cast<Class>()
+    ];
 
     final int dayNum;
     final List<Class> classes;
@@ -84,86 +111,152 @@ class TeacherAndRoom {
     final String? room;
 }
 
-class ClassType {
-    const ClassType({required this.name, required this.color});
-    final String name;
+// Class type ID is the latin name (enum entries).
+enum ClassType {
+    lecture(label: 'Лекция', color: Colors.green),
+    seminar(label: 'Семинар', color: Colors.yellow),
+    practicum(label: 'Практикум', color: Colors.red),
+    lab(label: 'Лабораторная', color: Colors.blue),
+    consultation(label: 'Консультация', color: Colors.purple);
+
+    const ClassType({required this.label, required this.color});
+
+    final String label;
     final Color color;
+
+    static ClassType? fromId(String name) {
+        for (final type in values) {
+            if (type.name == name.toLowerCase()) {
+                return type;
+            }
+        }
+
+        return null;
+    }
+
+    static ClassType? fromName(String name) {
+        for (final type in values) {
+            if (type.label.toLowerCase() == name.toLowerCase()) {
+                return type;
+            }
+        }
+
+        return null;
+    }
 }
 
-ClassType? classTypeFromString(String type) {
-    const typeTranslateMap = {
-        'лекция':       'lecture',
-        'семинар':      'seminar',
-        'практикум':    'practicum',
-        'лабораторная': 'lab',
-        'консультация': 'consultation',
-    };
+// const classTypes = [
+//     'lecture',
+//     'seminar',
+//     'practicum',
+//     'lab',
+//     'consultation',
+// ];
 
-    const typesMap = {
-        'lecture':      ClassType(name: 'Лекция',       color: Colors.green),
-        'seminar':      ClassType(name: 'Семинар',      color: Colors.yellow),
-        'practicum':    ClassType(name: 'Практикум',    color: Colors.red),
-        'lab':          ClassType(name: 'Лабораторная', color: Colors.blue),
-        'consultation': ClassType(name: 'Консультация', color: Colors.purple),
-    };
+// const classTypesMap = {
+//     'lecture':      'Лекция',
+//     'seminar':      'Семинар',
+//     'practicum':    'Практикум',
+//     'lab':          'Лабораторная',
+//     'consultation': 'Консультация',
+// };
 
-    final t = typeTranslateMap.keys.contains(type.toLowerCase())
-        ? typeTranslateMap[type.toLowerCase()]! : type;
+// const typeTranslateMap = {
+//     'лекция':       'lecture',
+//     'семинар':      'seminar',
+//     'практикум':    'practicum',
+//     'лабораторная': 'lab',
+//     'консультация': 'consultation',
+// };
 
-    return (typesMap.keys.contains(t))
-        ? typesMap[t]
-        : (t != '' ? ClassType(name: t, color: Colors.pink) : null);
-}
+// ClassType? classTypeFromString(String type) {
+//     // const typesMap = {
+//     //     'lecture':      ClassType(name: 'Лекция',       color: Colors.green),
+//     //     'seminar':      ClassType(name: 'Семинар',      color: Colors.yellow),
+//     //     'practicum':    ClassType(name: 'Практикум',    color: Colors.red),
+//     //     'lab':          ClassType(name: 'Лабораторная', color: Colors.blue),
+//     //     'consultation': ClassType(name: 'Консультация', color: Colors.purple),
+//     // };
+
+//     // final t = typeTranslateMap.keys.contains(type.toLowerCase())
+//     //     ? typeTranslateMap[type.toLowerCase()]! : type;
+
+//     // return (typesMap.keys.contains(t))
+//     //     ? typesMap[t]
+//     //     : (t != '' ? ClassType(name: t, color: Colors.pink) : null);
+//     return null;
+// }
 
 class Class {
     Class({
             required this.start,
             required this.end,
             this.name,
-            this.teachersAndRooms = const [null],
             this.building,
             this.type,
             this.note,
+            this.teachersAndRooms = const [null],
             required this.number,
     });
 
     Class.fromJson(final Map<String, dynamic> json, this.number)
         : start = TimeOfDay(
-            hour:   int.parse(json['begin'].toString().split(':')[0]),
-            minute: int.parse(json['begin'].toString().split(':')[1])
+            hour: int.parse(json['begin'].toString().split(':')[0]),
+            minute: int.parse(json['begin'].toString().split(':')[1]),
         ),
         end = TimeOfDay(
-            hour:   int.parse(json['end'].toString().split(':')[0]),
+            hour: int.parse(json['end'].toString().split(':')[0]),
             minute: int.parse(json['end'].toString().split(':')[1])
         ),
         name = json['name'],
         teachersAndRooms = [
-            ...(json['teachersAndRooms'] ?? [ null ])
-                .map(
-                    (tr) {
-                        if (tr != null) {
-                            // TODO HANDLE Only entry
-                            final t = tr[0].toString();
-                            final r = tr[1].toString();
+            ...(json['teachersAndRooms'] ?? [null]).map(
+                (tr) {
+                    if (tr != null && tr.length == 2) {
+                        // TODO HANDLE Only entry
+                        final t = tr[0].toString();
+                        final r = tr[1].toString();
 
-                            return TeacherAndRoom(
-                                teacher: t == 'null' || t == '' ? null : t,
-                                room:    r == 'null' || r == '' ? null : r
-                            );
-                        }
+                        return TeacherAndRoom(
+                            teacher: t == 'null' || t == '' ? null : t,
+                            room:    r == 'null' || r == '' ? null : r,
+                        );
+                    } else {
+                        return null;
                     }
-                )
+                }
+            )
         ],
         building = json['building'],
-        type     = json['type'] != null ? classTypeFromString(json['type']) : null,
-        note     = json['note'];
+        type = json['type'] != null ? ClassType.fromId(json['type']) : null,
+        note = json['note'];
 
-    final TimeOfDay start;
-    final TimeOfDay end;
-    final String? name;
-    final List<TeacherAndRoom?> teachersAndRooms;
-    final String? building;
-    final ClassType? type;
-    final String? note;
-    final int number;
+    Map<String, dynamic> toJson() {
+        return {
+            'begin': '${start.hour}:${start.minute}',
+            'end': '${end.hour}:${end.minute}',
+            'name': name,
+
+            if (building != null)
+            'building': building,
+
+            if (type != null)
+            'type': type!.name,
+
+            if (note != null)
+            'note': note,
+
+            if (teachersAndRooms.nonNulls.isNotEmpty)
+            'teachersAndRooms': teachersAndRooms.nonNulls.map((tr) => [ tr.teacher, tr.room ]).toList(),
+        };
+    }
+
+    TimeOfDay start;
+    TimeOfDay end;
+    String? name;
+    String? building;
+    ClassType? type;
+    String? note;
+    List<TeacherAndRoom?> teachersAndRooms;
+    int number;
 }

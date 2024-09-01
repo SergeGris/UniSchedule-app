@@ -19,7 +19,7 @@ import 'package:flutter/material.dart';
 
 // Because of the opened issue <https://github.com/flutter/flutter/issues/89705>.
 // We do as said here <https://github.com/flutter/flutter/issues/89705#issuecomment-1872540014>.
-class GlobalKeys {
+abstract final class GlobalKeys {
     static final globalScaffoldKey = GlobalKey<ScaffoldMessengerState>();
     static int haveWarningBanner = 0;
 
@@ -39,7 +39,7 @@ class GlobalKeys {
             () async {
                 final globalScaffoldMessanger = GlobalKeys.globalScaffold;
                 const textColor = Colors.black;
-                const bannerColor = Colors.yellow;
+                const bannerColor = Colors.yellowAccent;
 
                 if (haveWarningBanner == 0) {
                     haveWarningBanner++;
@@ -52,17 +52,17 @@ class GlobalKeys {
                             backgroundColor: bannerColor,
                             contentTextStyle: const TextStyle(color: textColor, fontWeight: FontWeight.bold),
                             actions: <Widget>[
-                                FilledButton(
+                                TextButton(
                                     onPressed: () async {
                                         hideWarningBanner();
                                     },
-                                    style: ButtonStyle(
-                                        backgroundColor: MaterialStateProperty.resolveWith<Color?>(
-                                            (Set<MaterialState> states) => bannerColor.withOpacity(
-                                                states.contains(MaterialState.pressed) ? 0.4 : 0.8
-                                            ),
-                                        ),
-                                    ),
+                                    // style: ButtonStyle(
+                                    //     backgroundColor: MaterialStateProperty.resolveWith<Color?>(
+                                    //         (Set<MaterialState> states) => bannerColor.withOpacity(
+                                    //             states.contains(MaterialState.pressed) ? 0.4 : 0.8
+                                    //         ),
+                                    //     ),
+                                    // ),
                                     child: const Text(
                                         'Понятно',
                                         style: TextStyle(color: textColor)

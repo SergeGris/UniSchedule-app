@@ -36,12 +36,10 @@ class LongPressAlertDialog extends StatefulWidget {
         InAppWebViewHitTestResultType.IMAGE_TYPE
     ];
 
-    const LongPressAlertDialog({
-            super.key,
-            required this.webViewController,
-            required this.hitTestResult,
-            this.requestFocusNodeHrefResult
-    });
+    const LongPressAlertDialog({super.key,
+                                required this.webViewController,
+                                required this.hitTestResult,
+                                this.requestFocusNodeHrefResult});
 
     final InAppWebViewController webViewController;
     final InAppWebViewHitTestResult hitTestResult;
@@ -55,52 +53,21 @@ class _LongPressAlertDialogState extends State<LongPressAlertDialog> {
     static const _borderRadius = 8.0;
 
     @override
-    Widget build(BuildContext context) {
-        // return Dialog(
-        //     child: SingleChildScrollView(
-        //         child: SizedBox(
-        //             width: double.maxFinite,
-        //             //height: MediaQuery.of(context).size.height * 0.8,
-        //             //width: MediaQuery.of(context).size.width * 0.8,
-        //             child: Column(
-        //                 mainAxisSize: MainAxisSize.min,
-        //                 children: _buildDialogLongPressHitTestResult(),
-        //             ),
-        //         ),
-        //     ),
-        //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_borderRadius)),
-        // );
-        // return SimpleDialog(
-        //     contentPadding: const EdgeInsets.all(0.0),
-        //     children: _buildDialogLongPressHitTestResult(),
-        //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_borderRadius)),
-        //         // SingleChildScrollView(
-        //         //     child: SizedBox(
-        //         //         width: double.maxFinite,
-        //         //         child: Column(
-        //         //             mainAxisSize: MainAxisSize.min,
-        //         //             children: _buildDialogLongPressHitTestResult(),
-        //         //         ),
-        //         //     ),
-        //         // ),
-        // );
-
-        return SimpleDialog(
-            contentPadding: EdgeInsets.zero,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_borderRadius)),
-            children: [
-                SingleChildScrollView(
-                    child: SizedBox(
-                        width: double.maxFinite,
-                        child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: _buildDialogLongPressHitTestResult(),
-                        ),
+    Widget build(BuildContext context) => SimpleDialog(
+        contentPadding: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_borderRadius)),
+        children: <Widget>[
+            SingleChildScrollView(
+                child: SizedBox(
+                    width: double.maxFinite,
+                    child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: _buildDialogLongPressHitTestResult(),
                     ),
                 ),
-            ],
-        );
-    }
+            ),
+        ],
+    );
 
     List<Widget> _buildDialogLongPressHitTestResult() {
         if (widget.hitTestResult.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE
@@ -132,10 +99,10 @@ class _LongPressAlertDialogState extends State<LongPressAlertDialog> {
     }
 
     Widget _buildLinkTile() {
-        var url = widget.requestFocusNodeHrefResult?.url ?? Uri.parse("about:blank");
-        var faviconUrl = Uri.parse("${url.origin}/favicon.ico");
+        final url = widget.requestFocusNodeHrefResult?.url ?? Uri.parse('about:blank');
+        final faviconUrl = Uri.parse('${url.origin}/favicon.ico');
         var title = widget.requestFocusNodeHrefResult?.title;
-        var link = widget.requestFocusNodeHrefResult?.url?.toString();
+        final link = widget.requestFocusNodeHrefResult?.url?.toString();
 
         if (title != null && title.isEmpty) {
             title = null;
@@ -231,12 +198,12 @@ class _LongPressAlertDialogState extends State<LongPressAlertDialog> {
 
     Widget _buildOpenLink() {
         return ListTile(
-            title: const Text("Открыть страницу"),
+            title: const Text('Открыть страницу'),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_borderRadius)),
-            onTap: () {
+            onTap: () async {
                 if (widget.requestFocusNodeHrefResult?.url != null) {
-                    widget.webViewController.loadUrl(
-                        urlRequest: URLRequest(url: widget.requestFocusNodeHrefResult?.url!)
+                    await widget.webViewController.loadUrl(
+                        urlRequest: URLRequest(url: widget.requestFocusNodeHrefResult?.url)
                     );
                 } else {
                     // TODO
@@ -249,10 +216,10 @@ class _LongPressAlertDialogState extends State<LongPressAlertDialog> {
 
     Widget _buildCopyAddressLink() {
         return ListTile(
-            title: const Text("Скопировать ссылку"),
+            title: const Text('Скопировать ссылку'),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_borderRadius)),
-            onTap: () {
-                Clipboard.setData(
+            onTap: () async {
+                await Clipboard.setData(
                     ClipboardData(
                         text: widget.requestFocusNodeHrefResult?.url.toString() ?? widget.hitTestResult.extra ?? ''
                     )
@@ -264,11 +231,11 @@ class _LongPressAlertDialogState extends State<LongPressAlertDialog> {
 
     Widget _buildShareLink() {
         return ListTile(
-            title: const Text("Поделиться ссылкой"),
+            title: const Text('Поделиться ссылкой'),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_borderRadius)),
-            onTap: () {
+            onTap: () async {
                 if (widget.hitTestResult.extra != null) {
-                    Share.share(widget.requestFocusNodeHrefResult?.url.toString() ?? widget.hitTestResult.extra!);
+                    await Share.share(widget.requestFocusNodeHrefResult?.url.toString() ?? widget.hitTestResult.extra!);
                 }
 
                 Navigator.pop(context);
@@ -325,15 +292,15 @@ class _LongPressAlertDialogState extends State<LongPressAlertDialog> {
             title: FutureBuilder<String?>(
                 future: widget.webViewController.getTitle(),
                 builder: (context, snapshot) {
-                    final title = snapshot.hasData ? snapshot.data! : '';
-                    return title != ''
-                    ? Text(
+                    final title = snapshot.hasData ? snapshot.data! : null;
+                    return title == null
+                    ? const SizedBox.shrink()
+                    : Text(
                         title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).colorScheme.primary),
-                    )
-                    : const SizedBox.shrink();
+                    );
                 },
             ),
         );
@@ -368,9 +335,9 @@ class _LongPressAlertDialogState extends State<LongPressAlertDialog> {
         return ListTile(
             title: const Text('Поделиться изображением'),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_borderRadius)),
-            onTap: () {
+            onTap: () async {
                 if (widget.hitTestResult.extra != null) {
-                    Share.share(widget.hitTestResult.extra!);
+                    await Share.share(widget.hitTestResult.extra!);
                 }
 
                 Navigator.pop(context);

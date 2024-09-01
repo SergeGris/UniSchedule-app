@@ -166,7 +166,7 @@ Future<Schedule> schedule(ScheduleRef ref) async {
                     throw Exception('Ошибка подключения: истекло время ожидания ответа');
                     // Time has run out, do what you wanted to do.
                     // return http.Response('Error', 408); // Request Timeout response status code
-                }
+                },
             );
             return response;
         } catch (e) {
@@ -174,7 +174,7 @@ Future<Schedule> schedule(ScheduleRef ref) async {
         }
     }
 
-    String? scheduleLastUpdate = null;
+    String? scheduleLastUpdate;
     String schedule;
 
     try {
@@ -203,18 +203,18 @@ Future<Schedule> schedule(ScheduleRef ref) async {
         }
     }
 
-    final json;
+    final Map<String, dynamic> json;
 
     try {
         String dateTimeToString(DateTime datetime) {
             // Returns at least two-digit stringified number
-            String _twoDigits(int n) => (n >= 10) ? '$n' : '0$n';
+            String twoDigits(int n) => (n >= 10) ? '$n' : '0$n';
 
             final year   = datetime.year;
-            final month  = _twoDigits(datetime.month);
-            final day    = _twoDigits(datetime.day);
-            final hour   = _twoDigits(datetime.hour);
-            final minute = _twoDigits(datetime.minute);
+            final month  = twoDigits(datetime.month);
+            final day    = twoDigits(datetime.day);
+            final hour   = twoDigits(datetime.hour);
+            final minute = twoDigits(datetime.minute);
 
             return '$hour:$minute $day.$month.$year';
         }
@@ -236,14 +236,11 @@ Future<Schedule> schedule(ScheduleRef ref) async {
 }
 
 @riverpod
-Future<SharedPreferences> settings(SettingsRef ref) async {
-  return SharedPreferences.getInstance();
-}
+Future<SharedPreferences> settings(SettingsRef ref) async => SharedPreferences.getInstance();
 
 @riverpod
 Future<void> uniScheduleConfiguration(UniScheduleConfigurationRef ref) async {
-    final stopwatch = Stopwatch();
-    stopwatch.start();
+    final stopwatch = Stopwatch()..start();
 
     try {
         final uri = Uri.https(
@@ -257,7 +254,7 @@ Future<void> uniScheduleConfiguration(UniScheduleConfigurationRef ref) async {
                 throw Exception('Запрос выполнялся слишком долго');
                 // Time has run out, do what you wanted to do.
                 return http.Response('Error', 408); // Request Timeout response status code
-            }
+            },
         );
 
         UniScheduleConfiguration.fromJson(await jsonDecode(manifestDataJson.body));
@@ -270,18 +267,10 @@ Future<void> uniScheduleConfiguration(UniScheduleConfigurationRef ref) async {
 
     // NOTE: We a doing a delation for at least 300 for showing logo
     if (stopwatch.elapsed.inMilliseconds < 300) {
-        await Future.delayed(Duration(milliseconds: 300 - stopwatch.elapsed.inMilliseconds));
+        await Future<void>.delayed(Duration(milliseconds: 300 - stopwatch.elapsed.inMilliseconds));
     }
 }
 
 // Used for notifing about updating selected building
 @riverpod
-Future<void> building(BuildingRef ref) async {
-    return;
-}
-
-// Used for notifing about updating selected building
-@riverpod
-Future<void> theme(ThemeRef ref) async {
-    return;
-}
+Future<void> building(BuildingRef ref) async => Future<void>.value();

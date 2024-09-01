@@ -85,10 +85,10 @@ class _HomePageState extends ConsumerState<HomePage> {
 
             if (untilBegin < 0) { // Пара уже началась и идёт
                 final untilEnd = pendingClasses[0].end.differenceInMinutes(time);
-                final hours   = untilEnd ~/ 60;
-                final minutes = untilEnd % 60;
+                final hours    = untilEnd ~/ 60;
+                final minutes  = untilEnd % 60;
 
-                listTitle    = 'Идёт ${pendingClasses[0].type?.name.toLowerCase() ?? "пара"}';
+                listTitle    = 'Идёт ${pendingClasses[0].type?.label.toLowerCase() ?? "пара"}';
                 listSubTitle = 'До конца ${timeToPrettyView(hours, minutes)}';
             } else {
                 final hours   = untilBegin ~/ 60;
@@ -111,7 +111,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         }
 
         if (pendingClasses.isEmpty) {
-            var daysToSkip = 0;
+            int daysToSkip = 0;
 
             do {
                 daysToSkip++;
@@ -127,48 +127,87 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ? 'завтра'
                     : (daysToSkip == 2
                         ? 'послезавтра'
-                        : numberToWords(daysToSkip - 1) + ' ' + plural(daysToSkip - 1, ['день', 'дня', 'дней'])));
+                        : numberToWords(daysToSkip - 1) + ' ' + plural(daysToSkip - 1, [ 'день', 'дня', 'дней' ])));
             } else {
                 listSubTitle = 'В ближайший месяц пар нет';
             }
         }
 
-        return ListView.separated(
-            itemCount: pendingClasses.length + 1,
-            itemBuilder: (context, index) => index == 0
-            ? ListTile(
-                title: Text(
-                    listTitle,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.fade,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.primary
+        return Column(
+            children: <Widget>[
+                SizedBox(
+                    height: getScheduleTabHeight(context),
+                    child: Center(
+                        child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            minTileHeight: 0,
+                            horizontalTitleGap: 0,
+                            minVerticalPadding: 0,
+                            minLeadingWidth: 0,
+
+                            title: AnimatedSwitcher(
+                                duration: kAnimationDuration,
+                                reverseDuration: kAnimationDuration,
+                                transitionBuilder: (Widget child, Animation<double> animation) => FadeTransition(
+                                    opacity: animation,
+                                    child: child,
+                                ),
+
+                                child: Text(
+                                    // This key causes the AnimatedSwitcher to interpret this as a 'new'
+                                    // child each time the count changes, so that it will begin its animation
+                                    // when the count changes.
+                                    listTitle,
+                                    key: ValueKey<String>(listTitle),
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow.fade,
+                                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                        color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                ),
+                            ),
+
+                            subtitle: AnimatedSwitcher(
+                                duration: kAnimationDuration,
+                                reverseDuration: kAnimationDuration,
+                                transitionBuilder: (Widget child, Animation<double> animation) => FadeTransition(
+                                    opacity: animation,
+                                    child: child,
+                                ),
+                                child: listSubTitle == null
+                                ? const SizedBox.shrink(key: ValueKey(null))
+                                : Text(
+                                    listSubTitle,
+                                    key: ValueKey<String>(listSubTitle),
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow.fade,
+                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        color: Theme.of(context).colorScheme.secondary,
+                                    ),
+                                ),
+                            ),
+                        ),
                     ),
                 ),
-                subtitle: listSubTitle != null
-                ? Text(
-                    listSubTitle,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.fade,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary
+
+                Expanded(
+                    child: ListView.separated(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        itemCount: pendingClasses.length,
+                        itemBuilder: (context, index) => ClassCard(
+                            classes: pendingClasses,
+                            index: index,
+                            showProgress: showProgress,
+                            horizontalMargin: kClassCardHorizontalMargin,
+                            borderRadius: kClassCardBorderRadius,
+                        ),
+                        separatorBuilder: (context, index) => const Divider(
+                            indent: kClassCardHorizontalMargin + kClassCardBorderRadius,
+                            endIndent: kClassCardHorizontalMargin + kClassCardBorderRadius,
+                        ),
                     ),
-                )
-                : null,
-            )
-            : ClassCard(
-                classes: pendingClasses,
-                index: index - 1,
-                showProgress: showProgress,
-                horizontalMargin: 8.0,
-                borderRadius: 8.0
-            ),
-            separatorBuilder: (context, index) => index != 0
-            ? const Divider(
-                indent: 16.0,
-                endIndent: 16.0
-            )
-            : const SizedBox.shrink(),
+                ),
+            ],
         );
     }
 }

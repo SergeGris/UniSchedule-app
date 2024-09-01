@@ -6,7 +6,7 @@ part of 'provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$scheduleHash() => r'7136465af08a5f5d3dd5fd24d3f9b6d757be9fd1';
+String _$scheduleHash() => r'b6d1032d1abf9fe2c096905f91de2e84e5f1c598';
 
 /// See also [schedule].
 @ProviderFor(schedule)
@@ -35,7 +35,7 @@ final settingsProvider = AutoDisposeFutureProvider<SharedPreferences>.internal(
 
 typedef SettingsRef = AutoDisposeFutureProviderRef<SharedPreferences>;
 String _$uniScheduleConfigurationHash() =>
-    r'61f950bda59895c2da591a200fb189ccbfcd4d85';
+    r'79c264297fc631997a6079f7fe84296f6c504b41';
 
 /// See also [uniScheduleConfiguration].
 @ProviderFor(uniScheduleConfiguration)
@@ -65,19 +65,5 @@ final buildingProvider = AutoDisposeFutureProvider<void>.internal(
 );
 
 typedef BuildingRef = AutoDisposeFutureProviderRef<void>;
-String _$themeHash() => r'f21d391c82fd11d888e2664f352ac0e457166869';
-
-/// See also [theme].
-@ProviderFor(theme)
-final themeProvider = AutoDisposeFutureProvider<void>.internal(
-  theme,
-  name: r'themeProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$themeHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef ThemeRef = AutoDisposeFutureProviderRef<void>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
